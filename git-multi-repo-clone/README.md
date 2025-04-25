@@ -1,6 +1,6 @@
 # Git Multi-Repo Clone
 
-A Go application to automatically clone/mirror all repositories from a Gitea server.
+A cross-platform CLI tool to automatically clone/mirror all repositories from a Gitea server.
 
 ## Features
 
@@ -9,11 +9,44 @@ A Go application to automatically clone/mirror all repositories from a Gitea ser
 - Clone repositories as mirrors to a specified target directory
 - Update repositories if they already exist
 - Filter repositories using include/exclude lists
+- Cross-platform support (Linux, Windows, macOS)
+
+## Installation
+
+### From Source
+
+#### Prerequisites
+- Go 1.21 or later
+
+#### Build
+
+```bash
+# Clone the repository
+git clone https://github.com/adeotek/git-multi-repo-clone.git
+cd git-multi-repo-clone
+
+# Build for your current platform
+make build
+
+# Or build for all supported platforms (Linux, Windows, macOS)
+make build-all
+```
+
+The binaries will be available in the `bin` directory after running `make build-all`:
+- Linux: `bin/git-multi-repo-clone_[version]_linux_amd64`
+- Windows: `bin/git-multi-repo-clone_[version]_windows_amd64.exe`
+- macOS: `bin/git-multi-repo-clone_[version]_darwin_amd64`
+
+### Using Go
+
+```bash
+go install github.com/adeotek/git-multi-repo-clone@latest
+```
 
 ## Setup
 
 1. Copy the example configuration file:
-   ```
+   ```bash
    cp config.yaml.example config.yaml
    ```
 
@@ -51,23 +84,96 @@ A Go application to automatically clone/mirror all repositories from a Gitea ser
 
 ## Usage
 
+```bash
+# Using default config.yaml in current directory
+git-multi-repo-clone
+
+# Specify a custom config file
+git-multi-repo-clone -config /path/to/config.yaml
+
+# Show version information
+git-multi-repo-clone -version
+
+# Show help
+git-multi-repo-clone -help
 ```
-go run main.go
-```
+
+### Command Line Flags
+
+- `-config`: Path to configuration file (default: "config.yaml")
+- `-version`: Show version information and exit
+- `-help`: Show help message and exit
 
 This will:
 1. Connect to your Gitea server
 2. Retrieve the list of repositories
-3. Clone each repository as a mirror to the target directory
-4. Update any repositories that already exist
+3. Clone each repository to the target directory
+4. Update any repositories that already exist (if configured)
 
-## Dependencies
+## Project Structure
 
-- Go 1.15 or later
+```
+.
+├── cmd/                     # Command-line interfaces
+│   └── git-multi-repo-clone/ # Main CLI package
+│       └── main.go          # CLI entry point
+├── internal/                # Private application and library code
+│   ├── config/              # Configuration handling
+│   ├── git/                 # Git operations
+│   └── repository/          # Repository API handling
+├── pkg/                     # Public library code
+│   └── filter/              # Repository filtering
+├── tests/                   # Integration tests
+├── bin/                     # Output binaries
+├── Makefile                 # Project build instructions
+├── README.md                # Project documentation
+├── config.yaml.example      # Example configuration
+└── go.mod                   # Go module definition
+```
+
+## Development
+
+### Dependencies
+
+- Go 1.21 or later
 - `gopkg.in/yaml.v3` package
 
-Install dependencies:
+### Install Dependencies
+
+```bash
+go mod download
 ```
-go mod init git-multi-repo-clone
-go get gopkg.in/yaml.v3
+
+### Run Unit Tests
+
+```bash
+make test
 ```
+
+### Run Integration Tests
+
+```bash
+make integration-test
+```
+
+### Format Code
+
+```bash
+make fmt
+```
+
+### Lint Code
+
+```bash
+make lint
+```
+
+## Cross-Compilation
+
+The project supports cross-compilation for Linux, Windows, and macOS. To build for all platforms:
+
+```bash
+make build-all
+```
+
+This will generate binaries in the `bin` directory with appropriate file extensions (.exe for Windows).

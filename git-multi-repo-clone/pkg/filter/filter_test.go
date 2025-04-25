@@ -1,24 +1,27 @@
-package main
+package filter
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/adeotek/git-multi-repo-clone/internal/config"
+	"github.com/adeotek/git-multi-repo-clone/internal/repository"
 )
 
 func TestFilterRepositoriesWithNoFilters(t *testing.T) {
 	// Setup test data
-	repos := []Repository{
+	repos := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo2", URL: "https://example.com/repo2"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}
 	
-	config := &Config{
+	config := &config.Config{
 		// No include or exclude lists
 	}
 	
 	// Run the filter
-	filtered := filterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config)
 	
 	// Verify no filtering happened
 	if !reflect.DeepEqual(filtered, repos) {
@@ -28,21 +31,21 @@ func TestFilterRepositoriesWithNoFilters(t *testing.T) {
 
 func TestFilterRepositoriesWithIncludeList(t *testing.T) {
 	// Setup test data
-	repos := []Repository{
+	repos := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo2", URL: "https://example.com/repo2"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}
 	
-	config := &Config{
+	config := &config.Config{
 		Include: []string{"repo1", "repo3"},
 	}
 	
 	// Run the filter
-	filtered := filterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config)
 	
 	// Verify only included repos are returned
-	expected := []Repository{
+	expected := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}
@@ -61,21 +64,21 @@ func TestFilterRepositoriesWithIncludeList(t *testing.T) {
 
 func TestFilterRepositoriesWithExcludeList(t *testing.T) {
 	// Setup test data
-	repos := []Repository{
+	repos := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo2", URL: "https://example.com/repo2"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}
 	
-	config := &Config{
+	config := &config.Config{
 		Exclude: []string{"repo2"},
 	}
 	
 	// Run the filter
-	filtered := filterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config)
 	
 	// Verify excluded repos are not returned
-	expected := []Repository{
+	expected := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}
@@ -94,23 +97,23 @@ func TestFilterRepositoriesWithExcludeList(t *testing.T) {
 
 func TestFilterRepositoriesWithBothLists(t *testing.T) {
 	// Setup test data
-	repos := []Repository{
+	repos := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo2", URL: "https://example.com/repo2"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 		{Name: "repo4", URL: "https://example.com/repo4"},
 	}
 	
-	config := &Config{
+	config := &config.Config{
 		Include: []string{"repo1", "repo3"},
 		Exclude: []string{"repo3", "repo4"}, // This should be ignored when include is specified
 	}
 	
 	// Run the filter
-	filtered := filterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config)
 	
 	// Verify only included repos are returned (exclude list should be ignored)
-	expected := []Repository{
+	expected := []repository.Repository{
 		{Name: "repo1", URL: "https://example.com/repo1"},
 		{Name: "repo3", URL: "https://example.com/repo3"},
 	}

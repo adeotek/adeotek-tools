@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestLoadConfig(t *testing.T) {
+func TestLoad(t *testing.T) {
 	// Create a temporary config file
 	tempDir, err := os.MkdirTemp("", "git-multi-repo-clone-test")
 	if err != nil {
@@ -36,9 +36,9 @@ exclude:
 	}
 
 	// Test loading the config
-	config, err := loadConfig(configPath)
+	config, err := Load(configPath)
 	if err != nil {
-		t.Fatalf("loadConfig failed: %v", err)
+		t.Fatalf("Load failed: %v", err)
 	}
 
 	// Verify loaded values
@@ -74,14 +74,14 @@ exclude:
 	}
 }
 
-func TestLoadConfigFileNotFound(t *testing.T) {
-	_, err := loadConfig("nonexistent-file.yaml")
+func TestLoadFileNotFound(t *testing.T) {
+	_, err := Load("nonexistent-file.yaml")
 	if err == nil {
 		t.Error("Expected an error when loading non-existent file, got nil")
 	}
 }
 
-func TestLoadConfigInvalidYAML(t *testing.T) {
+func TestLoadInvalidYAML(t *testing.T) {
 	// Create a temporary invalid config file
 	tempDir, err := os.MkdirTemp("", "git-multi-repo-clone-test")
 	if err != nil {
@@ -100,7 +100,7 @@ api_token: 123 : invalid : yaml
 	}
 
 	// Test loading the invalid config
-	_, err = loadConfig(configPath)
+	_, err = Load(configPath)
 	if err == nil {
 		t.Error("Expected an error when loading invalid YAML, got nil")
 	}

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,13 +18,13 @@ func TestIntegrationClone(t *testing.T) {
 	}
 
 	// Create temporary directories for testing
-	tempConfigDir, err := ioutil.TempDir("", "config-dir")
+	tempConfigDir, err := os.MkdirTemp("", "config-dir")
 	if err != nil {
 		t.Fatalf("Failed to create temp config directory: %v", err)
 	}
 	defer os.RemoveAll(tempConfigDir)
 
-	tempTargetDir, err := ioutil.TempDir("", "target-dir")
+	tempTargetDir, err := os.MkdirTemp("", "target-dir")
 	if err != nil {
 		t.Fatalf("Failed to create temp target directory: %v", err)
 	}
@@ -44,7 +43,7 @@ use_basic_auth: true
 override_exising_local_repos: true
 clone_as_mirror: false
 `
-	err = ioutil.WriteFile(configPath, []byte(configContent), 0644)
+	err = os.WriteFile(configPath, []byte(configContent), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write test config file: %v", err)
 	}
@@ -63,8 +62,7 @@ clone_as_mirror: false
 	}
 
 	// Run the program with our test config
-	cmd := exec.Command(binPath)
-	cmd.Env = append(os.Environ(), "CONFIG_PATH="+configPath)
+	cmd := exec.Command(binPath, "-config", configPath)
 	output, err := cmd.CombinedOutput()
 
 	// Check for expected output
@@ -74,7 +72,7 @@ clone_as_mirror: false
 
 	// Verify that repositories were cloned
 	// This depends on your test server having repositories
-	files, err := ioutil.ReadDir(tempTargetDir)
+	files, err := os.ReadDir(tempTargetDir)
 	if err != nil {
 		t.Fatalf("Failed to read target directory: %v", err)
 	}

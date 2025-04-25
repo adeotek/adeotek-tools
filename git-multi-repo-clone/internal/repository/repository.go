@@ -1,0 +1,55 @@
+// Package repository handles interaction with the Gitea API
+package repository
+
+import (
+	"encoding/json"
+	"fmt"
+	"os/exec"
+
+	"github.com/adeotek/git-multi-repo-clone/internal/config"
+)
+
+// Repository represents a Git repository from the Gitea API
+type Repository struct {
+	Name string `json:"name"`
+	URL  string `json:"clone_url"`
+}
+
+// ExecCommand is a variable that holds the exec.Command function.
+// It can be replaced in tests to mock command execution.
+var ExecCommand = exec.Command
+
+// GetRepositories retrieves a list of repositories from the Gitea server
+func GetRepositories(config *config.Config) ([]Repository, error) {
+	// Construct API URL
+	apiURL := fmt.Sprintf("%s/api/v1/repos/search", config.GiteaURL)
+
+	// Prepare curl command
+	cmd := ExecCommand("curl", "-s")
+
+	// Add authentication
+	if config.UseBasicAuth {
+		cmd.Args = append(cmd.Args, "-u", fmt.Sprintf("%s:%s", config.Username, config.Password))
+	} else if config.APIToken != "" {
+		cmd.Args = append(cmd.Args, "-H", fmt.Sprintf("Authorization: token %s", config.APIToken))
+	}
+
+	// Add API URL
+	cmd.Args = append(cmd.Args, apiURL)
+
+	// Execute command
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch repositories: %w", err)
+	}
+
+	// Parse response
+	var response struct {
+		Data []Repository `json:"data"`
+	}
+	if err := json.Unmarshal(output, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse API response: %w", err)
+	}
+
+	return response.Data, nil
+}

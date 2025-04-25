@@ -1,50 +1,39 @@
-package main
+package repository
 
 import (
-	"encoding/json"
 	"os/exec"
 	"testing"
+
+	"github.com/adeotek/git-multi-repo-clone/internal/config"
 )
 
-// Create a mock for the exec.Command used in getRepositories
+// Create a mock for the exec.Command used in GetRepositories
 func mockCurlSuccess() func(string, ...string) *exec.Cmd {
+	// Create a simple function that returns a mock command
+	// We'll use a shell script to output a fixed JSON response
 	return func(command string, args ...string) *exec.Cmd {
-		// Create a sample API response
-		apiResponse := struct {
-			Data []Repository `json:"data"`
-		}{
-			Data: []Repository{
-				{Name: "repo1", URL: "https://example.com/repo1.git"},
-				{Name: "repo2", URL: "https://example.com/repo2.git"},
-			},
-		}
-
-		// Marshal the response to JSON
-		jsonResponse, _ := json.Marshal(apiResponse)
-
-		// Return a command that outputs this JSON
-		cmd := exec.Command("echo", string(jsonResponse))
-		return cmd
+		jsonResponse := `{"data":[{"name":"repo1","clone_url":"https://example.com/repo1.git"},{"name":"repo2","clone_url":"https://example.com/repo2.git"}]}`
+		return exec.Command("bash", "-c", "echo -n '" + jsonResponse + "'")
 	}
 }
 
 func TestGetRepositories(t *testing.T) {
 	// Save the original exec.Command
-	origExecCommand := execCommand
-	defer func() { execCommand = origExecCommand }()
+	origExecCommand := ExecCommand
+	defer func() { ExecCommand = origExecCommand }()
 
 	// Set our mock
-	execCommand = mockCurlSuccess()
+	ExecCommand = mockCurlSuccess()
 
 	// Run the function with a test config
-	config := &Config{
+	config := &config.Config{
 		GiteaURL: "https://gitea.example.com",
 		APIToken: "test-token",
 	}
 
-	repos, err := getRepositories(config)
+	repos, err := GetRepositories(config)
 	if err != nil {
-		t.Fatalf("getRepositories returned error: %v", err)
+		t.Fatalf("GetRepositories returned error: %v", err)
 	}
 
 	// Verify the results
@@ -63,23 +52,23 @@ func TestGetRepositories(t *testing.T) {
 
 func TestGetRepositoriesWithBasicAuth(t *testing.T) {
 	// Save the original exec.Command
-	origExecCommand := execCommand
-	defer func() { execCommand = origExecCommand }()
+	origExecCommand := ExecCommand
+	defer func() { ExecCommand = origExecCommand }()
 
 	// Set our mock
-	execCommand = mockCurlSuccess()
+	ExecCommand = mockCurlSuccess()
 
 	// Run the function with a test config using basic auth
-	config := &Config{
+	config := &config.Config{
 		GiteaURL:     "https://gitea.example.com",
 		UseBasicAuth: true,
 		Username:     "testuser",
 		Password:     "testpass",
 	}
 
-	repos, err := getRepositories(config)
+	repos, err := GetRepositories(config)
 	if err != nil {
-		t.Fatalf("getRepositories returned error: %v", err)
+		t.Fatalf("GetRepositories returned error: %v", err)
 	}
 
 	// We just verify no error occurred, since we can't easily check
@@ -91,22 +80,22 @@ func TestGetRepositoriesWithBasicAuth(t *testing.T) {
 
 func TestGetRepositoriesWithToken(t *testing.T) {
 	// Save the original exec.Command
-	origExecCommand := execCommand
-	defer func() { execCommand = origExecCommand }()
+	origExecCommand := ExecCommand
+	defer func() { ExecCommand = origExecCommand }()
 
 	// Set our mock
-	execCommand = mockCurlSuccess()
+	ExecCommand = mockCurlSuccess()
 
 	// Run the function with a test config using token auth
-	config := &Config{
+	config := &config.Config{
 		GiteaURL:     "https://gitea.example.com",
 		UseBasicAuth: false,
 		APIToken:     "test-token",
 	}
 
-	repos, err := getRepositories(config)
+	repos, err := GetRepositories(config)
 	if err != nil {
-		t.Fatalf("getRepositories returned error: %v", err)
+		t.Fatalf("GetRepositories returned error: %v", err)
 	}
 
 	// We just verify no error occurred, since we can't easily check
