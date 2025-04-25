@@ -31,7 +31,7 @@ func TestGetRepositories(t *testing.T) {
 		APIToken: "test-token",
 	}
 
-	repos, err := GetRepositories(config)
+	repos, err := GetRepositories(config, false)
 	if err != nil {
 		t.Fatalf("GetRepositories returned error: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestGetRepositoriesWithBasicAuth(t *testing.T) {
 		Password:     "testpass",
 	}
 
-	repos, err := GetRepositories(config)
+	repos, err := GetRepositories(config, false)
 	if err != nil {
 		t.Fatalf("GetRepositories returned error: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestGetRepositoriesWithToken(t *testing.T) {
 		APIToken:     "test-token",
 	}
 
-	repos, err := GetRepositories(config)
+	repos, err := GetRepositories(config, false)
 	if err != nil {
 		t.Fatalf("GetRepositories returned error: %v", err)
 	}
