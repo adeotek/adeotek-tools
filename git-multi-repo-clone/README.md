@@ -22,14 +22,17 @@ A cross-platform CLI tool to automatically clone/mirror all repositories from a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/adeotek/git-multi-repo-clone.git
-cd git-multi-repo-clone
+git clone https://github.com/adeotek/tools.git adeotek-tools
+cd adeotek-tools/git-multi-repo-clone
 
 # Build for your current platform
 make build
 
 # Or build for all supported platforms (Linux, Windows, macOS)
 make build-all
+
+# Alternatively, you can build using Go directly
+go build -o git-multi-repo-clone
 ```
 
 The binaries will be available in the `bin` directory after running `make build-all`:
@@ -40,7 +43,7 @@ The binaries will be available in the `bin` directory after running `make build-
 ### Using Go
 
 ```bash
-go install github.com/adeotek/git-multi-repo-clone@latest
+??? go install github.com/adeotek/git-multi-repo-clone@latest
 ```
 
 ## Setup
@@ -118,6 +121,7 @@ This will:
 │   └── git-multi-repo-clone/ # Main CLI package
 │       └── main.go          # CLI entry point
 ├── internal/                # Private application and library code
+│   ├── app/                 # Core application logic
 │   ├── config/              # Configuration handling
 │   ├── git/                 # Git operations
 │   └── repository/          # Repository API handling
@@ -128,10 +132,19 @@ This will:
 ├── Makefile                 # Project build instructions
 ├── README.md                # Project documentation
 ├── config.yaml.example      # Example configuration
+├── main.go                  # Convenience wrapper for building from root
 └── go.mod                   # Go module definition
 ```
 
 ## Development
+
+### Code Structure
+
+The application is structured with a clear separation of concerns:
+- `internal/app` contains the core application logic, extracted to avoid code duplication
+- `cmd/git-multi-repo-clone/main.go` is the standard entry point following Go conventions
+- `main.go` in the root directory is a convenience wrapper allowing builds from the project root
+- Both entry points call the same `app.Run()` function, ensuring consistent behavior
 
 ### Dependencies
 

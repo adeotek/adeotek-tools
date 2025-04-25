@@ -43,7 +43,7 @@ func CloneRepository(config *config.Config, repo repository.Repository) error {
 			} else {
 				// For standard repos, update with fetch and pull
 				log.Printf("Updating existing repository: %s", repo.Name)
-				
+
 				// Fetch with prune
 				fetchCmd := ExecCommand("git", "-C", repoDir, "fetch", "--prune")
 				fetchCmd.Stdout = os.Stdout
@@ -51,7 +51,7 @@ func CloneRepository(config *config.Config, repo repository.Repository) error {
 				if err := fetchCmd.Run(); err != nil {
 					return fmt.Errorf("failed to fetch updates: %w", err)
 				}
-				
+
 				// Pull updates
 				pullCmd := ExecCommand("git", "-C", repoDir, "pull")
 				pullCmd.Stdout = os.Stdout
@@ -59,7 +59,7 @@ func CloneRepository(config *config.Config, repo repository.Repository) error {
 				if err := pullCmd.Run(); err != nil {
 					return fmt.Errorf("failed to pull updates: %w", err)
 				}
-				
+
 				return nil
 			}
 		} else {
@@ -80,7 +80,7 @@ func CloneRepository(config *config.Config, repo repository.Repository) error {
 		cmd = ExecCommand("git", "clone", cloneURL, repoDir)
 		log.Printf("Cloning repository: %s", repo.Name)
 	}
-	
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

@@ -27,10 +27,10 @@ func TestCloneRepositoryNewClone(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                 tempDir,
-		UseBasicAuth:              false,
+		TargetDir:                  tempDir,
+		UseBasicAuth:               false,
 		OverrideExistingLocalRepos: false,
-		CloneAsMirror:             false,
+		CloneAsMirror:              false,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -61,10 +61,10 @@ func TestCloneRepositoryAsMirror(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                 tempDir,
-		UseBasicAuth:              false,
+		TargetDir:                  tempDir,
+		UseBasicAuth:               false,
 		OverrideExistingLocalRepos: false,
-		CloneAsMirror:             true,
+		CloneAsMirror:              true,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -95,12 +95,12 @@ func TestCloneRepositoryWithBasicAuth(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                 tempDir,
-		UseBasicAuth:              true,
-		Username:                  "testuser",
-		Password:                  "testpass",
+		TargetDir:                  tempDir,
+		UseBasicAuth:               true,
+		Username:                   "testuser",
+		Password:                   "testpass",
 		OverrideExistingLocalRepos: false,
-		CloneAsMirror:             false,
+		CloneAsMirror:              false,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -153,8 +153,8 @@ func TestCloneExistingRepositoryWithOverride(t *testing.T) {
 
 	// Set our mock
 	ExecCommand = mockGitSuccessCommand
-	
-	// Instead of mocking os.RemoveAll, let's set CloneAsMirror to false 
+
+	// Instead of mocking os.RemoveAll, let's set CloneAsMirror to false
 	// to avoid the code path that would delete the directory
 	config.CloneAsMirror = false
 

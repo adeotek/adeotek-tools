@@ -13,7 +13,7 @@ func mockCurlSuccess() func(string, ...string) *exec.Cmd {
 	// We'll use a shell script to output a fixed JSON response
 	return func(command string, args ...string) *exec.Cmd {
 		jsonResponse := `{"data":[{"name":"repo1","clone_url":"https://example.com/repo1.git"},{"name":"repo2","clone_url":"https://example.com/repo2.git"}]}`
-		return exec.Command("bash", "-c", "echo -n '" + jsonResponse + "'")
+		return exec.Command("bash", "-c", "echo -n '"+jsonResponse+"'")
 	}
 }
 
