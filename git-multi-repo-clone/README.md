@@ -161,24 +161,32 @@ go mod download
 
 ```bash
 make test
+# or
+go test ./...
 ```
 
 ### Run Integration Tests
 
 ```bash
 make integration-test
+# or
+go test ./tests/...
 ```
 
 ### Format Code
 
 ```bash
 make fmt
+# or
+go fmt ./...
 ```
 
 ### Lint Code
 
 ```bash
 make lint
+# or
+go vet ./...
 ```
 
 ## Cross-Compilation

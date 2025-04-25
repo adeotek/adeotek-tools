@@ -62,7 +62,7 @@ fmt:
 # Lint code
 .PHONY: lint
 lint:
-	golint ./...
+	go vet ./...
 
 # Install locally
 .PHONY: install

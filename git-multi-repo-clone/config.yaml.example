@@ -1,14 +1,17 @@
 # Gitea Server Configuration
-gitea_url: "https://gitea.example.com"
+gitea_url: https://gitea.example.com
 
 # Authentication (use either token or username/password)
-api_token: "your_api_token"
-username: "your_username"
-password: "your_password"
+api_token: your_api_token
+username: your_username
+password: your_password
 use_basic_auth: false
 
+# Set to true to skip the SSL validation (e.g., when Gitea is using a self-signed certificate)
+# skip_ssl_validation: true
+
 # Target directory for cloned repositories
-target_dir: "/path/to/clone/target"
+target_dir: /path/to/clone/target
 
 # Set to true to delete and re-clone repositories that already exist locally (only applicable for mirror clones)
 # or update them with fetch/pull (for standard clones)
@@ -22,10 +25,10 @@ target_dir: "/path/to/clone/target"
 # Optional repository filtering
 # If include is specified, only these repositories will be cloned
 # include:
-#   - "repo1"
-#   - "repo2"
+#   - repo1
+#   - repo2
 
 # If exclude is specified (and include is not), these repositories will be skipped
 # exclude:
-#   - "repo3"
-#   - "repo4"
+#   - repo3
+#   - repo4

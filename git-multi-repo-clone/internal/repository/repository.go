@@ -20,12 +20,20 @@ type Repository struct {
 var ExecCommand = exec.Command
 
 // GetRepositories retrieves a list of repositories from the Gitea server
-func GetRepositories(config *config.Config) ([]Repository, error) {
+func GetRepositories(config *config.Config, verbose bool) ([]Repository, error) {
 	// Construct API URL
 	apiURL := fmt.Sprintf("%s/api/v1/repos/search", config.GiteaURL)
 
 	// Prepare curl command
 	cmd := ExecCommand("curl", "-s")
+
+	if config.SkipSslValidation {
+		cmd.Args = append(cmd.Args, "--insecure")
+	}
+
+	cmd.Args = append(cmd.Args, "-X", "GET") // Add method
+	cmd.Args = append(cmd.Args, apiURL)      // Add API URL
+	cmd.Args = append(cmd.Args, "-H", "accept: application/json")
 
 	// Add authentication
 	if config.UseBasicAuth {
@@ -34,8 +42,9 @@ func GetRepositories(config *config.Config) ([]Repository, error) {
 		cmd.Args = append(cmd.Args, "-H", fmt.Sprintf("Authorization: token %s", config.APIToken))
 	}
 
-	// Add API URL
-	cmd.Args = append(cmd.Args, apiURL)
+	if verbose {
+		fmt.Printf("----> %s\n", cmd.String())
+	}
 
 	// Execute command
 	output, err := cmd.Output()

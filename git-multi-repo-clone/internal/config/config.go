@@ -16,6 +16,7 @@ type Config struct {
 	Username                   string   `yaml:"username"`
 	Password                   string   `yaml:"password"`
 	UseBasicAuth               bool     `yaml:"use_basic_auth"`
+	SkipSslValidation          bool     `yaml:"skip_ssl_validation"`
 	OverrideExistingLocalRepos bool     `yaml:"override_exising_local_repos,omitempty"`
 	CloneAsMirror              bool     `yaml:"clone_as_mirror,omitempty"`
 	Include                    []string `yaml:"include,omitempty"`

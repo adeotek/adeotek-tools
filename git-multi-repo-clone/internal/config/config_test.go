@@ -22,6 +22,7 @@ target_dir: "/tmp/test-target"
 username: "test-user"
 password: "test-pass"
 use_basic_auth: true
+skip_ssl_validation: true
 override_exising_local_repos: true
 clone_as_mirror: true
 include:
@@ -59,6 +60,9 @@ exclude:
 	}
 	if !config.UseBasicAuth {
 		t.Error("Expected UseBasicAuth to be true")
+	}
+	if !config.SkipSslValidation {
+		t.Error("Expected SkipSslValidation to be true")
 	}
 	if !config.OverrideExistingLocalRepos {
 		t.Error("Expected OverrideExistingLocalRepos to be true")

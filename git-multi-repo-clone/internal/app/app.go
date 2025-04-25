@@ -24,14 +24,16 @@ func Run() {
 	// Define command-line flags
 	configPath := flag.String("config", "config.yaml", "Path to configuration file")
 	showVersion := flag.Bool("version", false, "Show version information and exit")
+	verbose := flag.Bool("verbose", false, "Show all messages")
 	showHelp := flag.Bool("help", false, "Show help message and exit")
 
 	// Parse command-line flags
 	flag.Parse()
 
-	// Show version if requested
+	// Show version
+	fmt.Printf("git-multi-repo-clone version %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
+
 	if *showVersion {
-		fmt.Printf("git-multi-repo-clone version %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
 		return
 	}
 
@@ -53,7 +55,7 @@ func Run() {
 	}
 
 	// Get list of repositories
-	repos, err := repository.GetRepositories(cfg)
+	repos, err := repository.GetRepositories(cfg, *verbose)
 	if err != nil {
 		log.Fatalf("Failed to get repositories: %v", err)
 	}
