@@ -2,21 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build and Testing Commands
-- Build/run: `go run main.go` (in the git-multi-repo-clone directory)
-- Build executable: `go build -o git-multi-repo-clone` (in the git-multi-repo-clone directory)
-- Install dependencies: `go mod download`
-- Format code: `go fmt ./...`
-- Lint code: `golint ./...`
-- Run tests: `go test ./...`
+## Build/Lint/Test Commands
+- Build: `make build`
+- Build all platforms: `make build-all`
+- Install: `make install`
+- Format code: `make fmt`
+- Lint code: `make lint`
+- Run all tests: `make test` or `go test -v ./...`
+- Run single test: `go test -v ./path/to/package -run TestName`
+- Run integration tests: `make integration-test` or `RUN_INTEGRATION_TESTS=1 go test -v ./tests`
 
 ## Code Style Guidelines
-- Follow standard Go naming conventions (CamelCase for exported, camelCase for internal)
-- Use meaningful variable names that reflect purpose
-- Group imports: standard library first, then third-party packages
-- Add clear error messages with context (use `fmt.Errorf("context: %w", err)`)
-- Document all exported functions, types, and packages with comments
-- Handle errors explicitly, avoid naked returns
-- Use early returns for error conditions to reduce nesting
-- Use constants for magic values
-- Keep functions small and focused on a single responsibility
+- Imports: Standard library first, third-party next, grouped with blank lines
+- Formatting: Go standard (go fmt), 2-space indentation
+- Types: Exported types have comments, use structs for configs and models
+- Naming: PascalCase for exported identifiers, camelCase for unexported
+- Error handling: Check immediately, descriptive messages, wrap errors with context
+- Testing: Standard Go testing package, mock dependencies, separate integration tests
+- Documentation: Package and exported function comments follow Go conventions
+- Architecture: Follow Go conventions with cmd/, internal/, pkg/ directories
