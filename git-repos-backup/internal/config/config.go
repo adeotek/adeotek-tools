@@ -51,3 +51,34 @@ func Load(filename string) (*Config, error) {
 
 	return &config, nil
 }
+
+// CreateFromArgs creates a config from command line arguments
+func CreateFromArgs(
+	providerType string, 
+	serverURL string, 
+	accessToken string, 
+	username string,
+	password string,
+	useBasicAuth bool,
+	skipSSLValidation bool,
+	include []string,
+	exclude []string,
+	targetDir string,
+) *Config {
+	provider := ProviderConfig{
+		Type:              ProviderType(providerType),
+		ServerURL:         serverURL,
+		AccessToken:       accessToken,
+		Username:          username,
+		Password:          password,
+		UseBasicAuth:      useBasicAuth,
+		SkipSslValidation: skipSSLValidation,
+		Include:           include,
+		Exclude:           exclude,
+		TargetDir:         targetDir,
+	}
+
+	return &Config{
+		Providers: []ProviderConfig{provider},
+	}
+}

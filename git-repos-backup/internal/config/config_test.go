@@ -91,3 +91,129 @@ providers:
 		t.Error("Expected error for invalid YAML, got nil")
 	}
 }
+
+func TestCreateFromArgs(t *testing.T) {
+	// Test creating config from arguments
+	testCases := []struct {
+		name              string
+		providerType      string
+		serverURL         string
+		accessToken       string
+		username          string
+		password          string
+		useBasicAuth      bool
+		skipSSLValidation bool
+		include           []string
+		exclude           []string
+		targetDir         string
+	}{
+		{
+			name:         "GitHub with token",
+			providerType: "github",
+			accessToken:  "github_token",
+			targetDir:    "/path/to/backup",
+		},
+		{
+			name:         "Gitea with token and server URL",
+			providerType: "gitea",
+			serverURL:    "https://gitea.example.com",
+			accessToken:  "gitea_token",
+			targetDir:    "/path/to/backup",
+		},
+		{
+			name:              "GitHub with basic auth and include",
+			providerType:      "github",
+			username:          "user",
+			password:          "pass",
+			useBasicAuth:      true,
+			skipSSLValidation: true,
+			include:           []string{"owner/repo1", "owner/repo2"},
+			targetDir:         "/path/to/backup",
+		},
+		{
+			name:         "GitHub with exclude",
+			providerType: "github",
+			accessToken:  "token",
+			exclude:      []string{"owner/repo3"},
+			targetDir:    "/path/to/backup",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := CreateFromArgs(
+				tc.providerType,
+				tc.serverURL,
+				tc.accessToken,
+				tc.username,
+				tc.password,
+				tc.useBasicAuth,
+				tc.skipSSLValidation,
+				tc.include,
+				tc.exclude,
+				tc.targetDir,
+			)
+
+			// Verify config
+			if len(cfg.Providers) != 1 {
+				t.Errorf("Expected 1 provider, got %d", len(cfg.Providers))
+				return
+			}
+
+			provider := cfg.Providers[0]
+
+			// Check provider type
+			if string(provider.Type) != tc.providerType {
+				t.Errorf("Expected type %s, got %s", tc.providerType, provider.Type)
+			}
+
+			// Check server URL
+			if provider.ServerURL != tc.serverURL {
+				t.Errorf("Expected server_url %s, got %s", tc.serverURL, provider.ServerURL)
+			}
+
+			// Check authentication
+			if provider.AccessToken != tc.accessToken {
+				t.Errorf("Expected access_token %s, got %s", tc.accessToken, provider.AccessToken)
+			}
+			if provider.Username != tc.username {
+				t.Errorf("Expected username %s, got %s", tc.username, provider.Username)
+			}
+			if provider.Password != tc.password {
+				t.Errorf("Expected password %s, got %s", tc.password, provider.Password)
+			}
+			if provider.UseBasicAuth != tc.useBasicAuth {
+				t.Errorf("Expected use_basic_auth %v, got %v", tc.useBasicAuth, provider.UseBasicAuth)
+			}
+			if provider.SkipSslValidation != tc.skipSSLValidation {
+				t.Errorf("Expected skip_ssl_validation %v, got %v", tc.skipSSLValidation, provider.SkipSslValidation)
+			}
+
+			// Check include/exclude
+			if len(provider.Include) != len(tc.include) {
+				t.Errorf("Expected %d include entries, got %d", len(tc.include), len(provider.Include))
+			} else {
+				for i, inc := range tc.include {
+					if provider.Include[i] != inc {
+						t.Errorf("Expected include[%d] %s, got %s", i, inc, provider.Include[i])
+					}
+				}
+			}
+
+			if len(provider.Exclude) != len(tc.exclude) {
+				t.Errorf("Expected %d exclude entries, got %d", len(tc.exclude), len(provider.Exclude))
+			} else {
+				for i, exc := range tc.exclude {
+					if provider.Exclude[i] != exc {
+						t.Errorf("Expected exclude[%d] %s, got %s", i, exc, provider.Exclude[i])
+					}
+				}
+			}
+
+			// Check target dir
+			if provider.TargetDir != tc.targetDir {
+				t.Errorf("Expected target_dir %s, got %s", tc.targetDir, provider.TargetDir)
+			}
+		})
+	}
+}

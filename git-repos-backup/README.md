@@ -77,6 +77,10 @@ make fmt lint
 
 ## Usage
 
+You can use git-repos-backup in two different ways:
+
+### 1. Using a configuration file
+
 1. Create a configuration file based on the example:
    ```bash
    cp config.yaml.example config.yaml
@@ -88,6 +92,14 @@ make fmt lint
    ./git-repos-backup -config /path/to/config.yaml
    ```
 
+### 2. Using command-line arguments
+
+You can also run the tool directly with command-line arguments:
+
+```bash
+./git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups
+```
+
 ### Command-line Options
 
 ```
@@ -95,7 +107,27 @@ git-repos-backup [flags]
 
 Flags:
   -config string
-        Path to configuration file (default "config.yaml")
+        Path to configuration file (if not specified, defaults to config.yaml in current directory if it exists)
+  -provider string
+        Provider type (gitea or github)
+  -server-url string
+        URL of the Git server (required for Gitea, optional for GitHub)
+  -token string
+        API token for authentication
+  -username string
+        Username for basic authentication
+  -password string
+        Password for basic authentication
+  -use-basic-auth
+        Whether to use basic authentication
+  -skip-ssl
+        Whether to skip SSL validation
+  -include string
+        Comma-separated list of repository full names to include
+  -exclude string
+        Comma-separated list of repository full names to exclude
+  -target-dir string
+        Directory to clone repositories into
   -help
         Show help message and exit
   -verbose
@@ -103,6 +135,28 @@ Flags:
   -version
         Show version information and exit
 ```
+
+#### Examples
+
+1. Using config file:
+   ```bash
+   ./git-repos-backup -config /path/to/config.yaml -verbose
+   ```
+
+2. Using command-line arguments for GitHub:
+   ```bash
+   ./git-repos-backup -provider github -token your_github_token -target-dir /path/to/github/backups -verbose
+   ```
+
+3. Using command-line arguments for Gitea:
+   ```bash
+   ./git-repos-backup -provider gitea -server-url https://gitea.example.com -token your_gitea_token -target-dir /path/to/gitea/backups -verbose
+   ```
+
+4. With repository filtering:
+   ```bash
+   ./git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups -include "owner/repo1,owner/repo2" -verbose
+   ```
 
 ## Configuration
 
