@@ -1,0 +1,17 @@
+# Binaries
+git-repos-backup
+git-repos-backup.exe
+bin/
+
+# Config files (except example)
+config.yaml
+config.yml
+
+# Temp files
+*.tmp
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -1,0 +1,37 @@
+# Git Repos Backup Configuration Sample
+
+# Providers configuration
+providers:
+  # Gitea provider
+  - type: gitea
+    server_url: https://gitea.example.com
+    # Authentication (use either token or username/password)
+    access_token: your_gitea_access_token
+    # username: your_username
+    # password: your_password
+    # use_basic_auth: false
+    # Set to true to skip the SSL validation (e.g., when Gitea is using a self-signed certificate)
+    # skip_ssl_validation: true
+    # Optional repository filtering
+    # include:
+    #   - owner/repo1
+    #   - owner/repo2
+    # exclude:
+    #   - owner/repo3
+    # Target directory for repositories backup
+    target_dir: /path/to/gitea/backups
+
+  # GitHub provider
+  - type: github
+    # For GitHub Enterprise, specify the server URL
+    # server_url: https://github.example.com
+    # GitHub authentication (use personal access token)
+    access_token: your_github_access_token
+    # Optional repository filtering
+    # include:
+    #   - owner/repo1
+    #   - owner/repo2
+    # exclude:
+    #   - owner/repo3
+    # Target directory for repositories backup
+    target_dir: /path/to/github/backups
