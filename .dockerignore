@@ -1,0 +1,36 @@
+# Go build artifacts
+/bin/
+/pkg/
+
+# Go modules and dependencies
+/vendor/
+/.go/
+
+# Test files
+*_test.go
+*.test
+/coverage*
+
+# Git related
+.git/
+.gitignore
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+.DS_Store
+
+# Docker related
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Misc
+README.md
+LICENSE
+*.md
+*.log
+/tmp/
+.env*
