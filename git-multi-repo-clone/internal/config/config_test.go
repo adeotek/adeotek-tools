@@ -43,11 +43,11 @@ exclude:
 	}
 
 	// Verify loaded values
-	if config.GiteaURL != "https://test-gitea.example.com" {
-		t.Errorf("Expected GiteaURL to be 'https://test-gitea.example.com', got '%s'", config.GiteaURL)
+	if config.ServerURL != "https://test-gitea.example.com" {
+		t.Errorf("Expected GiteaURL to be 'https://test-gitea.example.com', got '%s'", config.ServerURL)
 	}
-	if config.APIToken != "test-token" {
-		t.Errorf("Expected APIToken to be 'test-token', got '%s'", config.APIToken)
+	if config.AccessToken != "test-token" {
+		t.Errorf("Expected APIToken to be 'test-token', got '%s'", config.AccessToken)
 	}
 	if config.TargetDir != "/tmp/test-target" {
 		t.Errorf("Expected TargetDir to be '/tmp/test-target', got '%s'", config.TargetDir)
@@ -63,9 +63,6 @@ exclude:
 	}
 	if !config.SkipSslValidation {
 		t.Error("Expected SkipSslValidation to be true")
-	}
-	if !config.OverrideExistingLocalRepos {
-		t.Error("Expected OverrideExistingLocalRepos to be true")
 	}
 	if !config.CloneAsMirror {
 		t.Error("Expected CloneAsMirror to be true")

@@ -58,14 +58,24 @@ func Run() {
 	repos, err := repository.GetRepositories(cfg, *verbose)
 	if err != nil {
 		log.Fatalf("Failed to get repositories: %v", err)
+	} else if *verbose {
+		fmt.Printf("----> %d repos found\n", len(repos))
 	}
 
 	// Filter repositories based on include/exclude lists
-	repos = filter.FilterRepositories(repos, cfg)
+	repos = filter.FilterRepositories(repos, cfg, *verbose)
+
+	if *verbose {
+		fmt.Printf("----> %d repos filtered\n", len(repos))
+	}
 
 	// Clone each repository
 	for _, repo := range repos {
-		if err := git.CloneRepository(cfg, repo); err != nil {
+		if *verbose {
+			fmt.Printf("----> Processing repo: %s\n", repo.FullName)
+		}
+
+		if err := git.CloneRepository(cfg, repo, *verbose); err != nil {
 			log.Printf("Failed to clone repository %s: %v", repo.Name, err)
 		}
 	}

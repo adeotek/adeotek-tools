@@ -21,7 +21,7 @@ func TestFilterRepositoriesWithNoFilters(t *testing.T) {
 	}
 
 	// Run the filter
-	filtered := FilterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config, false)
 
 	// Verify no filtering happened
 	if !reflect.DeepEqual(filtered, repos) {
@@ -42,7 +42,7 @@ func TestFilterRepositoriesWithIncludeList(t *testing.T) {
 	}
 
 	// Run the filter
-	filtered := FilterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config, false)
 
 	// Verify only included repos are returned
 	expected := []repository.Repository{
@@ -75,7 +75,7 @@ func TestFilterRepositoriesWithExcludeList(t *testing.T) {
 	}
 
 	// Run the filter
-	filtered := FilterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config, false)
 
 	// Verify excluded repos are not returned
 	expected := []repository.Repository{
@@ -110,7 +110,7 @@ func TestFilterRepositoriesWithBothLists(t *testing.T) {
 	}
 
 	// Run the filter
-	filtered := FilterRepositories(repos, config)
+	filtered := FilterRepositories(repos, config, false)
 
 	// Verify only included repos are returned (exclude list should be ignored)
 	expected := []repository.Repository{

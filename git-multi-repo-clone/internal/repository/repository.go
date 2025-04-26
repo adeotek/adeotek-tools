@@ -11,8 +11,11 @@ import (
 
 // Repository represents a Git repository from the Gitea API
 type Repository struct {
-	Name string `json:"name"`
-	URL  string `json:"clone_url"`
+	Id       int    `json:"id"`
+	Login    string `json:"owner.login"`
+	Name     string `json:"name"`
+	FullName string `json:"full_name"`
+	URL      string `json:"clone_url"`
 }
 
 // ExecCommand is a variable that holds the exec.Command function.
@@ -22,7 +25,7 @@ var ExecCommand = exec.Command
 // GetRepositories retrieves a list of repositories from the Gitea server
 func GetRepositories(config *config.Config, verbose bool) ([]Repository, error) {
 	// Construct API URL
-	apiURL := fmt.Sprintf("%s/api/v1/repos/search", config.GiteaURL)
+	apiURL := fmt.Sprintf("%s/api/v1/repos/search", config.ServerURL)
 
 	// Prepare curl command
 	cmd := ExecCommand("curl", "-s")
@@ -38,8 +41,8 @@ func GetRepositories(config *config.Config, verbose bool) ([]Repository, error) 
 	// Add authentication
 	if config.UseBasicAuth {
 		cmd.Args = append(cmd.Args, "-u", fmt.Sprintf("%s:%s", config.Username, config.Password))
-	} else if config.APIToken != "" {
-		cmd.Args = append(cmd.Args, "-H", fmt.Sprintf("Authorization: token %s", config.APIToken))
+	} else if config.AccessToken != "" {
+		cmd.Args = append(cmd.Args, "-H", fmt.Sprintf("Authorization: token %s", config.AccessToken))
 	}
 
 	if verbose {

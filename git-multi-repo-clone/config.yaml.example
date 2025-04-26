@@ -1,8 +1,8 @@
 # Gitea Server Configuration
-gitea_url: https://gitea.example.com
+server_url: https://gitea.example.com
 
 # Authentication (use either token or username/password)
-api_token: your_api_token
+access_token: your_access_token
 username: your_username
 password: your_password
 use_basic_auth: false
@@ -12,15 +12,6 @@ use_basic_auth: false
 
 # Target directory for cloned repositories
 target_dir: /path/to/clone/target
-
-# Set to true to delete and re-clone repositories that already exist locally (only applicable for mirror clones)
-# or update them with fetch/pull (for standard clones)
-# If false or not present, existing repositories will be skipped
-# override_exising_local_repos: true
-
-# Set to true to clone repositories as mirrors (git clone --mirror)
-# Set to false or omit for standard clones
-# clone_as_mirror: true
 
 # Optional repository filtering
 # If include is specified, only these repositories will be cloned

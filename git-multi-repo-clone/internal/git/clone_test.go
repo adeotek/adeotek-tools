@@ -27,10 +27,9 @@ func TestCloneRepositoryNewClone(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                  tempDir,
-		UseBasicAuth:               false,
-		OverrideExistingLocalRepos: false,
-		CloneAsMirror:              false,
+		TargetDir:     tempDir,
+		UseBasicAuth:  false,
+		CloneAsMirror: false,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -45,7 +44,7 @@ func TestCloneRepositoryNewClone(t *testing.T) {
 	ExecCommand = mockGitSuccessCommand
 
 	// Run the function
-	err = CloneRepository(config, repo)
+	err = CloneRepository(config, repo, false)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -61,10 +60,9 @@ func TestCloneRepositoryAsMirror(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                  tempDir,
-		UseBasicAuth:               false,
-		OverrideExistingLocalRepos: false,
-		CloneAsMirror:              true,
+		TargetDir:     tempDir,
+		UseBasicAuth:  false,
+		CloneAsMirror: true,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -79,7 +77,7 @@ func TestCloneRepositoryAsMirror(t *testing.T) {
 	ExecCommand = mockGitSuccessCommand
 
 	// Run the function
-	err = CloneRepository(config, repo)
+	err = CloneRepository(config, repo, false)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -95,12 +93,11 @@ func TestCloneRepositoryWithBasicAuth(t *testing.T) {
 
 	// Setup test data
 	config := &config.Config{
-		TargetDir:                  tempDir,
-		UseBasicAuth:               true,
-		Username:                   "testuser",
-		Password:                   "testpass",
-		OverrideExistingLocalRepos: false,
-		CloneAsMirror:              false,
+		TargetDir:     tempDir,
+		UseBasicAuth:  true,
+		Username:      "testuser",
+		Password:      "testpass",
+		CloneAsMirror: false,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -115,7 +112,7 @@ func TestCloneRepositoryWithBasicAuth(t *testing.T) {
 	ExecCommand = mockGitSuccessCommand
 
 	// Run the function
-	err = CloneRepository(config, repo)
+	err = CloneRepository(config, repo, false)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -137,10 +134,9 @@ func TestCloneExistingRepositoryWithOverride(t *testing.T) {
 
 	// Setup test data for mirror mode
 	config := &config.Config{
-		TargetDir:                  tempDir,
-		UseBasicAuth:               false,
-		OverrideExistingLocalRepos: true,
-		CloneAsMirror:              true,
+		TargetDir:     tempDir,
+		UseBasicAuth:  false,
+		CloneAsMirror: true,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -159,7 +155,7 @@ func TestCloneExistingRepositoryWithOverride(t *testing.T) {
 	config.CloneAsMirror = false
 
 	// Run the function
-	err = CloneRepository(config, repo)
+	err = CloneRepository(config, repo, false)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -186,10 +182,9 @@ func TestCloneExistingRepositoryStandardMode(t *testing.T) {
 
 	// Setup test data for standard mode with override
 	config := &config.Config{
-		TargetDir:                  tempDir,
-		UseBasicAuth:               false,
-		OverrideExistingLocalRepos: true,
-		CloneAsMirror:              false,
+		TargetDir:     tempDir,
+		UseBasicAuth:  false,
+		CloneAsMirror: false,
 	}
 	repo := repository.Repository{
 		Name: "test-repo",
@@ -204,7 +199,7 @@ func TestCloneExistingRepositoryStandardMode(t *testing.T) {
 	ExecCommand = mockGitSuccessCommand
 
 	// Run the function
-	err = CloneRepository(config, repo)
+	err = CloneRepository(config, repo, false)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

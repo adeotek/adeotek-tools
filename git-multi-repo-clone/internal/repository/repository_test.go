@@ -27,8 +27,8 @@ func TestGetRepositories(t *testing.T) {
 
 	// Run the function with a test config
 	config := &config.Config{
-		GiteaURL: "https://gitea.example.com",
-		APIToken: "test-token",
+		ServerURL:   "https://gitea.example.com",
+		AccessToken: "test-token",
 	}
 
 	repos, err := GetRepositories(config, false)
@@ -60,7 +60,7 @@ func TestGetRepositoriesWithBasicAuth(t *testing.T) {
 
 	// Run the function with a test config using basic auth
 	config := &config.Config{
-		GiteaURL:     "https://gitea.example.com",
+		ServerURL:    "https://gitea.example.com",
 		UseBasicAuth: true,
 		Username:     "testuser",
 		Password:     "testpass",
@@ -88,9 +88,9 @@ func TestGetRepositoriesWithToken(t *testing.T) {
 
 	// Run the function with a test config using token auth
 	config := &config.Config{
-		GiteaURL:     "https://gitea.example.com",
+		ServerURL:    "https://gitea.example.com",
 		UseBasicAuth: false,
-		APIToken:     "test-token",
+		AccessToken:  "test-token",
 	}
 
 	repos, err := GetRepositories(config, false)

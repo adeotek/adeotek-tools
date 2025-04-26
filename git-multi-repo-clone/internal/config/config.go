@@ -10,17 +10,16 @@ import (
 
 // Config contains application configuration loaded from YAML
 type Config struct {
-	GiteaURL                   string   `yaml:"gitea_url"`
-	APIToken                   string   `yaml:"api_token"`
-	TargetDir                  string   `yaml:"target_dir"`
-	Username                   string   `yaml:"username"`
-	Password                   string   `yaml:"password"`
-	UseBasicAuth               bool     `yaml:"use_basic_auth"`
-	SkipSslValidation          bool     `yaml:"skip_ssl_validation"`
-	OverrideExistingLocalRepos bool     `yaml:"override_exising_local_repos,omitempty"`
-	CloneAsMirror              bool     `yaml:"clone_as_mirror,omitempty"`
-	Include                    []string `yaml:"include,omitempty"`
-	Exclude                    []string `yaml:"exclude,omitempty"`
+	ServerURL         string   `yaml:"server_url"`
+	AccessToken       string   `yaml:"access_token"`
+	TargetDir         string   `yaml:"target_dir"`
+	Username          string   `yaml:"username"`
+	Password          string   `yaml:"password"`
+	UseBasicAuth      bool     `yaml:"use_basic_auth"`
+	SkipSslValidation bool     `yaml:"skip_ssl_validation"`
+	CloneAsMirror     bool     `yaml:"clone_as_mirror,omitempty"`
+	Include           []string `yaml:"include,omitempty"`
+	Exclude           []string `yaml:"exclude,omitempty"`
 }
 
 // Load loads configuration from the specified YAML file
