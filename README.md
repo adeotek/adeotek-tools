@@ -1,6 +1,6 @@
 # AdeoTEK Tools
 
-This is a collection of various tools (mostly CLI tools).
+A collection of tools (CLI and more).
 
 ## Tools
 
