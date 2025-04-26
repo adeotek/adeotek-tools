@@ -23,7 +23,7 @@ A cross-platform CLI tool to automatically clone/mirror all repositories from a 
 ```bash
 # Clone the repository
 git clone https://github.com/adeotek/tools.git adeotek-tools
-cd adeotek-tools/git-multi-repo-clone
+cd adeotek-tools/`git-multi-repo-clone`
 
 # Build for your current platform
 make build
