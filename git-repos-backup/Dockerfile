@@ -1,6 +1,6 @@
 FROM golang:1.21-alpine AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 # Copy go.mod and go.sum first for better caching
 COPY go.mod go.sum ./
@@ -9,14 +9,17 @@ RUN go mod download
 # Copy the rest of the code
 COPY . .
 
+# Print directory structure for debugging
+RUN ls -la && ls -la cmd/
+
 # Install build dependencies
 RUN apk add --no-cache git
 
-# Build the application directly
-RUN CGO_ENABLED=0 GOOS=linux go build -o git-repos-backup ./cmd/git-repos-backup
+# Build the application with more verbose output
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o git-repos-backup ./cmd/git-repos-backup
 
 # Final stage
-FROM alpine:3.18
+FROM alpine:latest
 
 # Install runtime dependencies
 RUN apk add --no-cache git
@@ -24,9 +27,9 @@ RUN apk add --no-cache git
 WORKDIR /app
 
 # Copy only necessary files from builder
-COPY --from=builder /app/git-repos-backup /usr/local/bin/
-COPY --from=builder /app/backup_worker.sh /app/
-COPY --from=builder /app/config.yaml.example /app/
+COPY --from=builder /build/git-repos-backup /usr/local/bin/
+COPY --from=builder /build/backup_worker.sh /app/
+COPY --from=builder /build/config.yaml.example /app/
 
 # Set permissions
 RUN chmod +x /app/backup_worker.sh
