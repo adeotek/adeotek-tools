@@ -2,7 +2,7 @@
 
 # Binary name
 BINARY=git-repos-backup
-VERSION=0.1.1
+VERSION=0.1.2
 
 # Main package path
 MAIN_PACKAGE=./cmd/git-repos-backup

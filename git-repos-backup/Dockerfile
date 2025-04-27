@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o git-repos-backup ./cmd/git-repos-backup
 
 FROM alpine:latest
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git curl
 
 WORKDIR /app
 
