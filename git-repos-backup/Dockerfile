@@ -1,14 +1,13 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 COPY . .
 
 RUN apk add --no-cache make git
-# RUN make build
 RUN go mod download && \
     go build -o git-repos-backup ./cmd/git-repos-backup
 
-FROM alpine:latest
+FROM alpine:3.18
 
 RUN apk add --no-cache git
 
