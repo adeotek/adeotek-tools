@@ -1,0 +1,39 @@
+name: Build and Push git-repos-backup Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag for the Docker image (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Set up Docker tags
+        id: docker_tags
+        run: |
+          TAGS="adeotek/git-repos-backup:latest"
+          if [ ! -z "${{ github.event.inputs.version_tag }}" ]; then
+            TAGS="$TAGS,adeotek/git-repos-backup:${{ github.event.inputs.version_tag }}"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.docker_tags.outputs.tags }}
