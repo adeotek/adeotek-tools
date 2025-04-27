@@ -10,6 +10,7 @@
 *_test.go
 *.test
 /coverage*
+/tests
 
 # Git related
 .git/

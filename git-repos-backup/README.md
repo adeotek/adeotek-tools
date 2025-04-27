@@ -43,24 +43,6 @@ docker build -t git-repos-backup .
 docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups git-repos-backup
 ```
 
-### Docker Compose example
-
-You can also use Docker Compose to run scheduled backups:
-
-```yaml
-version: '3'
-
-services:
-  git-repos-backup:
-    image: adeotek/git-repos-backup:latest
-    volumes:
-      - ./config.yml:/app/config.yml
-      - /path/to/backups:/backups
-    restart: no
-    # Run daily at 2 AM
-    entrypoint: ["sh", "-c", "while :; do /app/git-repos-backup -config /app/config.yml; sleep 86400; done"]
-```
-
 ### Docker environment variables
 
 | Variable | Description | Default |

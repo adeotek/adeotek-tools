@@ -2,7 +2,7 @@
 
 CONFIG_FILE="/app/config.yaml"
 CONFIG_EXAMPLE="/app/config.yaml.example"
-SLEEP_TIME=${BACKUP_INTERVAL:-86400}  # Default to 24 hours (86400 seconds)
+GB_SLEEP_TIME=${GB_BACKUP_INTERVAL:-86400}  # Default to 24 hours (86400 seconds)
 
 echo "Starting adeotek-tools/git-repos-backup"
 echo "Author: adeotek"
