@@ -34,6 +34,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./git-repos-backup
+          file: ./git-repos-backup/Dockerfile
           push: true
           tags: ${{ steps.docker_tags.outputs.tags }}
