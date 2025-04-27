@@ -1,5 +1,6 @@
 # Binaries
-git-repos-backup
+/git-repos-backup
+!git-repos-backup/
 git-repos-backup.exe
 bin/
 

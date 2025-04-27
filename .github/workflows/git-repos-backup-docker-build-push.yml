@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'Version tag for the Docker image (e.g. v1.0.0)'
+        description: 'Version tag for the Docker image (e.g. 1.0.0)'
         required: false
         default: ''
 
@@ -34,6 +34,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./git-repos-backup
+          file: ./git-repos-backup/Dockerfile
           push: true
           tags: ${{ steps.docker_tags.outputs.tags }}
