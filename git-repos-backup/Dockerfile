@@ -1,21 +1,34 @@
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
+
+# Copy go.mod and go.sum first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the code
 COPY . .
 
-RUN apk add --no-cache make git
-RUN go mod download && \
-    go build -o git-repos-backup ./cmd/git-repos-backup
+# Install build dependencies
+RUN apk add --no-cache git
 
+# Build the application directly
+RUN CGO_ENABLED=0 GOOS=linux go build -o git-repos-backup ./cmd/git-repos-backup
+
+# Final stage
 FROM alpine:3.18
 
+# Install runtime dependencies
 RUN apk add --no-cache git
 
 WORKDIR /app
-COPY --from=builder /app/git-repos-backup /usr/local/bin/
-COPY --from=builder /app/config.yaml.example /app/config.yaml.example
-COPY --from=builder /app/backup_worker.sh /app/backup_worker.sh
 
+# Copy only necessary files from builder
+COPY --from=builder /app/git-repos-backup /usr/local/bin/
+COPY --from=builder /app/backup_worker.sh /app/
+COPY --from=builder /app/config.yaml.example /app/
+
+# Set permissions
 RUN chmod +x /app/backup_worker.sh
 
 VOLUME /data
@@ -24,6 +37,5 @@ VOLUME /data
 ENV GB_BACKUP_INTERVAL="86400"
 ENV GB_VERBOSE="false"
 
-# USER 99:98
 # Default to worker script which can handle both config modes
 ENTRYPOINT ["/app/backup_worker.sh"]
