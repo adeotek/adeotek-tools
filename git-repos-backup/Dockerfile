@@ -4,9 +4,11 @@ WORKDIR /app
 COPY . .
 
 RUN apk add --no-cache make git
-RUN make build
+# RUN make build
+RUN go mod download && \
+    go build -o git-repos-backup ./cmd/git-repos-backup
 
-FROM alpine:3.21
+FROM alpine:latest
 
 RUN apk add --no-cache git
 
