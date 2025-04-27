@@ -30,4 +30,6 @@ VOLUME /data
 ENV GB_BACKUP_INTERVAL="86400"
 ENV GB_VERBOSE="false"
 
+# USER 99:98
+# Default to worker script which can handle both config modes
 ENTRYPOINT ["/app/backup_worker.sh"]
