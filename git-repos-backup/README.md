@@ -13,6 +13,88 @@ A cross-platform CLI tool to backup multiple Git repositories from Gitea and/or 
 - SSL verification skip option for self-signed certificates
 - Separate target directories for each provider
 
+## Docker
+
+You can also run git-repos-backup using Docker:
+
+### Using the pre-built image
+
+```bash
+# Pull the image
+docker pull adeotek/git-repos-backup:latest
+
+# Run with a configuration file (mount it as a volume)
+docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
+
+# Run with command-line arguments
+docker run -v /path/to/backups:/backups adeotek/git-repos-backup:latest -provider github -token your_github_token -target-dir /backups
+```
+
+### Building the Docker image locally
+
+```bash
+# Navigate to the project directory
+cd git-repos-backup
+
+# Build the Docker image
+docker build -t git-repos-backup .
+
+# Run the container
+docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups git-repos-backup
+```
+
+### Docker Compose example
+
+You can also use Docker Compose to run scheduled backups:
+
+```yaml
+version: '3'
+
+services:
+  git-repos-backup:
+    image: adeotek/git-repos-backup:latest
+    volumes:
+      - ./config.yml:/app/config.yml
+      - /path/to/backups:/backups
+    restart: no
+    # Run daily at 2 AM
+    entrypoint: ["sh", "-c", "while :; do /app/git-repos-backup -config /app/config.yml; sleep 86400; done"]
+```
+
+### Docker environment variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GB_BACKUP_INTERVAL` | Seconds between backup runs (for scheduled backups) | `86400` (24 hours) |
+| `GB_VERBOSE` | Enable verbose output | `false` |
+| `GB_CONFIG` | Path to config file (if using config file mode) | `/app/config.yaml` |
+| `GB_PROVIDER` | Provider type (gitea or github) | - |
+| `GB_TARGET_DIR` | Directory to clone repositories into | - |
+| `GB_SERVER_URL` | URL of the Git server (required for Gitea, optional for GitHub) | - |
+| `GB_TOKEN` | API token for authentication | - |
+| `GB_USERNAME` | Username for basic authentication | - |
+| `GB_PASSWORD` | Password for basic authentication | - |
+| `GB_USE_BASIC_AUTH` | Whether to use basic authentication | `false` |
+| `GB_SKIP_SSL_VALIDATION` | Whether to skip SSL validation | `false` |
+| `GB_INCLUDE_REPOS` | Comma-separated list of repository full names to include | - |
+| `GB_EXCLUDE_REPOS` | Comma-separated list of repository full names to exclude | - |
+
+The Docker image can operate in two modes:
+
+1. **Config file mode (default)**: Loads configuration from a mounted config file
+   ```bash
+   docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
+   ```
+
+2. **Command-line mode**: Uses environment variables directly
+   ```bash
+   docker run -v /path/to/backups:/backups \
+     -e GB_PROVIDER=github \
+     -e GB_TOKEN=your_github_token \
+     -e GB_TARGET_DIR=/backups \
+     adeotek/git-repos-backup:latest
+   ```
+
 ## Project Structure
 
 ```
