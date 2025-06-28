@@ -1,7 +1,8 @@
-namespace SqlMigration.Options;
+namespace SqlMigration.Models;
 
 public class ConnectionOptions
 {
+    public string? Provider { get; set; }
     public string? ConnectionString { get; set; }
     public string? Host { get; set; }
     public int? Port { get; set; }

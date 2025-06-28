@@ -1,6 +1,4 @@
-using SqlMigration.Repositories;
-
-namespace SqlMigration.Factories;
+namespace SqlMigration.Repositories;
 
 public class MigrationHistoryRepositoryFactory : IMigrationHistoryRepositoryFactory
 {

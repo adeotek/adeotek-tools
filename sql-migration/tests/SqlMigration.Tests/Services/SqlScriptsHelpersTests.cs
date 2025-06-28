@@ -1,15 +1,14 @@
-using NSubstitute;
 using SqlMigration.Services;
 
 namespace SqlMigration.Tests;
 
-public class FileScannerTests
+public class SqlScriptsHelpersTests
 {
     [Fact]
     public void ScanForSqlFiles_ShouldReturnAllSqlFilesInDirectoryAndSubdirectories()
     {
         // Arrange
-        var fileScanner = new FileScanner();
+        var sqlScriptsHelpers = new SqlScriptsHelpers();
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         Directory.CreateDirectory(Path.Combine(tempDir, "sub"));
@@ -20,7 +19,7 @@ public class FileScannerTests
         File.WriteAllText(Path.Combine(tempDir, "script4.txt"), "");
 
         // Act
-        var result = fileScanner.ScanForSqlFiles(tempDir);
+        var result = sqlScriptsHelpers.ScanForSqlFiles(tempDir);
 
         // Assert
         Assert.Equal(3, result.Count());
@@ -30,5 +29,23 @@ public class FileScannerTests
 
         // Cleanup
         Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void CalculateHash_ShouldReturnCorrectSha256Hash()
+    {
+        // Arrange
+        var sqlScriptsHelpers = new SqlScriptsHelpers();
+        var tempFile = Path.GetTempFileName();
+        File.WriteAllText(tempFile, "test content");
+
+        // Act
+        var result = sqlScriptsHelpers.CalculateHash(tempFile);
+
+        // Assert
+        Assert.Equal("6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72", result);
+
+        // Cleanup
+        File.Delete(tempFile);
     }
 }

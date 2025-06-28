@@ -1,26 +1,23 @@
 using Microsoft.Extensions.Logging;
-using SqlMigration.Contracts;
-using SqlMigration.Factories;
+using SqlMigration.Models;
+using SqlMigration.Repositories;
 
 namespace SqlMigration.Services;
 
 public class MigrationService : IMigrationService
 {
-    private readonly IFileScanner _fileScanner;
-    private readonly IHashCalculator _hashCalculator;
+    private readonly ISqlScriptsHelpers _sqlScriptsHelpers;
     private readonly IScriptExecutor _scriptExecutor;
     private readonly IMigrationHistoryRepositoryFactory _migrationHistoryRepositoryFactory;
     private readonly ILogger<MigrationService> _logger;
 
     public MigrationService(
-        IFileScanner fileScanner,
-        IHashCalculator hashCalculator,
+        ISqlScriptsHelpers sqlScriptsHelpers,
         IScriptExecutor scriptExecutor,
         IMigrationHistoryRepositoryFactory migrationHistoryRepositoryFactory,
         ILogger<MigrationService> logger)
     {
-        _fileScanner = fileScanner;
-        _hashCalculator = hashCalculator;
+        _sqlScriptsHelpers = sqlScriptsHelpers;
         _scriptExecutor = scriptExecutor;
         _migrationHistoryRepositoryFactory = migrationHistoryRepositoryFactory;
         _logger = logger;
@@ -38,14 +35,14 @@ public class MigrationService : IMigrationService
         }
 
         var executedScripts = (await migrationRepository.GetExecutedScripts()).ToList();
-        var scriptFiles = _fileScanner.ScanForSqlFiles(scriptsPath).ToList();
+        var scriptFiles = _sqlScriptsHelpers.ScanForSqlFiles(scriptsPath).ToList();
 
         _logger.LogInformation($"Found {scriptFiles.Count} script files.");
 
         foreach (var scriptFile in scriptFiles)
         {
             var scriptName = Path.GetFileName(scriptFile);
-            var hash = _hashCalculator.CalculateHash(scriptFile);
+            var hash = _sqlScriptsHelpers.CalculateHash(scriptFile);
 
             var executedScript = executedScripts.FirstOrDefault(s => s.ScriptName == scriptName);
 

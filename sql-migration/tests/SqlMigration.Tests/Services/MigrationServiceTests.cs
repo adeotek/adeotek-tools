@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using SqlMigration.Contracts;
-using SqlMigration.Factories;
+using SqlMigration.Models;
 using SqlMigration.Repositories;
 using SqlMigration.Services;
 
@@ -9,57 +8,50 @@ namespace SqlMigration.Tests.Services;
 
 public class MigrationServiceTests
 {
-    private readonly IFileScanner _fileScanner;
-    private readonly IHashCalculator _hashCalculator;
-    private readonly IScriptExecutor _scriptExecutor;
-    private readonly IMigrationHistoryRepositoryFactory _migrationHistoryRepositoryFactory;
-    private readonly IMigrationHistoryRepository _migrationHistoryRepository;
-    private readonly ILogger<MigrationService> _logger;
+    private readonly ISqlScriptsHelpers _sqlScriptsHelpersMock = Substitute.For<ISqlScriptsHelpers>();
+    private readonly IScriptExecutor _scriptExecutorMock = Substitute.For<IScriptExecutor>();
+    private readonly IMigrationHistoryRepositoryFactory _migrationHistoryRepositoryFactoryMock = Substitute.For<IMigrationHistoryRepositoryFactory>();
+    private readonly IMigrationHistoryRepository _migrationHistoryRepositoryMock = Substitute.For<IMigrationHistoryRepository>();
+    private readonly ILogger<MigrationService> _loggerMock = Substitute.For<ILogger<MigrationService>>();
+
     private readonly MigrationService _migrationService;
 
     public MigrationServiceTests()
     {
-        _fileScanner = Substitute.For<IFileScanner>();
-        _hashCalculator = Substitute.For<IHashCalculator>();
-        _scriptExecutor = Substitute.For<IScriptExecutor>();
-        _migrationHistoryRepositoryFactory = Substitute.For<IMigrationHistoryRepositoryFactory>();
-        _migrationHistoryRepository = Substitute.For<IMigrationHistoryRepository>();
-        _logger = Substitute.For<ILogger<MigrationService>>();
-
-        _migrationHistoryRepositoryFactory.Create(Arg.Any<string>()).Returns(_migrationHistoryRepository);
+        _migrationHistoryRepositoryFactoryMock
+            .Create(Arg.Any<string>()).Returns(_migrationHistoryRepositoryMock);
 
         _migrationService = new MigrationService(
-            _fileScanner,
-            _hashCalculator,
-            _scriptExecutor,
-            _migrationHistoryRepositoryFactory,
-            _logger);
+            _sqlScriptsHelpersMock,
+            _scriptExecutorMock,
+            _migrationHistoryRepositoryFactoryMock,
+            _loggerMock);
     }
 
     [Fact]
     public async Task RunAsync_ShouldCreateHistoryTable_WhenItDoesNotExist()
     {
         // Arrange
-        _migrationHistoryRepository.IsHistoryTableCreated().Returns(false);
+        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(false);
 
         // Act
         await _migrationService.RunAsync("scripts", "connectionString");
 
         // Assert
-        await _migrationHistoryRepository.Received(1).CreateHistoryTable();
+        await _migrationHistoryRepositoryMock.Received(1).CreateHistoryTable();
     }
 
     [Fact]
     public async Task RunAsync_ShouldNotCreateHistoryTable_WhenItAlreadyExists()
     {
         // Arrange
-        _migrationHistoryRepository.IsHistoryTableCreated().Returns(true);
+        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
 
         // Act
         await _migrationService.RunAsync("scripts", "connectionString");
 
         // Assert
-        await _migrationHistoryRepository.DidNotReceive().CreateHistoryTable();
+        await _migrationHistoryRepositoryMock.DidNotReceive().CreateHistoryTable();
     }
 
     [Fact]
@@ -72,17 +64,17 @@ public class MigrationServiceTests
         File.WriteAllText(scriptFile, "SELECT 1");
 
         var scriptFiles = new[] { scriptFile };
-        _fileScanner.ScanForSqlFiles(tempDir).Returns(scriptFiles);
-        _hashCalculator.CalculateHash(scriptFile).Returns("hash1");
-        _migrationHistoryRepository.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepository.GetExecutedScripts().Returns(new List<MigrationHistory>());
+        _sqlScriptsHelpersMock.ScanForSqlFiles(tempDir).Returns(scriptFiles);
+        _sqlScriptsHelpersMock.CalculateHash(scriptFile).Returns("hash1");
+        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>());
 
         // Act
         await _migrationService.RunAsync(tempDir, "connectionString");
 
         // Assert
-        await _scriptExecutor.Received(1).ExecuteScript("connectionString", "SELECT 1");
-        await _migrationHistoryRepository.Received(1).AddExecutedScript(Arg.Is<MigrationHistory>(m => m.ScriptName == "script1.sql" && m.Hash == "hash1"));
+        await _scriptExecutorMock.Received(1).ExecuteScript("connectionString", "SELECT 1");
+        await _migrationHistoryRepositoryMock.Received(1).AddExecutedScript(Arg.Is<MigrationHistory>(m => m.ScriptName == "script1.sql" && m.Hash == "hash1"));
 
         // Cleanup
         Directory.Delete(tempDir, true);
@@ -93,10 +85,10 @@ public class MigrationServiceTests
     {
         // Arrange
         var scriptFiles = new[] { "scripts/script1.sql" };
-        _fileScanner.ScanForSqlFiles("scripts").Returns(scriptFiles);
-        _hashCalculator.CalculateHash("scripts/script1.sql").Returns("hash1");
-        _migrationHistoryRepository.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepository.GetExecutedScripts().Returns(new List<MigrationHistory>
+        _sqlScriptsHelpersMock.ScanForSqlFiles("scripts").Returns(scriptFiles);
+        _sqlScriptsHelpersMock.CalculateHash("scripts/script1.sql").Returns("hash1");
+        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>
         {
             new() { ScriptName = "script1.sql", Hash = "hash1" }
         });
@@ -105,8 +97,8 @@ public class MigrationServiceTests
         await _migrationService.RunAsync("scripts", "connectionString");
 
         // Assert
-        await _scriptExecutor.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
-        await _migrationHistoryRepository.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
+        await _scriptExecutorMock.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
+        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
     }
 
     [Fact]
@@ -114,10 +106,10 @@ public class MigrationServiceTests
     {
         // Arrange
         var scriptFiles = new[] { "scripts/script1.sql" };
-        _fileScanner.ScanForSqlFiles("scripts").Returns(scriptFiles);
-        _hashCalculator.CalculateHash("scripts/script1.sql").Returns("new_hash");
-        _migrationHistoryRepository.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepository.GetExecutedScripts().Returns(new List<MigrationHistory>
+        _sqlScriptsHelpersMock.ScanForSqlFiles("scripts").Returns(scriptFiles);
+        _sqlScriptsHelpersMock.CalculateHash("scripts/script1.sql").Returns("new_hash");
+        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>
         {
             new() { ScriptName = "script1.sql", Hash = "old_hash" }
         });
@@ -127,7 +119,7 @@ public class MigrationServiceTests
 
         // Assert
         Assert.Equal(1, result);
-        await _scriptExecutor.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
-        await _migrationHistoryRepository.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
+        await _scriptExecutorMock.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
+        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
     }
 }

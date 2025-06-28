@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using SqlMigration.Contracts;
+using SqlMigration.Models;
 
 namespace SqlMigration.Repositories;
 

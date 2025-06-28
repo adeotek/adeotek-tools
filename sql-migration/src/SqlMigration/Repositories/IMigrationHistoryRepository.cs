@@ -1,4 +1,4 @@
-using SqlMigration.Contracts;
+using SqlMigration.Models;
 
 namespace SqlMigration.Repositories;
 
