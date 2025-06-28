@@ -10,9 +10,15 @@ var configuration = new ConfigurationBuilder()
     .AddCommandLine(args)
     .Build();
 
+var logLevel = configuration.GetValue<string>(Constants.VerboseArgumentName, null) == null
+    ? LogLevel.Information
+    : LogLevel.Debug;
 var loggerFactory = LoggerFactory.Create(builder =>
 {
-    builder.AddConsole();
+    builder
+        .AddConsole(options => options.FormatterName = "SqlMigrationFormatter")
+        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>()
+        .SetMinimumLevel(logLevel);
 });
 
 var logger = loggerFactory.CreateLogger<MigrationService>();
@@ -21,11 +27,12 @@ var scriptExecutor = new ScriptExecutor();
 var migrationHistoryRepositoryFactory = new MigrationHistoryRepositoryFactory();
 var migrationService = new MigrationService(sqlScriptsHelpers, scriptExecutor, migrationHistoryRepositoryFactory, logger);
 
-var scriptsPath = configuration[Constants.ScriptsPathArgumentName];
-if (string.IsNullOrEmpty(scriptsPath))
+var targetPath = configuration[Constants.ScriptsPathArgumentName];
+if (string.IsNullOrEmpty(targetPath))
 {
     logger.LogError($"The {Constants.ScriptsPathArgumentName} option is required.");
     return 1;
 }
+logger.LogInformation("Starting SQL migration with target path: {TargetPath}", targetPath);
 
-return await migrationService.RunAsync(scriptsPath, configuration.GetConnectionString());
+return await migrationService.RunAsync(targetPath, configuration.GetConnectionString());

@@ -5,12 +5,12 @@ This is a CLI tool to apply multiple SQL scripts to a database.
 ## Usage
 
 ```
-dotnet run --project src/SqlMigration/SqlMigration.csproj -- --scripts-path <path-to-scripts-dir> [options]
+dotnet run --project src/SqlMigration/SqlMigration.csproj -- --target-path <path-to-scripts-dir> [options]
 ```
 
 ### Options
 
-- `--scripts-path`: The path to the directory containing the SQL scripts. (Required)
+- `--target-path`: The path to the directory containing the SQL scripts. (Required)
 - `--connection-string`: The connection string to the database.
 - `--host`: The database host.
 - `--port`: The database port.
@@ -18,7 +18,7 @@ dotnet run --project src/SqlMigration/SqlMigration.csproj -- --scripts-path <pat
 - `--user`: The database user.
 - `--password`: The database password.
 
-Connection details can also be provided as environment variables with the `SQL_MIGRATE_` prefix. For example, `SQL_MIGRATE_HOST`, `SQL_MIGRATE_PORT`, etc.
+Connection details can also be provided as environment variables with the `SQL_MIGRATION_` prefix. For example, `SQL_MIGRATION_HOST`, `SQL_MIGRATION_PORT`, etc.
 
 ## Building for production
 
