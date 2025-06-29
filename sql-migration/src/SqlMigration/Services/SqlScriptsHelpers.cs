@@ -1,4 +1,8 @@
+using System.Data;
 using System.Security.Cryptography;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using SqlMigration.Models;
 
 namespace SqlMigration.Services;
 
@@ -19,6 +23,12 @@ public class SqlScriptsHelpers : ISqlScriptsHelpers
         using var sha256 = SHA256.Create();
         using var stream = File.OpenRead(filePath);
         var hash = sha256.ComputeHash(stream);
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        return Convert.ToHexStringLower(hash);
+    }
+
+    public async Task ExecuteScriptAsync(string scriptContent, ConnectionParameters connectionParameters)
+    {
+        using IDbConnection db = new SqlConnection(connectionParameters.GetConnectionString());
+        await db.ExecuteAsync(scriptContent);
     }
 }

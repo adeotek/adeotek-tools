@@ -32,26 +32,26 @@ public class MigrationServiceTests
     public async Task RunAsync_ShouldCreateHistoryTable_WhenItDoesNotExist()
     {
         // Arrange
-        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(false);
+        _migrationHistoryRepositoryMock.IsHistoryTableCreatedAsync().Returns(false);
 
         // Act
         await _migrationService.RunAsync("scripts", "connectionString");
 
         // Assert
-        await _migrationHistoryRepositoryMock.Received(1).CreateHistoryTable();
+        await _migrationHistoryRepositoryMock.Received(1).CreateHistoryTableAsync();
     }
 
     [Fact]
     public async Task RunAsync_ShouldNotCreateHistoryTable_WhenItAlreadyExists()
     {
         // Arrange
-        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
+        _migrationHistoryRepositoryMock.IsHistoryTableCreatedAsync().Returns(true);
 
         // Act
         await _migrationService.RunAsync("scripts", "connectionString");
 
         // Assert
-        await _migrationHistoryRepositoryMock.DidNotReceive().CreateHistoryTable();
+        await _migrationHistoryRepositoryMock.DidNotReceive().CreateHistoryTableAsync();
     }
 
     [Fact]
@@ -66,15 +66,15 @@ public class MigrationServiceTests
         var scriptFiles = new[] { scriptFile };
         _sqlScriptsHelpersMock.ScanForSqlFiles(tempDir).Returns(scriptFiles);
         _sqlScriptsHelpersMock.CalculateHash(scriptFile).Returns("hash1");
-        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>());
+        _migrationHistoryRepositoryMock.IsHistoryTableCreatedAsync().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScriptsAsync().Returns(new List<ScriptExecutionHistory>());
 
         // Act
         await _migrationService.RunAsync(tempDir, "connectionString");
 
         // Assert
         await _scriptExecutorMock.Received(1).ExecuteScript("connectionString", "SELECT 1");
-        await _migrationHistoryRepositoryMock.Received(1).AddExecutedScript(Arg.Is<MigrationHistory>(m => m.ScriptName == "script1.sql" && m.Hash == "hash1"));
+        await _migrationHistoryRepositoryMock.Received(1).AddExecutedScript(Arg.Is<ScriptExecutionHistory>(m => m.ScriptName == "script1.sql" && m.ScriptHash == "hash1"));
 
         // Cleanup
         Directory.Delete(tempDir, true);
@@ -87,10 +87,10 @@ public class MigrationServiceTests
         var scriptFiles = new[] { "scripts/script1.sql" };
         _sqlScriptsHelpersMock.ScanForSqlFiles("scripts").Returns(scriptFiles);
         _sqlScriptsHelpersMock.CalculateHash("scripts/script1.sql").Returns("hash1");
-        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>
+        _migrationHistoryRepositoryMock.IsHistoryTableCreatedAsync().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScriptsAsync().Returns(new List<ScriptExecutionHistory>
         {
-            new() { ScriptName = "script1.sql", Hash = "hash1" }
+            new() { ScriptName = "script1.sql", ScriptHash = "hash1" }
         });
 
         // Act
@@ -98,7 +98,7 @@ public class MigrationServiceTests
 
         // Assert
         await _scriptExecutorMock.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
-        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
+        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<ScriptExecutionHistory>());
     }
 
     [Fact]
@@ -108,10 +108,10 @@ public class MigrationServiceTests
         var scriptFiles = new[] { "scripts/script1.sql" };
         _sqlScriptsHelpersMock.ScanForSqlFiles("scripts").Returns(scriptFiles);
         _sqlScriptsHelpersMock.CalculateHash("scripts/script1.sql").Returns("new_hash");
-        _migrationHistoryRepositoryMock.IsHistoryTableCreated().Returns(true);
-        _migrationHistoryRepositoryMock.GetExecutedScripts().Returns(new List<MigrationHistory>
+        _migrationHistoryRepositoryMock.IsHistoryTableCreatedAsync().Returns(true);
+        _migrationHistoryRepositoryMock.GetExecutedScriptsAsync().Returns(new List<ScriptExecutionHistory>
         {
-            new() { ScriptName = "script1.sql", Hash = "old_hash" }
+            new() { ScriptName = "script1.sql", ScriptHash = "old_hash" }
         });
 
         // Act
@@ -120,6 +120,6 @@ public class MigrationServiceTests
         // Assert
         Assert.Equal(1, result);
         await _scriptExecutorMock.DidNotReceive().ExecuteScript(Arg.Any<string>(), Arg.Any<string>());
-        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<MigrationHistory>());
+        await _migrationHistoryRepositoryMock.DidNotReceive().AddExecutedScript(Arg.Any<ScriptExecutionHistory>());
     }
 }

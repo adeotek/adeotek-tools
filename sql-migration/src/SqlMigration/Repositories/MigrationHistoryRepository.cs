@@ -5,27 +5,27 @@ using SqlMigration.Models;
 
 namespace SqlMigration.Repositories;
 
-public class MigrationHistoryRepository : IMigrationHistoryRepository
+public class MigrationHistoryRepository(ConnectionParameters connectionParameters)
+    : IMigrationHistoryRepository
 {
-    private readonly string _connectionString;
+    private const string TableName = "__migrations_history";
 
-    public MigrationHistoryRepository(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
+    private readonly DatabaseProvider _dbProvider = connectionParameters.DbProvider;
+    private readonly string _connectionString = connectionParameters.GetConnectionString();
 
-    public async Task<bool> IsHistoryTableCreated()
+    public async Task<bool> IsHistoryTableCreatedAsync(CancellationToken ct = default)
     {
         using IDbConnection db = new SqlConnection(_connectionString);
-        const string sql = @"
-            IF OBJECT_ID(N'dbo.__SchemaMigrations', N'U') IS NOT NULL
-                SELECT 1
-            ELSE
-                SELECT 0";
+        const string sql = $"""
+                           IF OBJECT_ID('{TableName}', N'U') IS NOT NULL
+                               SELECT 1
+                           ELSE
+                               SELECT 0
+                           """;
         return await db.ExecuteScalarAsync<bool>(sql);
     }
 
-    public async Task CreateHistoryTable()
+    public async Task CreateHistoryTableAsync()
     {
         using IDbConnection db = new SqlConnection(_connectionString);
         const string sql = @"
@@ -38,19 +38,19 @@ public class MigrationHistoryRepository : IMigrationHistoryRepository
         await db.ExecuteAsync(sql);
     }
 
-    public async Task<IEnumerable<MigrationHistory>> GetExecutedScripts()
+    public async Task<IEnumerable<ScriptExecutionHistory>> GetExecutedScriptsAsync(CancellationToken ct = default)
     {
         using IDbConnection db = new SqlConnection(_connectionString);
         const string sql = "SELECT * FROM dbo.__SchemaMigrations";
-        return await db.QueryAsync<MigrationHistory>(sql);
+        return await db.QueryAsync<ScriptExecutionHistory>(sql);
     }
 
-    public async Task AddExecutedScript(MigrationHistory migrationHistory)
+    public async Task UpsertExecutedScriptAsync(ScriptExecutionHistory scriptExecutionHistory)
     {
         using IDbConnection db = new SqlConnection(_connectionString);
         const string sql = @"
             INSERT INTO dbo.__SchemaMigrations (ScriptName, Hash, ExecutedAt)
             VALUES (@ScriptName, @Hash, @ExecutedAt)";
-        await db.ExecuteAsync(sql, migrationHistory);
+        await db.ExecuteAsync(sql, scriptExecutionHistory);
     }
 }

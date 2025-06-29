@@ -4,8 +4,8 @@ namespace SqlMigration.Repositories;
 
 public interface IMigrationHistoryRepository
 {
-    Task<bool> IsHistoryTableCreated();
-    Task CreateHistoryTable();
-    Task<IEnumerable<MigrationHistory>> GetExecutedScripts();
-    Task AddExecutedScript(MigrationHistory migrationHistory);
+    Task<bool> IsHistoryTableCreatedAsync(CancellationToken ct = default);
+    Task CreateHistoryTableAsync();
+    Task<IEnumerable<ScriptExecutionHistory>> GetExecutedScriptsAsync(CancellationToken ct = default);
+    Task UpsertExecutedScriptAsync(ScriptExecutionHistory scriptExecutionHistory);
 }

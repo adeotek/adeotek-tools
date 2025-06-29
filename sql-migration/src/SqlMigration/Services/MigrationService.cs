@@ -4,82 +4,85 @@ using SqlMigration.Repositories;
 
 namespace SqlMigration.Services;
 
-public class MigrationService : IMigrationService
+public class MigrationService(
+    ISqlScriptsHelpers sqlScriptsHelpers,
+    IMigrationHistoryRepositoryFactory migrationHistoryRepositoryFactory,
+    ILogger<MigrationService> logger,
+    bool isDryRun = false)
+    : IMigrationService
 {
-    private readonly ISqlScriptsHelpers _sqlScriptsHelpers;
-    private readonly IScriptExecutor _scriptExecutor;
-    private readonly IMigrationHistoryRepositoryFactory _migrationHistoryRepositoryFactory;
-    private readonly ILogger<MigrationService> _logger;
-
-    public MigrationService(
-        ISqlScriptsHelpers sqlScriptsHelpers,
-        IScriptExecutor scriptExecutor,
-        IMigrationHistoryRepositoryFactory migrationHistoryRepositoryFactory,
-        ILogger<MigrationService> logger)
+    public async Task<int> RunAsync(string scriptsPath, ConnectionParameters connectionParameters, CancellationToken ct = default)
     {
-        _sqlScriptsHelpers = sqlScriptsHelpers;
-        _scriptExecutor = scriptExecutor;
-        _migrationHistoryRepositoryFactory = migrationHistoryRepositoryFactory;
-        _logger = logger;
-    }
-
-    public async Task<int> RunAsync(string scriptsPath, string connectionString)
-    {
-        var migrationRepository = _migrationHistoryRepositoryFactory.Create(connectionString);
-
-        if (!await migrationRepository.IsHistoryTableCreated())
+        var migrationHistoryRepository = migrationHistoryRepositoryFactory.Create(connectionParameters);
+        List<ScriptExecutionHistory> executedScripts;
+        if (!await migrationHistoryRepository.IsHistoryTableCreatedAsync(ct))
         {
-            _logger.LogInformation("History table not found. Creating...");
-            await migrationRepository.CreateHistoryTable();
-            _logger.LogInformation("History table created.");
+            if (!isDryRun)
+            {
+                logger.LogDebug("History table not found. Creating...");
+                await migrationHistoryRepository.CreateHistoryTableAsync();
+                logger.LogDebug("History table created.");
+            }
+            executedScripts = [];
+        }
+        else
+        {
+            executedScripts = (await migrationHistoryRepository.GetExecutedScriptsAsync(ct)).ToList();
         }
 
-        var executedScripts = (await migrationRepository.GetExecutedScripts()).ToList();
-        var scriptFiles = _sqlScriptsHelpers.ScanForSqlFiles(scriptsPath).ToList();
+        ct.ThrowIfCancellationRequested();
+        var scriptFiles = sqlScriptsHelpers.ScanForSqlFiles(scriptsPath).ToList();
+        var targetDir = Path.GetFullPath(scriptsPath);
+        logger.LogDebug("Found {FilesCount} script files in directory {TargetDir}", scriptFiles.Count, targetDir);
 
-        _logger.LogInformation($"Found {scriptFiles.Count} script files.");
-
+        var successCount = 0;
+        var errorsCount = 0;
+        var skipCount = 0;
         foreach (var scriptFile in scriptFiles)
         {
-            var scriptName = Path.GetFileName(scriptFile);
-            var hash = _sqlScriptsHelpers.CalculateHash(scriptFile);
+            ct.ThrowIfCancellationRequested();
+            var scriptName = Path.GetRelativePath(targetDir, scriptFile);
+            var hash = sqlScriptsHelpers.CalculateHash(scriptFile);
 
-            var executedScript = executedScripts.FirstOrDefault(s => s.ScriptName == scriptName);
-
+            var executedScript = executedScripts.FirstOrDefault(s => s.ScriptFile == scriptName);
             if (executedScript != null)
             {
-                if (executedScript.Hash == hash)
+                if (executedScript.ScriptHash == hash)
                 {
-                    _logger.LogInformation($"Skipping script {scriptName} (already executed and hash is unchanged).");
+                    skipCount++;
+                    logger.LogInformation("Skipping script {ScriptName} [{ScriptHash}]", scriptName, hash);
                     continue;
                 }
-
-                _logger.LogError($"Script {scriptName} has changed since it was last executed. Halting execution.");
-                return 1;
             }
 
             try
             {
-                _logger.LogInformation($"Executing script {scriptName}...");
-                var scriptContent = await File.ReadAllTextAsync(scriptFile);
-                await _scriptExecutor.ExecuteScript(connectionString, scriptContent);
-                _logger.LogInformation($"Script {scriptName} executed successfully.");
-
-                await migrationRepository.AddExecutedScript(new MigrationHistory
+                if (isDryRun)
                 {
-                    ScriptName = scriptName,
-                    Hash = hash,
+                    logger.LogInformation("Dry run: would execute script {ScriptName} [{ScriptHash}]", scriptName, hash);
+                    successCount++;
+                    continue;
+                }
+
+                var scriptContent = await File.ReadAllTextAsync(scriptFile, ct);
+                await sqlScriptsHelpers.ExecuteScriptAsync(scriptContent, connectionParameters);
+                logger.LogInformation("Script {ScriptName} executed successfully [{ScriptHash}]", scriptName, hash);
+                await migrationHistoryRepository.UpsertExecutedScriptAsync(new ScriptExecutionHistory
+                {
+                    ScriptFile = scriptName,
+                    ScriptHash = hash,
                     ExecutedAt = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error executing script {scriptName}. Halting execution.");
-                return 1;
+                errorsCount++;
+                logger.LogError(ex, "Error executing script {ScriptName} [{ScriptHash}]", scriptName, hash);
             }
         }
 
-        _logger.LogInformation("All scripts executed successfully.");
+        logger.LogInformation("Total scripts: {TotalCount} | Success: {SuccessCount} | Skipped: {SkipCount} | Errors: {ErrorsCount}",
+            scriptFiles.Count, successCount, skipCount, errorsCount);
         return 0;
     }
 }

@@ -1,6 +1,8 @@
+using SqlMigration.Models;
+
 namespace SqlMigration.Repositories;
 
 public interface IMigrationHistoryRepositoryFactory
 {
-    IMigrationHistoryRepository Create(string connectionString);
+    IMigrationHistoryRepository Create(ConnectionParameters connectionParameters);
 }
