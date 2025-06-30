@@ -1,53 +1,45 @@
-using Dapper;
 using SqlMigration.Models;
-using SqlMigration.Services;
 
 namespace SqlMigration.Repositories;
 
-public class MigrationHistoryRepository(ConnectionParameters connectionParameters)
+public class MigrationHistoryRepository(ISqlRepository sqlRepository)
     : IMigrationHistoryRepository
 {
     private const string TableName = "__migrations_history";
 
-    private readonly IDbConnectionFactory _dbConnectionFactory = new DbConnectionFactory(connectionParameters);
-
     public async Task<bool> IsHistoryTableCreatedAsync(CancellationToken ct = default)
     {
-        var sql = _dbConnectionFactory.Provider == DatabaseProvider.PostgreSql
+        var sql = sqlRepository.DbConnectionFactory.Provider == DatabaseProvider.PostgreSql
             ? PostgreSqlIsHistoryTableCreated
             : SqLiteIsHistoryTableCreated;
-        using var connection = _dbConnectionFactory.Create();
-        return await connection.ExecuteScalarAsync<int>(sql) > 0;
+        return await sqlRepository.ExecuteScalarAsync<int>(sql) > 0;
     }
 
     public async Task CreateHistoryTableAsync()
     {
-        var sql = _dbConnectionFactory.Provider == DatabaseProvider.PostgreSql
+        var sql = sqlRepository.DbConnectionFactory.Provider == DatabaseProvider.PostgreSql
             ? PostgreSqlHistoryTableCreate
             : SqLiteHistoryTableCreate;
-        using var connection = _dbConnectionFactory.Create();
-        await connection.ExecuteAsync(sql);
+        await sqlRepository.ExecuteAsync(sql);
     }
 
     public async Task<IEnumerable<ScriptExecutionHistory>> GetExecutedScriptsAsync(CancellationToken ct = default)
     {
-        using var connection = _dbConnectionFactory.Create();
-        return await connection.QueryAsync<ScriptExecutionHistory>(SqlHistoryTableSelect);
+        return await sqlRepository.QueryAsync<ScriptExecutionHistory>(SqlHistoryTableSelect);
     }
 
     public async Task UpsertExecutedScriptAsync(ScriptExecutionHistory scriptExecutionHistory)
     {
-        using var connection = _dbConnectionFactory.Create();
-        var existingScript = await connection.QueryFirstOrDefaultAsync<ScriptExecutionHistory>(
+        var existingScript = await sqlRepository.QueryFirstOrDefaultAsync<ScriptExecutionHistory>(
             SqlHistoryTableSelectByPk, new { scriptExecutionHistory.ScriptFile });
         if (existingScript is null)
         {
-            await connection.ExecuteAsync(SqlHistoryTableInsert, scriptExecutionHistory);
+            await sqlRepository.ExecuteAsync(SqlHistoryTableInsert, scriptExecutionHistory);
         }
         else
         {
             scriptExecutionHistory.ExecutedAt = DateTime.UtcNow;
-            await connection.ExecuteAsync(SqlHistoryTableUpdate, scriptExecutionHistory);
+            await sqlRepository.ExecuteAsync(SqlHistoryTableUpdate, scriptExecutionHistory);
         }
     }
 

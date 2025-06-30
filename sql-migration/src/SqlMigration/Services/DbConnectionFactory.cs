@@ -38,7 +38,7 @@ public class DbConnectionFactory(ConnectionParameters connectionParameters)
             DatabaseProvider.PostgreSql => new NpgsqlConnection(connectionString),
             DatabaseProvider.SqLite => new SQLiteConnection(connectionString),
             DatabaseProvider.Unknown => throw new NotSupportedException($"Database provider '{provider}' is not supported."),
-            _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported database provider.")
+            _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported database provider")
         };
     }
 }

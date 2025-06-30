@@ -1,5 +1,7 @@
 using System.Collections;
 using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 
 namespace SqlMigration.CommandLine;
 
@@ -9,50 +11,31 @@ public static class CommandLineManager
 
     public static async Task<int> ExecuteCommandAsync(string[] args)
     {
-        try
-        {
-            return await BuildCommandLineConfiguration()
-                .InvokeAsync(ProcessArgs(args));
-        }
-        catch (Exception e)
-        {
-            ConsoleLogger.WriteException(e);
-            return 1;
-        }
-    }
+        var rootCommand = new RootCommand(SqlMigrationCommand.Description);
+        SqlMigrationCommand.CommandOptions.ForEach(rootCommand.AddOption);
+        rootCommand.AddOption(DryRunOption);
+        rootCommand.AddOption(VerboseOption);
 
-    private static CommandLineConfiguration BuildCommandLineConfiguration()
-    {
-        RootCommand rootCommand = new()
+        rootCommand.SetHandler(async context =>
         {
-            Description = SqlMigrationCommand.Description,
-            TreatUnmatchedTokensAsErrors = false
-        };
-        SqlMigrationCommand.CommandOptions.ForEach(rootCommand.Options.Add);
-        rootCommand.Options.Add(DryRunOption);
-        rootCommand.Options.Add(VerboseOption);
-        rootCommand.SetAction(SqlMigrationCommand.ExecuteAsync);
+            var parseResult = context.ParseResult;
+            var cancellationToken = context.GetCancellationToken();
+            await SqlMigrationCommand.ExecuteAsync(parseResult, cancellationToken);
+        });
 
-        return new CommandLineConfiguration(rootCommand)
-        {
-            EnableDefaultExceptionHandler = false,
-            ProcessTerminationTimeout = TimeSpan.FromSeconds(1800) // 30 minutes
-        };
+        var commandLineBuilder = new CommandLineBuilder(rootCommand)
+            .UseDefaults();
+
+        var parser = commandLineBuilder.Build();
+        
+        return await parser.InvokeAsync(ProcessArgs(args));
     }
 
     public static readonly Option<bool> DryRunOption =
-        new("--dry-run", "-d")
-        {
-            Description = "Perform a dry run without making any changes",
-            Required = false
-        };
+        new("--dry-run", "-d");
 
     public static readonly Option<bool> VerboseOption =
-        new("--verbose", "-v")
-        {
-            Description = "Enable verbose logging",
-            Required = false
-        };
+        new("--verbose", "-v");
 
     private static string[] ProcessArgs(string[] args)
     {

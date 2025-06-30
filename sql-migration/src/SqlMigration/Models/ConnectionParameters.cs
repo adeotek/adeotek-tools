@@ -1,8 +1,8 @@
 namespace SqlMigration.Models;
 
 public record ConnectionParameters(
+    string Provider,
     string? RawConnectionString,
-    string? Provider,
     string? Host,
     int? Port,
     string? DatabaseName,
@@ -17,29 +17,23 @@ public record ConnectionParameters(
     public bool IsValid(out string[] errors)
     {
         var errorList = new List<string>();
+        var provider = DbProvider;
 
-        if (!string.IsNullOrWhiteSpace(RawConnectionString))
-        {
-            errors = [];
-            return true;
-        }
-
-        if (Provider is null && Host is null && Port is null && DatabaseName is null)
-        {
-            errors = ["Either the Database connection string or the individual parameters must be provided."];
-            return true;
-        }
-
-        DatabaseProvider? databaseProvider = null;
-        if (string.IsNullOrWhiteSpace(Provider)
-            || !Enum.TryParse<DatabaseProvider>(Provider, true, out var provider)
-            || provider == DatabaseProvider.Unknown)
+        if (provider == DatabaseProvider.Unknown)
         {
             errorList.Add("Invalid or missing Database provider.");
         }
-        else
+
+        if (!string.IsNullOrWhiteSpace(RawConnectionString))
         {
-            databaseProvider = provider;
+            errors = errorList.ToArray();
+            return errorList.Count == 0;
+        }
+
+        if (Host is null && Port is null && DatabaseName is null)
+        {
+            errors = ["Either the Database connection string or the individual parameters must be provided."];
+            return true;
         }
 
         if (string.IsNullOrWhiteSpace(DatabaseName))
@@ -47,17 +41,17 @@ public record ConnectionParameters(
             errorList.Add("Database name must be provided.");
         }
 
-        if (databaseProvider == DatabaseProvider.PostgreSql && string.IsNullOrWhiteSpace(Host))
+        if (provider == DatabaseProvider.PostgreSql && string.IsNullOrWhiteSpace(Host))
         {
             errorList.Add("Database host must be provided for PostgreSQL databases.");
         }
 
-        if (databaseProvider == DatabaseProvider.PostgreSql && Port is null)
+        if (provider == DatabaseProvider.PostgreSql && Port is null)
         {
             errorList.Add("Database port must be provided for PostgreSQL databases.");
         }
 
-        if (databaseProvider == DatabaseProvider.PostgreSql && Port is <= 0 or > 65535)
+        if (provider == DatabaseProvider.PostgreSql && Port is <= 0 or > 65535)
         {
             errorList.Add("Database port must be a valid integer between 1 and 65535.");
         }
@@ -79,17 +73,13 @@ public record ConnectionParameters(
             return RawConnectionString;
         }
 
-        if (string.IsNullOrEmpty(Provider) || !Enum.TryParse<DatabaseProvider>(Provider, true, out var provider))
-        {
-            throw new ArgumentException("Invalid or missing Database provider.");
-        }
-
-        return provider switch
+        return DbProvider switch
         {
             DatabaseProvider.PostgreSql =>
                 $"Host={Host};Port={Port};Database={DatabaseName};Username={User};Password={Password};",
             DatabaseProvider.SqLite => $"Data Source={DatabaseName};",
-            _ => throw new ArgumentException($"Unknown Database provider {provider}")
+            DatabaseProvider.Unknown => throw new ArgumentException("Unknown Database provider"),
+            _ => throw new ArgumentOutOfRangeException(nameof(DbProvider), DbProvider, "Unsupported database provider")
         };
     }
 }

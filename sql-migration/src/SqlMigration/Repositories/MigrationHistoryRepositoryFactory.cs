@@ -1,4 +1,5 @@
 using SqlMigration.Models;
+using SqlMigration.Services;
 
 namespace SqlMigration.Repositories;
 
@@ -6,6 +7,6 @@ public class MigrationHistoryRepositoryFactory : IMigrationHistoryRepositoryFact
 {
     public IMigrationHistoryRepository Create(ConnectionParameters connectionParameters)
     {
-        return new MigrationHistoryRepository(connectionParameters);
+        return new MigrationHistoryRepository(new SqlRepository(new DbConnectionFactory(connectionParameters)));
     }
 }
