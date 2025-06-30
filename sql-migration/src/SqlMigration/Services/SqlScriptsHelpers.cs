@@ -1,7 +1,5 @@
-using System.Data;
 using System.Security.Cryptography;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using SqlMigration.Models;
 
 namespace SqlMigration.Services;
@@ -28,7 +26,7 @@ public class SqlScriptsHelpers : ISqlScriptsHelpers
 
     public async Task ExecuteScriptAsync(string scriptContent, ConnectionParameters connectionParameters)
     {
-        using IDbConnection db = new SqlConnection(connectionParameters.GetConnectionString());
+        using var db = DbConnectionFactory.Create(connectionParameters);
         await db.ExecuteAsync(scriptContent);
     }
 }

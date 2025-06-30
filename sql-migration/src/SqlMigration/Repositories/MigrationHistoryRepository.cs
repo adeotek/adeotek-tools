@@ -1,7 +1,6 @@
-using System.Data;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using SqlMigration.Models;
+using SqlMigration.Services;
 
 namespace SqlMigration.Repositories;
 
@@ -10,47 +9,77 @@ public class MigrationHistoryRepository(ConnectionParameters connectionParameter
 {
     private const string TableName = "__migrations_history";
 
-    private readonly DatabaseProvider _dbProvider = connectionParameters.DbProvider;
-    private readonly string _connectionString = connectionParameters.GetConnectionString();
+    private readonly IDbConnectionFactory _dbConnectionFactory = new DbConnectionFactory(connectionParameters);
 
     public async Task<bool> IsHistoryTableCreatedAsync(CancellationToken ct = default)
     {
-        using IDbConnection db = new SqlConnection(_connectionString);
-        const string sql = $"""
-                           IF OBJECT_ID('{TableName}', N'U') IS NOT NULL
-                               SELECT 1
-                           ELSE
-                               SELECT 0
-                           """;
-        return await db.ExecuteScalarAsync<bool>(sql);
+        var sql = _dbConnectionFactory.Provider == DatabaseProvider.PostgreSql
+            ? PostgreSqlIsHistoryTableCreated
+            : SqLiteIsHistoryTableCreated;
+        using var connection = _dbConnectionFactory.Create();
+        return await connection.ExecuteScalarAsync<int>(sql) > 0;
     }
 
     public async Task CreateHistoryTableAsync()
     {
-        using IDbConnection db = new SqlConnection(_connectionString);
-        const string sql = @"
-            CREATE TABLE dbo.__SchemaMigrations (
-                Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-                ScriptName NVARCHAR(255) NOT NULL,
-                Hash NVARCHAR(255) NOT NULL,
-                ExecutedAt DATETIME NOT NULL
-            )";
-        await db.ExecuteAsync(sql);
+        var sql = _dbConnectionFactory.Provider == DatabaseProvider.PostgreSql
+            ? PostgreSqlHistoryTableCreate
+            : SqLiteHistoryTableCreate;
+        using var connection = _dbConnectionFactory.Create();
+        await connection.ExecuteAsync(sql);
     }
 
     public async Task<IEnumerable<ScriptExecutionHistory>> GetExecutedScriptsAsync(CancellationToken ct = default)
     {
-        using IDbConnection db = new SqlConnection(_connectionString);
-        const string sql = "SELECT * FROM dbo.__SchemaMigrations";
-        return await db.QueryAsync<ScriptExecutionHistory>(sql);
+        using var connection = _dbConnectionFactory.Create();
+        return await connection.QueryAsync<ScriptExecutionHistory>(SqlHistoryTableSelect);
     }
 
     public async Task UpsertExecutedScriptAsync(ScriptExecutionHistory scriptExecutionHistory)
     {
-        using IDbConnection db = new SqlConnection(_connectionString);
-        const string sql = @"
-            INSERT INTO dbo.__SchemaMigrations (ScriptName, Hash, ExecutedAt)
-            VALUES (@ScriptName, @Hash, @ExecutedAt)";
-        await db.ExecuteAsync(sql, scriptExecutionHistory);
+        using var connection = _dbConnectionFactory.Create();
+        var existingScript = await connection.QueryFirstOrDefaultAsync<ScriptExecutionHistory>(
+            SqlHistoryTableSelectByPk, new { scriptExecutionHistory.ScriptFile });
+        if (existingScript is null)
+        {
+            await connection.ExecuteAsync(SqlHistoryTableInsert, scriptExecutionHistory);
+        }
+        else
+        {
+            scriptExecutionHistory.ExecutedAt = DateTime.UtcNow;
+            await connection.ExecuteAsync(SqlHistoryTableUpdate, scriptExecutionHistory);
+        }
     }
+
+    private const string PostgreSqlIsHistoryTableCreated =
+        $"SELECT count(*) FROM information_schema.tables WHERE table_name = '{TableName}';";
+    private const string SqLiteIsHistoryTableCreated =
+        $"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{TableName}';";
+    private const string SqlHistoryTableSelect =
+        $"SELECT * FROM {TableName}";
+    private const string SqlHistoryTableSelectByPk =
+        $"SELECT * FROM {TableName} WHERE ScriptFile = @ScriptFile;";
+    private const string SqlHistoryTableInsert =
+        $"INSERT INTO {TableName} (ScriptFile, ScriptHash, ExecutedAt) VALUES (@ScriptFile, @ScriptHash, @ExecutedAt);";
+    private const string SqlHistoryTableUpdate =
+        $"UPDATE {TableName} SET ScriptHash = @ScriptHash, ExecutedAt = @ExecutedAt WHERE ScriptFile = @ScriptFile;";
+
+    private const string PostgreSqlHistoryTableCreate =
+        $"""
+        CREATE TABLE {TableName} (
+            ScriptFile varchar(255) NOT NULL,
+            ScriptHash varchar(150) NOT NULL,
+            ExecutedAt timestamptz DEFAULT now() NOT NULL,
+            CONSTRAINT {TableName}_pk PRIMARY KEY (ScriptFile)
+        )
+        """;
+
+    private const string SqLiteHistoryTableCreate =
+        $"""
+          CREATE TABLE {TableName} (
+              ScriptFile TEXT NOT NULL PRIMARY KEY,
+              ScriptHash TEXT NOT NULL,
+              ExecutedAt DATETIME NOT NULL
+          )
+          """;
 }

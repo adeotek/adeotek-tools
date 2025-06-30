@@ -1,12 +1,5 @@
 namespace SqlMigration.Models;
 
-public enum DatabaseProvider
-{
-    Unknown,
-    PostgreSql,
-    SqLite
-}
-
 public record ConnectionParameters(
     string? RawConnectionString,
     string? Provider,
