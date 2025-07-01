@@ -1,7 +1,5 @@
 using System.Collections;
 using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
 
 namespace SqlMigration.CommandLine;
 
@@ -12,30 +10,24 @@ public static class CommandLineManager
     public static async Task<int> ExecuteCommandAsync(string[] args)
     {
         var rootCommand = new RootCommand(SqlMigrationCommand.Description);
-        SqlMigrationCommand.CommandOptions.ForEach(rootCommand.AddOption);
-        rootCommand.AddOption(DryRunOption);
-        rootCommand.AddOption(VerboseOption);
-
-        rootCommand.SetHandler(async context =>
-        {
-            var parseResult = context.ParseResult;
-            var cancellationToken = context.GetCancellationToken();
-            await SqlMigrationCommand.ExecuteAsync(parseResult, cancellationToken);
-        });
-
-        var commandLineBuilder = new CommandLineBuilder(rootCommand)
-            .UseDefaults();
-
-        var parser = commandLineBuilder.Build();
-        
-        return await parser.InvokeAsync(ProcessArgs(args));
+        SqlMigrationCommand.CommandOptions.ForEach(rootCommand.Options.Add);
+        rootCommand.Options.Add(DryRunOption);
+        rootCommand.Options.Add(VerboseOption);
+        rootCommand.SetAction(SqlMigrationCommand.ExecuteAsync);
+        return await rootCommand.Parse(ProcessArgs(args)).InvokeAsync();
     }
 
     public static readonly Option<bool> DryRunOption =
-        new("--dry-run", "-d");
+        new("--dry-run", "-d")
+        {
+            Description = "Run the command in dry-run mode, which simulates the execution without making any changes."
+        };
 
     public static readonly Option<bool> VerboseOption =
-        new("--verbose", "-v");
+        new("--verbose", "-v")
+        {
+            Description = "Enable verbose output, providing detailed information about the command execution."
+        };
 
     private static string[] ProcessArgs(string[] args)
     {
@@ -43,7 +35,7 @@ public static class CommandLineManager
         foreach (DictionaryEntry envVar in Environment.GetEnvironmentVariables())
         {
             var key = envVar.Key.ToString();
-            if (key is null || key.StartsWith(EnvironmentVariablesPrefix) != true)
+            if (key is null || key.StartsWith(EnvironmentVariablesPrefix) != true || string.IsNullOrEmpty(envVar.Value?.ToString()))
             {
                 continue;
             }

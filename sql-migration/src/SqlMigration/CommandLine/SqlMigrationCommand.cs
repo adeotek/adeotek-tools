@@ -1,6 +1,5 @@
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Microsoft.Extensions.Logging;
 using SqlMigration.Models;
 using SqlMigration.Repositories;
@@ -14,8 +13,8 @@ public static class SqlMigrationCommand
 
     public static async Task<int> ExecuteAsync(ParseResult parseResult, CancellationToken ct)
     {
-        var isVerbose = parseResult.GetValueForOption(CommandLineManager.VerboseOption);
-        var isDryRun = parseResult.GetValueForOption(CommandLineManager.DryRunOption);
+        var isVerbose = parseResult.GetValue(CommandLineManager.VerboseOption);
+        var isDryRun = parseResult.GetValue(CommandLineManager.DryRunOption);
         ConsoleLogger.WriteSuccess(isDryRun
             ? "Executing SQL migration command in [DryRun] mode..."
             : "Executing SQL migration command...");
@@ -56,7 +55,7 @@ public static class SqlMigrationCommand
         ConnectionStringOption,
         HostOption,
         PortOption,
-        NameOption,
+        DatabaseOption,
         UserOption,
         PasswordOption
     ];
@@ -64,13 +63,13 @@ public static class SqlMigrationCommand
     private static int ValidateConnectionParameters(ParseResult parseResult, out ConnectionParameters connectionParameters)
     {
         connectionParameters = new ConnectionParameters(
-            parseResult.GetValueForOption(ProviderOption) ?? nameof(DatabaseProvider.PostgreSql),
-            parseResult.GetValueForOption(ConnectionStringOption),
-            parseResult.GetValueForOption(HostOption),
-            parseResult.GetValueForOption(PortOption),
-            parseResult.GetValueForOption(NameOption),
-            parseResult.GetValueForOption(UserOption),
-            parseResult.GetValueForOption(PasswordOption)
+            parseResult.GetValue(ProviderOption) ?? nameof(DatabaseProvider.PostgreSql),
+            parseResult.GetValue(ConnectionStringOption),
+            parseResult.GetValue(HostOption),
+            parseResult.GetValue(PortOption),
+            parseResult.GetValue(DatabaseOption),
+            parseResult.GetValue(UserOption),
+            parseResult.GetValue(PasswordOption)
         );
         if (connectionParameters.IsValid(out var errors))
         {
@@ -87,7 +86,7 @@ public static class SqlMigrationCommand
 
     private static int ValidateTargetPath(ParseResult parseResult, out string targetPath)
     {
-        targetPath = parseResult.GetValueForOption(TargetPathOption) ?? string.Empty;
+        targetPath = parseResult.GetValue(TargetPathOption) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(targetPath) || !Directory.Exists(targetPath))
         {
             ConsoleLogger.WriteError("`--target-path` must be a valid directory path");
@@ -103,7 +102,7 @@ public static class SqlMigrationCommand
 
     private static readonly Option<string> TargetPathOption = new("--target-path", "-t")
     {
-        IsRequired = true,
+        Required = true,
         Description = "Target path (path to the SQL scripts directory)"
     };
 
@@ -131,10 +130,10 @@ public static class SqlMigrationCommand
                       $" or set `{CommandLineManager.EnvironmentVariablesPrefix}PORT` environment variable"
     };
 
-    private static readonly Option<string> NameOption = new("--name", "-n")
+    private static readonly Option<string> DatabaseOption = new("--database", "-b")
     {
         Description = "Database name" +
-                      $" or set `{CommandLineManager.EnvironmentVariablesPrefix}DATABASE_NAME` environment variable"
+                      $" or set `{CommandLineManager.EnvironmentVariablesPrefix}DATABASE` environment variable"
     };
 
     private static readonly Option<string> UserOption = new("--user", "-u")
