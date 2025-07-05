@@ -31,7 +31,7 @@ func Run() {
 	}
 
 	// Add flags
-	rootCmd.Flags().StringP("target-path", "t", "", "Target path (path to the SQL scripts directory) [required]")
+	rootCmd.Flags().StringP("target-path", "t", "", "[required] Target path (path to the SQL scripts directory)")
 	rootCmd.Flags().StringP("provider", "r", "postgresql", "Database provider (postgresql/sqlite)")
 	rootCmd.Flags().StringP("connection-string", "c", "", "Database connection string")
 	rootCmd.Flags().StringP("host", "o", "", "Database host")
@@ -43,10 +43,7 @@ func Run() {
 	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
-	// Don't mark target-path as required here - we'll check it in the run function
-	// to allow for environment variable usage
-
-	// Set up environment variable support
+		// Set up environment variable support
 	viper.SetEnvPrefix(EnvPrefix)
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
