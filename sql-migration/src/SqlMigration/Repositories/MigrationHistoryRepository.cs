@@ -48,30 +48,30 @@ public class MigrationHistoryRepository(ISqlRepository sqlRepository)
     private const string SqLiteIsHistoryTableCreated =
         $"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{TableName}';";
     private const string SqlHistoryTableSelect =
-        $"SELECT * FROM {TableName}";
+        $"SELECT * FROM \"{TableName}\";";
     private const string SqlHistoryTableSelectByPk =
-        $"SELECT * FROM {TableName} WHERE ScriptFile = @ScriptFile;";
+        $"SELECT * FROM \"{TableName}\" WHERE \"ScriptFile\" = @ScriptFile;";
     private const string SqlHistoryTableInsert =
-        $"INSERT INTO {TableName} (ScriptFile, ScriptHash, ExecutedAt) VALUES (@ScriptFile, @ScriptHash, @ExecutedAt);";
+        $"INSERT INTO \"{TableName}\" (\"ScriptFile\", \"ScriptHash\", \"ExecutedAt\") VALUES (@ScriptFile, @ScriptHash, @ExecutedAt);";
     private const string SqlHistoryTableUpdate =
-        $"UPDATE {TableName} SET ScriptHash = @ScriptHash, ExecutedAt = @ExecutedAt WHERE ScriptFile = @ScriptFile;";
+        $"UPDATE \"{TableName}\" SET \"ScriptHash\" = @ScriptHash, \"ExecutedAt\" = @ExecutedAt WHERE \"ScriptFile\" = @ScriptFile;";
 
     private const string PostgreSqlHistoryTableCreate =
         $"""
-        CREATE TABLE {TableName} (
-            ScriptFile varchar(255) NOT NULL,
-            ScriptHash varchar(150) NOT NULL,
-            ExecutedAt timestamptz DEFAULT now() NOT NULL,
-            CONSTRAINT {TableName}_pk PRIMARY KEY (ScriptFile)
+        CREATE TABLE "{TableName}" (
+            "ScriptFile" varchar(255) NOT NULL,
+            "ScriptHash" varchar(150) NOT NULL,
+            "ExecutedAt" timestamptz DEFAULT now() NOT NULL,
+            CONSTRAINT "{TableName}_pk" PRIMARY KEY ("ScriptFile")
         )
         """;
 
     private const string SqLiteHistoryTableCreate =
         $"""
-          CREATE TABLE {TableName} (
-              ScriptFile TEXT NOT NULL PRIMARY KEY,
-              ScriptHash TEXT NOT NULL,
-              ExecutedAt DATETIME NOT NULL
+          CREATE TABLE "{TableName}" (
+              "ScriptFile" TEXT NOT NULL PRIMARY KEY,
+              "ScriptHash" TEXT NOT NULL,
+              "ExecutedAt" DATETIME NOT NULL
           )
           """;
 }

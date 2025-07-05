@@ -6,14 +6,32 @@ namespace SqlMigration.Services;
 
 public class SqlScriptsHelpers : ISqlScriptsHelpers
 {
-    public IEnumerable<string> ScanForSqlFiles(string directory)
+    public List<string> ScanForSqlFiles(string directory)
     {
         if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
         {
             throw new DirectoryNotFoundException($"The directory '{directory}' does not exist.");
         }
 
-        return Directory.EnumerateFiles(directory, "*.sql", SearchOption.AllDirectories);
+        var unorderedScripts = Directory
+            .EnumerateFiles(directory, "*.sql", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(directory, file));
+
+        List<string> orderedScripts = [];
+        orderedScripts.AddRange(unorderedScripts
+            .Where(file => file.StartsWith("tables/"))
+            .OrderBy(file => file));
+        orderedScripts.AddRange(unorderedScripts
+            .Where(file => file.StartsWith("views/"))
+            .OrderBy(file => file));
+        orderedScripts.AddRange(unorderedScripts
+            .Where(file => file.StartsWith("stored_procedures/"))
+            .OrderBy(file => file));
+        orderedScripts.AddRange(unorderedScripts
+            .Where(file => file.StartsWith("data/"))
+            .OrderBy(file => file));
+
+        return orderedScripts;
     }
 
     public string CalculateHash(string filePath)

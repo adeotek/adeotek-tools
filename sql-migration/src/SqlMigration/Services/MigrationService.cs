@@ -31,17 +31,17 @@ public class MigrationService(
         }
 
         ct.ThrowIfCancellationRequested();
-        var scriptFiles = sqlScriptsHelpers.ScanForSqlFiles(scriptsPath).ToList();
         var targetDir = Path.GetFullPath(scriptsPath);
+        var scriptFiles = sqlScriptsHelpers.ScanForSqlFiles(targetDir);
         logger.LogDebug("Found {FilesCount} script files in directory {TargetDir}", scriptFiles.Count, targetDir);
 
         var successCount = 0;
         var errorsCount = 0;
         var skipCount = 0;
-        foreach (var scriptFile in scriptFiles)
+        foreach (var scriptName in scriptFiles)
         {
             ct.ThrowIfCancellationRequested();
-            var scriptName = Path.GetRelativePath(targetDir, scriptFile);
+            var scriptFile = Path.Combine(targetDir, scriptName);
             var hash = sqlScriptsHelpers.CalculateHash(scriptFile);
 
             var executedScript = executedScripts.FirstOrDefault(s => s.ScriptFile == scriptName);
