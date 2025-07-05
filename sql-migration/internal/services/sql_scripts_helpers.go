@@ -31,7 +31,7 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 		return nil, fmt.Errorf("directory '%s' does not exist", directory)
 	}
 
-	var unorderedScripts []string
+  scripts := make(map[string][]string)
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -44,7 +44,12 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 			}
 			// Convert Windows path separators to Unix-style for consistency
 			relativePath = strings.ReplaceAll(relativePath, "\\", "/")
-			unorderedScripts = append(unorderedScripts, relativePath)
+      // Extract first folder as prefix
+      prefix := strings.SplitN(relativePath, "/", 2)[0]
+      if _, exists := scripts[prefix]; !exists {
+        scripts[prefix] = []string{}
+      }
+      scripts[prefix] = append(scripts[prefix], relativePath)
 		}
 		return nil
 	})
@@ -53,38 +58,29 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 		return nil, fmt.Errorf("failed to scan directory '%s': %w", directory, err)
 	}
 
-	// Order scripts by directory priority: tables, views, stored_procedures, data
-	var orderedScripts []string
-
-	// Add tables scripts first
-	tablesScripts := filterAndSort(unorderedScripts, "tables/")
-	orderedScripts = append(orderedScripts, tablesScripts...)
-
-	// Add views scripts
-	viewsScripts := filterAndSort(unorderedScripts, "views/")
-	orderedScripts = append(orderedScripts, viewsScripts...)
-
-	// Add stored procedures scripts
-	storedProcScripts := filterAndSort(unorderedScripts, "stored_procedures/")
-	orderedScripts = append(orderedScripts, storedProcScripts...)
-
-	// Add data scripts
-	dataScripts := filterAndSort(unorderedScripts, "data/")
-	orderedScripts = append(orderedScripts, dataScripts...)
-
-	return orderedScripts, nil
+  return sortScripts(scripts), nil
 }
 
-// filterAndSort filters scripts by prefix and sorts them
-func filterAndSort(scripts []string, prefix string) []string {
-	var filtered []string
-	for _, script := range scripts {
-		if strings.HasPrefix(script, prefix) {
-			filtered = append(filtered, script)
-		}
-	}
-	sort.Strings(filtered)
-	return filtered
+// sortScripts sorts scripts by prefix (folder)
+func sortScripts(scripts map[string][]string) []string {
+	var sorted = []string{}
+
+  // Get all keys and sort them
+  keys := make([]string, 0, len(scripts))
+  for key := range scripts {
+    keys = append(keys, key)
+  }
+  sort.Strings(keys)
+
+  // Iterate over sorted keys and append scripts
+  for _, key := range keys {
+    if scripts[key] != nil {
+      sort.Strings(scripts[key])
+      sorted = append(sorted, scripts[key]...)
+    }
+  }
+
+	return sorted
 }
 
 // CalculateHash calculates the SHA256 hash of a file

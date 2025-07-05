@@ -53,12 +53,12 @@ func TestSqlScriptsHelpers_ScanForSqlFiles(t *testing.T) {
 		t.Fatalf("ScanForSqlFiles() error = %v", err)
 	}
 
-	// Expected order: tables (sorted), views (sorted), data (sorted)
+	// Expected order: alphabetical by directory (data, tables, views), then alphabetical by filename within each directory
 	expected := []string{
+		"data/001_seed_data.sql",
 		"tables/001_create_users.sql",
 		"tables/002_create_posts.sql",
 		"views/001_user_posts.sql",
-		"data/001_seed_data.sql",
 	}
 
 	if len(result) != len(expected) {
@@ -104,5 +104,103 @@ func TestSqlScriptsHelpers_CalculateHash(t *testing.T) {
 
 	if hash != hash2 {
 		t.Errorf("Hash should be consistent: %s != %s", hash, hash2)
+	}
+}
+
+func TestSqlScriptsHelpers_ScanForSqlFiles_Comprehensive(t *testing.T) {
+	// Create a temporary directory structure for testing
+	tempDir := t.TempDir()
+
+	// Create test directories including stored_procedures
+	directories := []string{"tables", "views", "stored_procedures", "data", "other"}
+	for _, dir := range directories {
+		err := os.MkdirAll(filepath.Join(tempDir, dir), 0755)
+		if err != nil {
+			t.Fatalf("Failed to create %s directory: %v", dir, err)
+		}
+	}
+
+	// Create test SQL files with various naming patterns
+	testFiles := []string{
+		"tables/001_create_users.sql",
+		"tables/002_create_posts.sql",
+		"views/001_user_posts.sql",
+		"views/002_post_stats.sql",
+		"stored_procedures/001_get_user.sql",
+		"data/001_seed_users.sql",
+		"data/002_seed_posts.sql",
+		"other/001_misc.sql",
+		"other/002_cleanup.sql",
+	}
+
+	for _, file := range testFiles {
+		fullPath := filepath.Join(tempDir, file)
+		err := os.WriteFile(fullPath, []byte("SELECT 1;"), 0644)
+		if err != nil {
+			t.Fatalf("Failed to create test file %s: %v", file, err)
+		}
+	}
+
+	// Test the scanner
+	helper := NewSqlScriptsHelpers()
+	result, err := helper.ScanForSqlFiles(tempDir)
+	if err != nil {
+		t.Fatalf("ScanForSqlFiles() error = %v", err)
+	}
+
+	// Expected order: alphabetical by directory, then alphabetical by filename within each directory
+	// Directories in alphabetical order: data, other, stored_procedures, tables, views
+	expected := []string{
+		"data/001_seed_users.sql",
+		"data/002_seed_posts.sql",
+		"other/001_misc.sql",
+		"other/002_cleanup.sql",
+		"stored_procedures/001_get_user.sql",
+		"tables/001_create_users.sql",
+		"tables/002_create_posts.sql",
+		"views/001_user_posts.sql",
+		"views/002_post_stats.sql",
+	}
+
+	if len(result) != len(expected) {
+		t.Errorf("Expected %d files, got %d", len(expected), len(result))
+		t.Errorf("Expected: %v", expected)
+		t.Errorf("Got: %v", result)
+	}
+
+	for i, expectedFile := range expected {
+		if i >= len(result) {
+			t.Errorf("Missing expected file: %s", expectedFile)
+			continue
+		}
+		if result[i] != expectedFile {
+			t.Errorf("Expected file %s at index %d, got %s", expectedFile, i, result[i])
+		}
+	}
+}
+
+func TestSqlScriptsHelpers_ScanForSqlFiles_ErrorCases(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+
+	// Test with empty directory path
+	_, err := helper.ScanForSqlFiles("")
+	if err == nil {
+		t.Error("Expected error for empty directory path")
+	}
+
+	// Test with non-existent directory
+	_, err = helper.ScanForSqlFiles("/non/existent/directory")
+	if err == nil {
+		t.Error("Expected error for non-existent directory")
+	}
+
+	// Test with empty directory
+	emptyDir := t.TempDir()
+	result, err := helper.ScanForSqlFiles(emptyDir)
+	if err != nil {
+		t.Fatalf("ScanForSqlFiles() error = %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("Expected 0 files in empty directory, got %d", len(result))
 	}
 }
