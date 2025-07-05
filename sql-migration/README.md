@@ -82,7 +82,6 @@ sql-migration --target-path /path/to/sql/scripts --provider postgresql --host lo
 
 You can use environment variables instead of command-line flags. Prefix them with `CLI_SQL_MIGRATION_`:
 
-- `CLI_SQL_MIGRATION_TARGET_PATH`
 - `CLI_SQL_MIGRATION_PROVIDER`
 - `CLI_SQL_MIGRATION_CONNECTION_STRING`
 - `CLI_SQL_MIGRATION_HOST`
@@ -163,7 +162,6 @@ sql-migration \
 ### Using Environment Variables
 
 ```bash
-export CLI_SQL_MIGRATION_TARGET_PATH=./sql-scripts
 export CLI_SQL_MIGRATION_PROVIDER=postgresql
 export CLI_SQL_MIGRATION_HOST=localhost
 export CLI_SQL_MIGRATION_PORT=5432
@@ -171,7 +169,15 @@ export CLI_SQL_MIGRATION_DATABASE=myapp
 export CLI_SQL_MIGRATION_USER=myuser
 export CLI_SQL_MIGRATION_PASSWORD=mypass
 
-sql-migration --verbose
+sql-migration --target-path <sql-scripts-dir> --verbose
+```
+
+### Set environment variables from .env file
+
+```shell
+export $(grep -v '^#' .env | xargs)
+
+sql-migration --target-path <sql-scripts-dir> --verbose
 ```
 
 ## Building

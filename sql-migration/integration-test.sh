@@ -75,12 +75,11 @@ fi
 
 # Test 5: Environment variables
 echo "Test 5: Environment variables"
-export CLI_SQL_MIGRATION_TARGET_PATH=./test-scripts
 export CLI_SQL_MIGRATION_PROVIDER=sqlite
 export CLI_SQL_MIGRATION_DATABASE=test-integration-env.db
 export CLI_SQL_MIGRATION_VERBOSE=true
 
-OUTPUT=$(./build/sql-migration 2>&1)
+OUTPUT=$(./build/sql-migration -t ./test-scripts 2>&1)
 
 if echo "$OUTPUT" | grep -q "Success: 5"; then
     echo "✓ Environment variables working correctly"
@@ -90,7 +89,6 @@ else
     exit 1
 fi
 
-unset CLI_SQL_MIGRATION_TARGET_PATH
 unset CLI_SQL_MIGRATION_PROVIDER
 unset CLI_SQL_MIGRATION_DATABASE
 unset CLI_SQL_MIGRATION_VERBOSE

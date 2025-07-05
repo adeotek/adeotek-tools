@@ -100,7 +100,7 @@ func runMigration(cmd *cobra.Command, args []string) {
 
 	// Validate target path
 	if targetPath == "" {
-		log.Fatal("target-path is required")
+		log.Fatal("--target-path is required")
 	}
 
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
@@ -162,5 +162,5 @@ func runMigration(cmd *cobra.Command, args []string) {
 		log.Fatalf("Migration failed: %v", err)
 	}
 
-	fmt.Println("DONE!!!")
+	fmt.Println("Migration DONE!")
 }

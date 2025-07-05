@@ -119,17 +119,13 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 
 		if executedScript != nil && executedScript.ScriptHash == hash {
 			skipCount++
-			if ms.verbose {
-				log.Printf("Skipping script %s [%s]", scriptName, hash)
-			}
+      log.Printf("Skipping script %s [%s]", scriptName, hash)
 			continue
 		}
 
 		// Execute script
 		if ms.isDryRun {
-			if ms.verbose {
-				log.Printf("Dry run: would execute script %s [%s]", scriptName, hash)
-			}
+      log.Printf("Dry run: would execute script %s [%s]", scriptName, hash)
 			successCount++
 			continue
 		}
@@ -150,9 +146,7 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 			continue
 		}
 
-		if ms.verbose {
-			log.Printf("Script %s executed successfully [%s]", scriptName, hash)
-		}
+    log.Printf("Script %s executed successfully [%s]", scriptName, hash)
 
 		// Update execution history
 		executionHistory := &models.ScriptExecutionHistory{
