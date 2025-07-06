@@ -47,13 +47,13 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 
 	// Check if history table exists, create if not
 	var executedScripts []models.ScriptExecutionHistory
-	if !ms.isDryRun {
-		historyExists, err := migrationRepo.IsHistoryTableCreated()
-		if err != nil {
-			return fmt.Errorf("failed to check history table: %w", err)
-		}
+	historyExists, err := migrationRepo.IsHistoryTableCreated()
+	if err != nil {
+		return fmt.Errorf("failed to check history table: %w", err)
+	}
 
-		if !historyExists {
+	if !historyExists {
+		if !ms.isDryRun {
 			if ms.verbose {
 				log.Println("History table not found. Creating...")
 			}
@@ -64,16 +64,14 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 			if ms.verbose {
 				log.Println("History table created.")
 			}
-			executedScripts = []models.ScriptExecutionHistory{}
-		} else {
-			executedScripts, err = migrationRepo.GetExecutedScripts()
-			if err != nil {
-				return fmt.Errorf("failed to get executed scripts: %w", err)
-			}
 		}
+    executedScripts = []models.ScriptExecutionHistory{}
 	} else {
-		// In dry run mode, assume no scripts have been executed
-		executedScripts = []models.ScriptExecutionHistory{}
+		// Get executed scripts from history table (both dry-run and normal modes)
+		executedScripts, err = migrationRepo.GetExecutedScripts()
+		if err != nil {
+			return fmt.Errorf("failed to get executed scripts: %w", err)
+		}
 	}
 
 	// Get the full path to the scripts directory
@@ -119,13 +117,17 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 
 		if executedScript != nil && executedScript.ScriptHash == hash {
 			skipCount++
-      log.Printf("Skipping script %s [%s]", scriptName, hash)
+			if ms.isDryRun {
+				log.Printf("Dry run: would skip script %s [%s] (already executed)", scriptName, hash)
+			} else {
+				log.Printf("Skipping script %s [%s]", scriptName, hash)
+			}
 			continue
 		}
 
 		// Execute script
 		if ms.isDryRun {
-      log.Printf("Dry run: would execute script %s [%s]", scriptName, hash)
+			log.Printf("Dry run: would execute script %s [%s]", scriptName, hash)
 			successCount++
 			continue
 		}
