@@ -3,6 +3,7 @@ package services
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -307,5 +308,142 @@ INSERT INTO users (id, name) VALUES (2, 'Jane Smith');`
 		if strings.HasPrefix(trimmed, "--") && !strings.Contains(trimmed, "CREATE") && !strings.Contains(trimmed, "INSERT") {
 			t.Errorf("Statement should not be a standalone comment: %s", stmt)
 		}
+	}
+}
+
+func TestSqlScriptsHelpers_SplitSqlStatements_DollarEdgeCases(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+
+	// Test script with $ characters in different contexts
+	testScript := `-- Test with dollar signs in strings
+INSERT INTO products (name, price) VALUES ('Product $19.99', 19.99);
+
+-- Test with column names containing $
+SELECT column$1 FROM table$name;
+
+-- Test with dollar-quoted function containing $ in strings
+CREATE FUNCTION test_function() RETURNS TEXT AS $$
+BEGIN
+    -- This function returns a string with dollar signs
+    RETURN 'This costs $50 and that costs $100';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Another statement after the function
+GRANT EXECUTE ON FUNCTION test_function() TO public;`
+
+	statements := helper.SplitSqlStatements(testScript)
+
+	// Should have 4 statements
+	if len(statements) != 4 {
+		t.Errorf("Expected 4 statements, got %d", len(statements))
+		for i, stmt := range statements {
+			t.Logf("Statement %d: %s", i+1, stmt)
+		}
+		return
+	}
+
+	// Test first statement (INSERT with $ in string)
+	expectedInsert := "INSERT INTO products (name, price) VALUES ('Product $19.99', 19.99);"
+	if !strings.Contains(statements[0], expectedInsert) {
+		t.Errorf("First statement should contain INSERT with $ in string")
+	}
+
+	// Test second statement (SELECT with $ in column name)
+	expectedSelect := "SELECT column$1 FROM table$name;"
+	if !strings.Contains(statements[1], expectedSelect) {
+		t.Errorf("Second statement should contain SELECT with $ in column name")
+	}
+
+	// Test third statement (CREATE FUNCTION with dollar-quoted block)
+	if !strings.Contains(statements[2], "CREATE FUNCTION test_function()") {
+		t.Errorf("Third statement should contain CREATE FUNCTION")
+	}
+	if !strings.Contains(statements[2], "$$") {
+		t.Errorf("Third statement should contain dollar-quoted block")
+	}
+	if !strings.Contains(statements[2], "This costs $50 and that costs $100") {
+		t.Errorf("Third statement should contain string with $ inside dollar-quoted block")
+	}
+
+	// Test fourth statement (GRANT)
+	if !strings.Contains(statements[3], "GRANT EXECUTE ON FUNCTION test_function()") {
+		t.Errorf("Fourth statement should contain GRANT EXECUTE")
+	}
+}
+
+func TestSqlScriptsHelpers_DollarQuoteRegexPattern(t *testing.T) {
+	// Test the regex pattern used for dollar-quoted string detection
+	dollarQuotePattern := regexp.MustCompile(`\$([A-Za-z0-9_]*)\$`)
+
+	testCases := []struct {
+		input    string
+		expected []string
+		desc     string
+	}{
+		{
+			input:    "CREATE FUNCTION test() AS $$",
+			expected: []string{"$$"},
+			desc:     "Should match empty dollar quotes",
+		},
+		{
+			input:    "CREATE FUNCTION test() AS $tag$",
+			expected: []string{"$tag$"},
+			desc:     "Should match dollar quotes with alphanumeric tag",
+		},
+		{
+			input:    "CREATE FUNCTION test() AS $func_name$",
+			expected: []string{"$func_name$"},
+			desc:     "Should match dollar quotes with underscore in tag",
+		},
+		{
+			input:    "INSERT INTO products VALUES ('$19.99')",
+			expected: []string{},
+			desc:     "Should NOT match dollar sign in string literal",
+		},
+		{
+			input:    "SELECT column$1 FROM table$name",
+			expected: []string{},
+			desc:     "Should NOT match dollar sign in column names",
+		},
+		{
+			input:    "$invalid-tag$",
+			expected: []string{},
+			desc:     "Should NOT match dollar quotes with invalid characters (hyphen)",
+		},
+		{
+			input:    "$$some text$$",
+			expected: []string{"$$", "$$"},
+			desc:     "Should match multiple dollar quotes in same line",
+		},
+		{
+			input:    "AS $123$ BEGIN",
+			expected: []string{"$123$"},
+			desc:     "Should match dollar quotes with numeric tag",
+		},
+		{
+			input:    "AS $a_b_c$ BEGIN",
+			expected: []string{"$a_b_c$"},
+			desc:     "Should match dollar quotes with complex underscore tag",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			matches := dollarQuotePattern.FindAllString(tc.input, -1)
+
+			if len(matches) != len(tc.expected) {
+				t.Errorf("Expected %d matches, got %d for input: %s", len(tc.expected), len(matches), tc.input)
+				t.Errorf("Expected: %v", tc.expected)
+				t.Errorf("Got: %v", matches)
+				return
+			}
+
+			for i, expected := range tc.expected {
+				if matches[i] != expected {
+					t.Errorf("Expected match %d to be %s, got %s for input: %s", i, expected, matches[i], tc.input)
+				}
+			}
+		})
 	}
 }
