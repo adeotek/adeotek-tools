@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -136,6 +137,9 @@ func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 	inBlock := false
 	blockDelimiter := ""
 
+	// Regex pattern for PostgreSQL dollar-quoted strings: $tag$ where tag can be empty or contain letters, digits, underscores
+	dollarQuotePattern := regexp.MustCompile(`\$([A-Za-z0-9_]*)\$`)
+
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 
@@ -147,11 +151,10 @@ func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 		// Check for block delimiters ($$, $tag$, etc.)
 		if !inBlock {
 			// Look for PostgreSQL dollar-quoted strings or PL/pgSQL blocks
-			// Match valid PostgreSQL dollar-quoted block delimiters
-			delimiterRegex := regexp.MustCompile(`^\$[A-Za-z0-9_]*\$`)
-			matches := delimiterRegex.FindString(trimmedLine)
-			if matches != "" {
-				blockDelimiter = matches
+			matches := dollarQuotePattern.FindAllString(trimmedLine, -1)
+			if len(matches) > 0 {
+				// Use the first valid delimiter found
+				blockDelimiter = matches[0]
 				inBlock = true
 			}
 		}
@@ -192,3 +195,5 @@ func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 
 	return result
 }
+
+
