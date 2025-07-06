@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# GEMINI.md
 
 ## Repository description
 
@@ -12,16 +10,6 @@ This repository contains a collection of tools written in GO and .NET.
 
 A tool to backup Git repositories from GitHub or Gitea to a local directory. It supports both public and private repositories, and can be configured to run periodically using a cron job.
 The `git-repos-backup` tool is written in Go and provides a simple command-line interface to manage backups of Git repositories.
-
-#### `git-repos-backup` Build/Lint/Test Commands
-- Build: `make build`
-- Build all platforms: `make build-all`
-- Install: `make install`
-- Format code: `make fmt`
-- Lint code: `make lint`
-- Run all tests: `make test` or `go test -v ./...`
-- Run single test: `go test -v ./path/to/package -run TestName`
-- Run integration tests: `make integration-test` or `RUN_INTEGRATION_TESTS=1 go test -v ./tests`
 
 #### `git-repos-backup` Code Style Guidelines
 - Imports: Standard library first, third-party next, grouped with blank lines
