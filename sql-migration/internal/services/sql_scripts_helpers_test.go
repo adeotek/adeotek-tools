@@ -3,6 +3,7 @@ package services
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -202,5 +203,109 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_ErrorCases(t *testing.T) {
 	}
 	if len(result) != 0 {
 		t.Errorf("Expected 0 files in empty directory, got %d", len(result))
+	}
+}
+
+func TestSqlScriptsHelpers_SplitSqlStatements_ComplexScript(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+
+	// Test with PostgreSQL stored procedure
+	complexScript := `CREATE OR REPLACE PROCEDURE public.sp_test()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    counter_companies INT := 0;
+    counter_legal_entities INT := 0;
+    counter_contacts INT := 0;
+BEGIN
+  SELECT COUNT(*) INTO counter_companies FROM public.companies;
+  SELECT COUNT(*) INTO counter_legal_entities FROM public.legal_entities;
+  SELECT COUNT(*) INTO counter_contacts FROM public.contacts;
+
+  RAISE NOTICE 'Total Companies: %, Total Legal Entities: %, Total Contacts: %',
+    counter_companies, counter_legal_entities, counter_contacts;
+END;
+$$;
+
+-- Grant execute permission to necessary roles (adjust as needed)
+GRANT EXECUTE ON PROCEDURE public.sp_test() TO PUBLIC;`
+
+	statements := helper.SplitSqlStatements(complexScript)
+
+	// Should result in 2 statements: CREATE PROCEDURE and GRANT
+	expectedCount := 2
+	if len(statements) != expectedCount {
+		t.Errorf("Expected %d statements, got %d", expectedCount, len(statements))
+		for i, stmt := range statements {
+			t.Logf("Statement %d: %s", i+1, stmt)
+		}
+	}
+
+	// First statement should be the CREATE PROCEDURE
+	if len(statements) > 0 {
+		if !strings.Contains(statements[0], "CREATE OR REPLACE PROCEDURE") {
+			t.Errorf("First statement should contain CREATE OR REPLACE PROCEDURE")
+		}
+		if !strings.Contains(statements[0], "$$") {
+			t.Errorf("First statement should contain $$ delimiters")
+		}
+	}
+
+	// Second statement should be the GRANT
+	if len(statements) > 1 {
+		if !strings.Contains(statements[1], "GRANT EXECUTE") {
+			t.Errorf("Second statement should contain GRANT EXECUTE")
+		}
+	}
+}
+
+func TestSqlScriptsHelpers_SplitSqlStatements_SimpleStatements(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+
+	// Test with simple statements
+	simpleScript := `CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));
+INSERT INTO users (id, name) VALUES (1, 'John Doe');
+INSERT INTO users (id, name) VALUES (2, 'Jane Smith');`
+
+	statements := helper.SplitSqlStatements(simpleScript)
+
+	expectedCount := 3
+	if len(statements) != expectedCount {
+		t.Errorf("Expected %d statements, got %d", expectedCount, len(statements))
+		for i, stmt := range statements {
+			t.Logf("Statement %d: %s", i+1, stmt)
+		}
+	}
+}
+
+func TestSqlScriptsHelpers_SplitSqlStatements_WithComments(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+
+	// Test with comments
+	scriptWithComments := `-- Create users table
+CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100));
+
+-- Insert test data
+INSERT INTO users (id, name) VALUES (1, 'John Doe');
+
+-- Another comment
+INSERT INTO users (id, name) VALUES (2, 'Jane Smith');`
+
+	statements := helper.SplitSqlStatements(scriptWithComments)
+
+	expectedCount := 3
+	if len(statements) != expectedCount {
+		t.Errorf("Expected %d statements, got %d", expectedCount, len(statements))
+		for i, stmt := range statements {
+			t.Logf("Statement %d: %s", i+1, stmt)
+		}
+	}
+
+	// Statements should not contain standalone comments
+	for _, stmt := range statements {
+		trimmed := strings.TrimSpace(stmt)
+		if strings.HasPrefix(trimmed, "--") && !strings.Contains(trimmed, "CREATE") && !strings.Contains(trimmed, "INSERT") {
+			t.Errorf("Statement should not be a standalone comment: %s", stmt)
+		}
 	}
 }

@@ -109,7 +109,7 @@ func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams
 	defer db.Close()
 
 	// Split script into individual statements for better error handling
-	statements := s.splitSqlStatements(scriptContent)
+	statements := s.SplitSqlStatements(scriptContent)
 
 	for _, statement := range statements {
 		statement = strings.TrimSpace(statement)
@@ -126,16 +126,72 @@ func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams
 	return nil
 }
 
-// splitSqlStatements splits a SQL script into individual statements
-func (s *SqlScriptsHelpers) splitSqlStatements(script string) []string {
-	// Simple statement splitter - splits on semicolon followed by newline
-	// This is a basic implementation and might need enhancement for complex scripts
-	statements := strings.Split(script, ";")
+// SplitSqlStatements splits a SQL script into individual statements
+// This handles complex scripts including stored procedures, functions, and other constructs
+func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 	var result []string
+	var current strings.Builder
 
-	for _, stmt := range statements {
-		stmt = strings.TrimSpace(stmt)
-		if stmt != "" {
+	lines := strings.Split(script, "\n")
+	inBlock := false
+	blockDelimiter := ""
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+
+		// Skip empty lines and comments when not in a block
+		if !inBlock && (trimmedLine == "" || strings.HasPrefix(trimmedLine, "--")) {
+			continue
+		}
+
+		// Check for block delimiters ($$, $tag$, etc.)
+		if !inBlock {
+			// Look for PostgreSQL dollar-quoted strings or PL/pgSQL blocks
+			if strings.Contains(trimmedLine, "$$") || strings.Contains(trimmedLine, "$") {
+				// Extract potential delimiter
+				dollarPos := strings.Index(trimmedLine, "$")
+				if dollarPos != -1 {
+					// Find the closing $ to get the full delimiter
+					remaining := trimmedLine[dollarPos:]
+					nextDollar := strings.Index(remaining[1:], "$")
+					if nextDollar != -1 {
+						blockDelimiter = remaining[:nextDollar+2]
+						inBlock = true
+					}
+				}
+			}
+		}
+
+		// Add the line to current statement
+		if current.Len() > 0 {
+			current.WriteString("\n")
+		}
+		current.WriteString(line)
+
+		// Check if we're ending a block
+		if inBlock && blockDelimiter != "" && strings.Contains(trimmedLine, blockDelimiter) {
+			// Count occurrences to handle multiple delimiters in same line
+			openCount := strings.Count(current.String(), blockDelimiter)
+			if openCount%2 == 0 { // Even number means block is closed
+				inBlock = false
+				blockDelimiter = ""
+			}
+		}
+
+		// If not in a block and line ends with semicolon, it's end of statement
+		if !inBlock && strings.HasSuffix(trimmedLine, ";") {
+			stmt := strings.TrimSpace(current.String())
+			if stmt != "" && stmt != ";" {
+				result = append(result, stmt)
+			}
+			current.Reset()
+		}
+	}
+
+	// Add any remaining content as final statement
+	if current.Len() > 0 {
+		stmt := strings.TrimSpace(current.String())
+		if stmt != "" && stmt != ";" {
 			result = append(result, stmt)
 		}
 	}
