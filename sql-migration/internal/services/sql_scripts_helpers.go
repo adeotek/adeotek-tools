@@ -147,18 +147,12 @@ func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 		// Check for block delimiters ($$, $tag$, etc.)
 		if !inBlock {
 			// Look for PostgreSQL dollar-quoted strings or PL/pgSQL blocks
-			if strings.Contains(trimmedLine, "$$") || strings.Contains(trimmedLine, "$") {
-				// Extract potential delimiter
-				dollarPos := strings.Index(trimmedLine, "$")
-				if dollarPos != -1 {
-					// Find the closing $ to get the full delimiter
-					remaining := trimmedLine[dollarPos:]
-					nextDollar := strings.Index(remaining[1:], "$")
-					if nextDollar != -1 {
-						blockDelimiter = remaining[:nextDollar+2]
-						inBlock = true
-					}
-				}
+			// Match valid PostgreSQL dollar-quoted block delimiters
+			delimiterRegex := regexp.MustCompile(`^\$[A-Za-z0-9_]*\$`)
+			matches := delimiterRegex.FindString(trimmedLine)
+			if matches != "" {
+				blockDelimiter = matches
+				inBlock = true
 			}
 		}
 
