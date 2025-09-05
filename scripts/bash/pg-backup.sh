@@ -11,6 +11,7 @@ SSH_HOST=""
 SSH_USER=""
 SSH_KEY=""
 BACKUP_DIR="./postgres_backups"
+DB_SUBDIR=false
 VV=false  # Verbose mode off by default
 NO_COLOR=false
 VERBOSE_FLAG=""
@@ -35,7 +36,7 @@ function cecho() {
     echo $args "$@"
     return
   fi
-  
+
   case $color in
     "black") color_code="30";;
     "red") color_code="31";;
@@ -47,7 +48,7 @@ function cecho() {
     "white") color_code="37";;
     *) color_code="";;
   esac
-  
+
   if [ -z "$color_code" ]; then
     echo $args "$@"
   else
@@ -75,6 +76,7 @@ OPTIONS:
     -i, --ssh-user SSH_USER     SSH username (required for SSH tunnel)
     -k, --ssh-key SSH_KEY       Path to SSH private key (required for SSH tunnel)
     -d, --backup-dir DIR        Local backup directory (default: ./postgres_backups)
+    --db-subdir                 Create subdirectory for each database
     --include DB1,DB2,DB3       Only backup specified databases (comma-separated)
     --exclude DB1,DB2,DB3       Exclude specified databases (comma-separated)
     -v, --verbose               Enable verbose output
@@ -84,16 +86,16 @@ OPTIONS:
 EXAMPLES:
     # SSH tunnel mode
     $0 -s server.com -i myuser -k ~/.ssh/id_rsa -u postgres
-    
+
     # Direct connection
     $0 -h db.server.com -u postgres --pg-password mypass
-    
+
     # Only backup specific databases
     $0 -h db.server.com -u postgres --include "myapp,myapp_test"
-    
+
     # Exclude system/temp databases
     $0 -s server.com -i user -k ~/.ssh/key -u postgres --exclude "temp_db,old_db"
-    
+
     # Using environment variable for password
     export PGPASSWORD=mypass
     $0 -s server.com -i user -k ~/.ssh/key -u postgres
@@ -149,6 +151,10 @@ while [[ $# -gt 0 ]]; do
         -d|--backup-dir)
             BACKUP_DIR="$2"
             shift 2
+            ;;
+        --db-subdir)
+            DB_SUBDIR=true
+            shift
             ;;
         --include)
             INCLUDE_DBS="$2"
@@ -228,7 +234,7 @@ export PGPASSWORD="$PG_PASSWORD"
 
 if [[ "$USE_SSH_TUNNEL" == "true" ]]; then
     cecho "cyan" "Establishing SSH tunnel to $SSH_HOST..."
-    
+
     # Start SSH tunnel in background and capture PID
     ssh -N -L "$PG_PORT:$PG_HOST:$PG_REMOTE_PORT" \
         -i "$SSH_KEY" \
@@ -239,13 +245,13 @@ if [[ "$USE_SSH_TUNNEL" == "true" ]]; then
 
     # Wait a moment for SSH to establish or fail
     sleep 2
-    
+
     # Check if SSH process is still running
     if ! kill -0 "$SSH_PID" 2>/dev/null; then
         cecho "red" "Error: Failed to establish SSH tunnel. Port $PG_PORT may be in use." >&2
         exit 1
     fi
-    
+
     cecho "yellow" "SSH tunnel established (PID: $SSH_PID)"
 else
     cecho "cyan" "Using direct connection to PostgreSQL..."
@@ -275,7 +281,7 @@ fi
 FILTERED_DATABASES=""
 for db in $USER_DATABASES; do
     SKIP_DB=false
-    
+
     # Check exclude list
     if [[ -n "$EXCLUDE_DBS" ]]; then
         IFS=',' read -ra EXCLUDE_ARRAY <<< "$EXCLUDE_DBS"
@@ -287,7 +293,7 @@ for db in $USER_DATABASES; do
             fi
         done
     fi
-    
+
     # Check include list (if specified, only include listed databases)
     if [[ -n "$INCLUDE_DBS" ]] && [[ "$SKIP_DB" == "false" ]]; then
         INCLUDE_MATCH=false
@@ -303,7 +309,7 @@ for db in $USER_DATABASES; do
             SKIP_DB=true
         fi
     fi
-    
+
     if [[ "$SKIP_DB" == "false" ]]; then
         FILTERED_DATABASES="$FILTERED_DATABASES $db"
     fi
@@ -323,7 +329,13 @@ TIMESTAMP=$(date +"%Y%m%d%H%M%S")
 decho "cyan" "Starting backup process..."
 for db in $FILTERED_DATABASES; do
     cecho "magenta" "-> Backing up database: $db"
-    BACKUP_FILE="$BACKUP_DIR/${db}-${TIMESTAMP}.dump"
+    if [[ "$DB_SUBDIR" == "true" ]]; then
+        DB_DIR="$BACKUP_DIR/$db"
+        mkdir -p "$DB_DIR"
+        BACKUP_FILE="$DB_DIR/${db}-${TIMESTAMP}.dump"
+    else
+        BACKUP_FILE="$BACKUP_DIR/${db}-${TIMESTAMP}.dump"
+    fi
 
     if pg_dump -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$db" \
         --no-password \
@@ -332,7 +344,7 @@ for db in $FILTERED_DATABASES; do
         --no-privileges \
         $VERBOSE_FLAG \
         -f "$BACKUP_FILE"; then
-        
+
         cecho "yellow" "✓ Successfully backed up $db to $BACKUP_FILE"
     else
         cecho "red" "✗ Failed to backup database: $db" >&2
