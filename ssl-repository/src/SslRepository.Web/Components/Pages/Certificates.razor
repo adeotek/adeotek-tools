@@ -1,0 +1,261 @@
+@page "/certificates"
+@inject ApplicationDbContext DbContext
+@inject ICertificateStorageService StorageService
+@inject ICertificateConversionService ConversionService
+@inject ILogger<Certificates> Logger
+
+<PageTitle>Certificates - SSL Repository</PageTitle>
+
+<h1>Certificates</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="ShowUploadForm">
+        <i class="bi bi-upload"></i> Upload Certificate
+    </button>
+</div>
+
+@if (showUploadForm)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Upload New Certificate</h5>
+            <EditForm Model="uploadModel" OnValidSubmit="HandleUpload">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <InputText @bind-Value="uploadModel.Name" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputTextArea @bind-Value="uploadModel.Description" class="form-control" rows="3" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Group</label>
+                    <InputSelect @bind-Value="uploadModel.GroupId" class="form-select">
+                        <option value="">Select a group...</option>
+                        @foreach (var group in groups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Certificate Format</label>
+                    <InputSelect @bind-Value="uploadModel.Format" class="form-select">
+                        @foreach (var format in Enum.GetValues<CertificateFormat>())
+                        {
+                            <option value="@format">@format</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password (for PFX files)</label>
+                    <InputText @bind-Value="uploadModel.Password" type="password" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Certificate File</label>
+                    <InputFile OnChange="HandleFileSelected" class="form-control" />
+                </div>
+                <div class="mb-3 form-check">
+                    <InputCheckbox @bind-Value="uploadModel.Encrypt" class="form-check-input" id="encryptCheck" />
+                    <label class="form-check-label" for="encryptCheck">
+                        Encrypt certificate on disk
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" disabled="@uploading">
+                    @if (uploading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Upload
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="() => showUploadForm = false">Cancel</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+    </div>
+}
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @successMessage
+        <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+    </div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Group</th>
+            <th>Subject</th>
+            <th>Expires</th>
+            <th>Format</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cert in certificates)
+        {
+            <tr>
+                <td>@cert.Name</td>
+                <td>@cert.Group.Name</td>
+                <td>@cert.Subject</td>
+                <td>
+                    @if (cert.ExpiresAt.HasValue)
+                    {
+                        var daysUntilExpiry = (cert.ExpiresAt.Value - DateTime.UtcNow).Days;
+                        var badgeClass = daysUntilExpiry < 30 ? "bg-danger" : daysUntilExpiry < 90 ? "bg-warning" : "bg-success";
+                        <span class="badge @badgeClass">@cert.ExpiresAt.Value.ToString("yyyy-MM-dd")</span>
+                    }
+                </td>
+                <td><span class="badge bg-info">@cert.OriginalFormat</span></td>
+                <td>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteCertificate(cert.Id)">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Certificate> certificates = new();
+    private List<Group> groups = new();
+    private bool showUploadForm = false;
+    private bool uploading = false;
+    private string? errorMessage;
+    private string? successMessage;
+    private UploadModel uploadModel = new();
+    private IBrowserFile? selectedFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        certificates = await DbContext.Certificates.Include(c => c.Group).ToListAsync();
+        groups = await DbContext.Groups.ToListAsync();
+    }
+
+    private void ShowUploadForm()
+    {
+        uploadModel = new UploadModel();
+        selectedFile = null;
+        showUploadForm = true;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task HandleUpload()
+    {
+        if (selectedFile == null || string.IsNullOrEmpty(uploadModel.GroupId))
+        {
+            errorMessage = "Please select a file and group";
+            return;
+        }
+
+        try
+        {
+            uploading = true;
+            errorMessage = null;
+
+            // Read file content
+            using var stream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB limit
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var fileContent = ms.ToArray();
+
+            // Extract metadata
+            var metadata = await ConversionService.ExtractMetadataAsync(
+                fileContent,
+                uploadModel.Format,
+                uploadModel.Password);
+
+            // Create certificate entity
+            var certificate = new Certificate
+            {
+                Id = Guid.NewGuid(),
+                Name = uploadModel.Name,
+                Description = uploadModel.Description,
+                GroupId = Guid.Parse(uploadModel.GroupId),
+                OriginalFormat = uploadModel.Format,
+                IsEncrypted = uploadModel.Encrypt,
+                Password = uploadModel.Password,
+                Subject = metadata.Subject,
+                Issuer = metadata.Issuer,
+                ExpiresAt = metadata.ExpiresAt,
+                HasPrivateKey = metadata.HasPrivateKey,
+                FilePath = string.Empty // Will be set by storage service
+            };
+
+            // Store certificate file
+            certificate.FilePath = await StorageService.StoreCertificateAsync(
+                certificate.Id,
+                fileContent,
+                uploadModel.Format,
+                uploadModel.Encrypt);
+
+            // Save to database
+            DbContext.Certificates.Add(certificate);
+            await DbContext.SaveChangesAsync();
+
+            successMessage = $"Certificate '{uploadModel.Name}' uploaded successfully";
+            showUploadForm = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to upload certificate");
+            errorMessage = $"Failed to upload certificate: {ex.Message}";
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private async Task DeleteCertificate(Guid id)
+    {
+        try
+        {
+            var certificate = await DbContext.Certificates.FindAsync(id);
+            if (certificate != null)
+            {
+                await StorageService.DeleteCertificateAsync(certificate.FilePath);
+                DbContext.Certificates.Remove(certificate);
+                await DbContext.SaveChangesAsync();
+                successMessage = "Certificate deleted successfully";
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete certificate");
+            errorMessage = $"Failed to delete certificate: {ex.Message}";
+        }
+    }
+
+    private class UploadModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string GroupId { get; set; } = string.Empty;
+        public CertificateFormat Format { get; set; } = CertificateFormat.PEM;
+        public string? Password { get; set; }
+        public bool Encrypt { get; set; }
+    }
+}

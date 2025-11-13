@@ -1,0 +1,68 @@
+@page "/"
+@inject ApplicationDbContext DbContext
+
+<PageTitle>Home - SSL Repository</PageTitle>
+
+<h1>SSL Repository</h1>
+
+<p class="lead">Centralized SSL certificate management and distribution system</p>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-file-lock"></i> Certificates</h5>
+                <p class="card-text">@certificateCount total certificates</p>
+                <a href="/certificates" class="btn btn-primary">Manage Certificates</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-folder"></i> Groups</h5>
+                <p class="card-text">@groupCount total groups</p>
+                <a href="/groups" class="btn btn-primary">Manage Groups</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-key"></i> API Keys</h5>
+                <p class="card-text">@apiKeyCount active keys</p>
+                <a href="/apikeys" class="btn btn-primary">Manage API Keys</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5">
+    <h3>Features</h3>
+    <ul>
+        <li>Upload and manage SSL certificates in various formats (PEM, PFX, DER, etc.)</li>
+        <li>Organize certificates into groups for better management</li>
+        <li>Secure API access with API keys for certificate retrieval</li>
+        <li>Automatic format conversion for certificate downloads</li>
+        <li>Optional encryption for stored certificates</li>
+        <li>Group-based access control for API clients</li>
+    </ul>
+
+    <h3 class="mt-4">API Usage</h3>
+    <p>Access certificates programmatically using the REST API:</p>
+    <pre><code>curl -H "X-API-Key: your-api-key" https://your-domain/api/certificates</code></pre>
+    <pre><code>curl -H "X-API-Key: your-api-key" https://your-domain/api/certificates/{id}?format=pem</code></pre>
+</div>
+
+@code {
+    private int certificateCount;
+    private int groupCount;
+    private int apiKeyCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        certificateCount = await DbContext.Certificates.CountAsync();
+        groupCount = await DbContext.Groups.CountAsync();
+        apiKeyCount = await DbContext.ApiKeys.CountAsync(k => k.IsActive);
+    }
+}
