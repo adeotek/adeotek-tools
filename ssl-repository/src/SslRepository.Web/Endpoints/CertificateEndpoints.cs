@@ -24,13 +24,13 @@ public static class CertificateEndpoints
             .WithName("GetCertificate")
             .WithDescription("Gets a specific certificate by ID in the requested format")
             .Produces<FileContentHttpResult>()
-            .Produces<NotFound>(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:guid}/metadata", GetCertificateMetadata)
             .WithName("GetCertificateMetadata")
             .WithDescription("Gets certificate metadata")
             .Produces<CertificateDto>()
-            .Produces<NotFound>(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound);
 
         return group;
     }
@@ -67,7 +67,7 @@ public static class CertificateEndpoints
         ApplicationDbContext dbContext,
         ICertificateStorageService storageService,
         ICertificateConversionService conversionService,
-        ILogger<Program> logger)
+        ILoggerFactory loggerFactory)
     {
         var groupIds = GetAccessibleGroupIds(user);
 
@@ -81,6 +81,8 @@ public static class CertificateEndpoints
 
         try
         {
+            var logger = loggerFactory.CreateLogger("CertificateEndpoints");
+
             // Retrieve the certificate file
             var certificateData = await storageService.GetCertificateAsync(
                 certificate.FilePath,
@@ -115,6 +117,7 @@ public static class CertificateEndpoints
         }
         catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger("CertificateEndpoints");
             logger.LogError(ex, "Failed to retrieve certificate {CertificateId}", id);
             return TypedResults.Problem("Failed to retrieve certificate", statusCode: 500);
         }
