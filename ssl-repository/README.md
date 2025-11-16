@@ -127,35 +127,51 @@ The application is built using .NET 10.0 and C# 14 with a clean architecture app
 
 ### REST API
 
+The API supports authentication via **header** or **query parameter**:
+- Header: `X-API-Key: your-api-key`
+- Query parameter: `?api_key=your-api-key`
+
 #### List Certificates
 ```bash
+# Using header authentication
 curl -H "X-API-Key: your-api-key" \
   https://your-domain/api/certificates
+
+# Using query parameter authentication
+curl "https://your-domain/api/certificates?api_key=your-api-key"
 ```
 
 #### Get Certificate Metadata
 ```bash
+# Using header authentication
 curl -H "X-API-Key: your-api-key" \
   https://your-domain/api/certificates/{certificate-id}/metadata
+
+# Using query parameter authentication
+curl "https://your-domain/api/certificates/{certificate-id}/metadata?api_key=your-api-key"
 ```
 
 #### Download Certificate
 ```bash
+# Using header authentication
 curl -H "X-API-Key: your-api-key" \
   https://your-domain/api/certificates/{certificate-id} \
+  -o certificate.pem
+
+# Using query parameter authentication
+curl "https://your-domain/api/certificates/{certificate-id}?api_key=your-api-key" \
   -o certificate.pem
 ```
 
 #### Download Certificate with Format Conversion
 ```bash
-# Convert to PFX
+# Convert to PFX (header auth)
 curl -H "X-API-Key: your-api-key" \
   "https://your-domain/api/certificates/{certificate-id}?format=pfx" \
   -o certificate.pfx
 
-# Convert to DER
-curl -H "X-API-Key: your-api-key" \
-  "https://your-domain/api/certificates/{certificate-id}?format=der" \
+# Convert to DER (query param auth)
+curl "https://your-domain/api/certificates/{certificate-id}?api_key=your-api-key&format=der" \
   -o certificate.der
 ```
 

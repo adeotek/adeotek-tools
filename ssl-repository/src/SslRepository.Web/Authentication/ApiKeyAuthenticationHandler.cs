@@ -9,10 +9,12 @@ namespace SslRepository.Web.Authentication;
 
 /// <summary>
 /// Authentication handler for API key-based authentication
+/// Supports API key via header (X-API-Key) or query parameter (api_key)
 /// </summary>
 public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private const string ApiKeyHeaderName = "X-API-Key";
+    private const string ApiKeyQueryParam = "api_key";
     private readonly ApplicationDbContext _dbContext;
 
     public ApiKeyAuthenticationHandler(
@@ -27,12 +29,21 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
+        // Try to get API key from header first
+        string? providedApiKey = null;
+
+        if (Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
         {
-            return AuthenticateResult.NoResult();
+            providedApiKey = apiKeyHeaderValues.FirstOrDefault();
         }
 
-        var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
+        // If not in header, try query parameter
+        if (string.IsNullOrWhiteSpace(providedApiKey) && Request.Query.TryGetValue(ApiKeyQueryParam, out var apiKeyQueryValues))
+        {
+            providedApiKey = apiKeyQueryValues.FirstOrDefault();
+        }
+
+        // If no API key found in either location, return no result
         if (string.IsNullOrWhiteSpace(providedApiKey))
         {
             return AuthenticateResult.NoResult();
