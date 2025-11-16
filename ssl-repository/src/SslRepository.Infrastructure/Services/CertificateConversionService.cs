@@ -15,16 +15,10 @@ namespace SslRepository.Infrastructure.Services;
 /// <summary>
 /// Service for converting certificates between different formats and extracting metadata
 /// </summary>
-public class CertificateConversionService : ICertificateConversionService
+public class CertificateConversionService(ILogger<CertificateConversionService> logger)
+  : ICertificateConversionService
 {
-    private readonly ILogger<CertificateConversionService> _logger;
-
-    public CertificateConversionService(ILogger<CertificateConversionService> logger)
-    {
-        _logger = logger;
-    }
-
-    public async Task<byte[]> ConvertCertificateAsync(
+  public async Task<byte[]> ConvertCertificateAsync(
         byte[] certificateData,
         CertificateFormat sourceFormat,
         CertificateFormat targetFormat,
@@ -33,7 +27,7 @@ public class CertificateConversionService : ICertificateConversionService
     {
         try
         {
-            _logger.LogDebug("Converting certificate from {SourceFormat} to {TargetFormat}", sourceFormat, targetFormat);
+            logger.LogDebug("Converting certificate from {SourceFormat} to {TargetFormat}", sourceFormat, targetFormat);
 
             // If formats are the same, return as-is
             if (sourceFormat == targetFormat)
@@ -55,12 +49,12 @@ public class CertificateConversionService : ICertificateConversionService
                 _ => throw new NotSupportedException($"Target format {targetFormat} is not supported")
             };
 
-            _logger.LogDebug("Successfully converted certificate to {TargetFormat}", targetFormat);
+            logger.LogDebug("Successfully converted certificate to {TargetFormat}", targetFormat);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to convert certificate from {SourceFormat} to {TargetFormat}", sourceFormat, targetFormat);
+            logger.LogError(ex, "Failed to convert certificate from {SourceFormat} to {TargetFormat}", sourceFormat, targetFormat);
             throw;
         }
     }
@@ -85,12 +79,12 @@ public class CertificateConversionService : ICertificateConversionService
                 Thumbprint: GetThumbprint(certificate)
             );
 
-            _logger.LogDebug("Extracted metadata from certificate: Subject={Subject}", metadata.Subject);
+            logger.LogDebug("Extracted metadata from certificate: Subject={Subject}", metadata.Subject);
             return metadata;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to extract metadata from certificate");
+            logger.LogError(ex, "Failed to extract metadata from certificate");
             throw;
         }
     }
@@ -233,7 +227,7 @@ public class CertificateConversionService : ICertificateConversionService
             store.SetKeyEntry(
                 certificate.SubjectDN.ToString(),
                 new AsymmetricKeyEntry(privateKey),
-                new[] { certEntry });
+                [certEntry]);
         }
 
         using var ms = new MemoryStream();
@@ -258,24 +252,17 @@ public class CertificateConversionService : ICertificateConversionService
         return ConvertToPem(certificate, null);
     }
 
-    private string GetThumbprint(X509Certificate certificate)
+    private static string GetThumbprint(X509Certificate certificate)
     {
-        using var cert = new X509Certificate2(certificate.GetEncoded());
+        using var cert = X509CertificateLoader.LoadCertificate(certificate.GetEncoded());
         return cert.Thumbprint;
     }
 
-    private class PasswordFinder : IPasswordFinder
+    private class PasswordFinder(string? password) : IPasswordFinder
     {
-        private readonly string? _password;
-
-        public PasswordFinder(string? password)
+      public char[] GetPassword()
         {
-            _password = password;
-        }
-
-        public char[] GetPassword()
-        {
-            return (_password ?? "").ToCharArray();
+            return (password ?? "").ToCharArray();
         }
     }
 }

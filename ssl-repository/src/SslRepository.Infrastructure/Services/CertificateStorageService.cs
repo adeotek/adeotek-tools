@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Text;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SslRepository.Core.Entities;
@@ -157,13 +159,12 @@ public class CertificateStorageService : ICertificateStorageService
     private static byte[] DeriveEncryptionKey(string password)
     {
         // Use PBKDF2 to derive a 256-bit key from the password
-        using var deriveBytes = new Rfc2898DeriveBytes(
+        return Rfc2898DeriveBytes.Pbkdf2(
             password,
-            System.Text.Encoding.UTF8.GetBytes("SslRepository.Salt.v1"),
+            Encoding.UTF8.GetBytes("SslRepository.Salt.v1"),
             100000,
-            HashAlgorithmName.SHA256);
-
-        return deriveBytes.GetBytes(32); // 256 bits
+            HashAlgorithmName.SHA256,
+            32);
     }
 
     private static string GetFileExtension(CertificateFormat format)
@@ -201,5 +202,5 @@ public class StorageOptions
     /// <summary>
     /// Enable encryption for all stored certificates
     /// </summary>
-    public bool EncryptByDefault { get; set; } = false;
+    public bool EncryptByDefault { get; set; }
 }

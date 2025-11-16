@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SslRepository.Core\SslRepository.Core.csproj" />
     <ProjectReference Include="..\..\src\SslRepository.Infrastructure\SslRepository.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\SslRepository.Web\SslRepository.Web.csproj" />
   </ItemGroup>
 
 </Project>
