@@ -1,4 +1,3 @@
-using FluentAssertions;
 using SslRepository.Web.Authentication;
 using Xunit;
 
@@ -13,8 +12,9 @@ public class ApiKeyHelperTests
         var apiKey = ApiKeyHelper.GenerateApiKey();
 
         // Assert
-        apiKey.Should().NotBeNullOrEmpty();
-        apiKey.Length.Should().BeGreaterThan(20);
+        Assert.NotNull(apiKey);
+        Assert.NotEmpty(apiKey);
+        Assert.True(apiKey.Length > 20);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class ApiKeyHelperTests
         var apiKey2 = ApiKeyHelper.GenerateApiKey();
 
         // Assert
-        apiKey1.Should().NotBe(apiKey2);
+        Assert.NotEqual(apiKey1, apiKey2);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class ApiKeyHelperTests
         var hash2 = ApiKeyHelper.HashApiKey(apiKey);
 
         // Assert
-        hash1.Should().Be(hash2);
+        Assert.Equal(hash1, hash2);
     }
 
     [Fact]
@@ -54,6 +54,6 @@ public class ApiKeyHelperTests
         var hash2 = ApiKeyHelper.HashApiKey(apiKey2);
 
         // Assert
-        hash1.Should().NotBe(hash2);
+        Assert.NotEqual(hash1, hash2);
     }
 }
