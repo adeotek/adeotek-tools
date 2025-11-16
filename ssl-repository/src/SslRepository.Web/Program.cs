@@ -5,14 +5,13 @@ using SslRepository.Infrastructure.Data;
 using SslRepository.Infrastructure.Services;
 using SslRepository.Web.Authentication;
 using SslRepository.Web.Components;
+using SslRepository.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddControllers();
 
 // Configure database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -37,9 +36,9 @@ builder.Services.AddAuthentication("ApiKey")
 
 builder.Services.AddAuthorization();
 
-// Add logging
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+// Add OpenAPI/Swagger support
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
@@ -47,9 +46,13 @@ var app = builder.Build();
 await DbInitializer.InitializeDatabaseAsync(app.Services);
 
 // Configure the HTTP request pipeline
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.MapOpenApi();
+}
+else
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 
@@ -60,9 +63,15 @@ app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map Blazor components
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.MapControllers();
+// Map API endpoints
+var apiGroup = app.MapGroup("/api/certificates")
+    .RequireAuthorization()
+    .WithOpenApi();
+
+apiGroup.MapCertificateEndpoints();
 
 app.Run();

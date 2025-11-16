@@ -16,16 +16,16 @@ A centralized SSL certificate repository and management system with a Blazor Ser
 
 ## Architecture
 
-The application is built using .NET 9.0 with a clean architecture approach:
+The application is built using .NET 10.0 and C# 14 with a clean architecture approach:
 
 - **SslRepository.Core**: Domain models and interfaces
 - **SslRepository.Infrastructure**: Data access, storage, and certificate conversion services
-- **SslRepository.Web**: Blazor Server UI and REST API controllers
-- **SslRepository.Tests**: Unit tests
+- **SslRepository.Web**: Blazor Server UI and Minimal API endpoints
+- **SslRepository.Tests**: Unit tests with xUnit
 
 ## Prerequisites
 
-- .NET 9.0 SDK or later (for local development)
+- .NET 10.0 SDK or later (for local development)
 - Docker (for containerized deployment)
 - IIS with ASP.NET Core Hosting Bundle (for IIS deployment)
 
