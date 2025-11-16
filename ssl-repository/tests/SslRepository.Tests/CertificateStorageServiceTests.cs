@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -44,11 +43,12 @@ public class CertificateStorageServiceTests : IDisposable
             encrypt: false);
 
         // Assert
-        filePath.Should().NotBeNullOrEmpty();
-        File.Exists(filePath).Should().BeTrue();
+        Assert.NotNull(filePath);
+        Assert.NotEmpty(filePath);
+        Assert.True(File.Exists(filePath));
 
         var storedContent = await File.ReadAllBytesAsync(filePath);
-        storedContent.Should().BeEquivalentTo(fileContent);
+        Assert.Equal(fileContent, storedContent);
     }
 
     [Fact]
@@ -66,11 +66,12 @@ public class CertificateStorageServiceTests : IDisposable
             encrypt: true);
 
         // Assert
-        filePath.Should().NotBeNullOrEmpty();
-        File.Exists(filePath).Should().BeTrue();
+        Assert.NotNull(filePath);
+        Assert.NotEmpty(filePath);
+        Assert.True(File.Exists(filePath));
 
         var storedContent = await File.ReadAllBytesAsync(filePath);
-        storedContent.Should().NotBeEquivalentTo(fileContent, "content should be encrypted");
+        Assert.NotEqual(fileContent, storedContent); // Content should be encrypted
     }
 
     [Fact]
@@ -89,7 +90,7 @@ public class CertificateStorageServiceTests : IDisposable
         var retrievedContent = await _service.GetCertificateAsync(filePath, isEncrypted: false);
 
         // Assert
-        retrievedContent.Should().BeEquivalentTo(fileContent);
+        Assert.Equal(fileContent, retrievedContent);
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class CertificateStorageServiceTests : IDisposable
         var retrievedContent = await _service.GetCertificateAsync(filePath, isEncrypted: true);
 
         // Assert
-        retrievedContent.Should().BeEquivalentTo(fileContent);
+        Assert.Equal(fileContent, retrievedContent);
     }
 
     [Fact]
@@ -127,7 +128,7 @@ public class CertificateStorageServiceTests : IDisposable
         await _service.DeleteCertificateAsync(filePath);
 
         // Assert
-        File.Exists(filePath).Should().BeFalse();
+        Assert.False(File.Exists(filePath));
     }
 
     public void Dispose()
