@@ -68,10 +68,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 // Map API endpoints
-var apiGroup = app.MapGroup("/api/certificates")
+app.MapGroup("/api/v1/certificates")
     .RequireAuthorization()
-    .WithOpenApi();
-
-apiGroup.MapCertificateEndpoints();
+    .MapCertificateEndpoints();
 
 app.Run();

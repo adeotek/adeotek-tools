@@ -13,7 +13,7 @@ namespace SslRepository.Web.Endpoints;
 /// </summary>
 public static class CertificateEndpoints
 {
-    public static RouteGroupBuilder MapCertificateEndpoints(this RouteGroupBuilder group)
+    public static void MapCertificateEndpoints(this RouteGroupBuilder group)
     {
         group.MapGet("/", ListCertificates)
             .WithName("ListCertificates")
@@ -31,11 +31,9 @@ public static class CertificateEndpoints
             .WithDescription("Gets certificate metadata")
             .Produces<CertificateDto>()
             .Produces(StatusCodes.Status404NotFound);
-
-        return group;
     }
 
-    private static async Task<Ok<IEnumerable<CertificateDto>>> ListCertificates(
+    private static async Task<IResult> ListCertificates(
         ClaimsPrincipal user,
         ApplicationDbContext dbContext)
     {
@@ -57,10 +55,10 @@ public static class CertificateEndpoints
             ))
             .ToListAsync();
 
-        return TypedResults.Ok(certificates.AsEnumerable());
+        return Results.Ok(certificates.AsEnumerable());
     }
 
-    private static async Task<Results<FileContentHttpResult, NotFound<object>, ProblemHttpResult>> GetCertificate(
+    private static async Task<IResult> GetCertificate(
         Guid id,
         string? format,
         ClaimsPrincipal user,
@@ -76,7 +74,7 @@ public static class CertificateEndpoints
 
         if (certificate is null)
         {
-            return TypedResults.NotFound(new { error = "Certificate not found or access denied" });
+            return Results.NotFound(new { error = "Certificate not found or access denied" });
         }
 
         try
@@ -113,17 +111,17 @@ public static class CertificateEndpoints
             var contentType = GetContentType(targetFormat);
             var fileName = $"{certificate.Name}{GetFileExtension(targetFormat)}";
 
-            return TypedResults.File(certificateData, contentType, fileName);
+            return Results.File(certificateData, contentType, fileName);
         }
         catch (Exception ex)
         {
             var logger = loggerFactory.CreateLogger("CertificateEndpoints");
             logger.LogError(ex, "Failed to retrieve certificate {CertificateId}", id);
-            return TypedResults.Problem("Failed to retrieve certificate", statusCode: 500);
+            return Results.Problem("Failed to retrieve certificate", statusCode: 500);
         }
     }
 
-    private static async Task<Results<Ok<CertificateDto>, NotFound<object>>> GetCertificateMetadata(
+    private static async Task<IResult> GetCertificateMetadata(
         Guid id,
         ClaimsPrincipal user,
         ApplicationDbContext dbContext)
@@ -136,7 +134,7 @@ public static class CertificateEndpoints
 
         if (certificate is null)
         {
-            return TypedResults.NotFound(new { error = "Certificate not found or access denied" });
+            return Results.NotFound(new { error = "Certificate not found or access denied" });
         }
 
         var dto = new CertificateDto(
@@ -151,7 +149,7 @@ public static class CertificateEndpoints
             certificate.OriginalFormat.ToString()
         );
 
-        return TypedResults.Ok(dto);
+        return Results.Ok(dto);
     }
 
     private static List<Guid> GetAccessibleGroupIds(ClaimsPrincipal user)
