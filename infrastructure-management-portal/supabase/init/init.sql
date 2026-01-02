@@ -10,7 +10,9 @@ GRANT CREATE ON SCHEMA public TO supabase_storage_admin;
 GRANT ALL PRIVILEGES ON SCHEMA public TO supabase_storage_admin;
 
 -- Grant permissions to admin role
+GRANT CREATE ON SCHEMA public TO supabase_admin;
 GRANT ALL PRIVILEGES ON SCHEMA public TO supabase_admin;
+GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_admin;
 
 -- Grant usage to authenticated and service roles
 GRANT USAGE ON SCHEMA public TO authenticated;
