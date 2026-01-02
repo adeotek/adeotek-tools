@@ -1,5 +1,12 @@
 # env file
 .env
+.env.local
+
+# Node.js
+node_modules/
+.next/
+*.log
+npm-debug.log*
 
 # IDEs
 .idea
