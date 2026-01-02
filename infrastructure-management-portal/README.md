@@ -117,7 +117,7 @@ infrastructure-management-portal/
 │   ├── lib/                   # Utilities and helpers
 │   │   ├── supabase/         # Supabase client configuration
 │   │   └── types/            # TypeScript type definitions
-│   └── middleware.ts         # Next.js middleware for auth
+│   └── proxy.ts              # Next.js proxy for auth
 ├── supabase/
 │   ├── config/               # Supabase configuration
 │   │   └── kong.yml         # API Gateway configuration
