@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Supabase PostgreSQL Database
   db:
-    image: supabase/postgres:15.6.1.93
+    image: supabase/postgres:17.6.1.067
     container_name: imp-postgres
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

@@ -15,7 +15,7 @@ Enterprise-ready web application for managing infrastructure data with dynamic s
 - **Date Handling**: date-fns
 
 ### Backend
-- **Database**: PostgreSQL 15.6
+- **Database**: PostgreSQL 17.6
 - **Auth**: Supabase GoTrue v2.162
 - **API**: PostgREST v12.2 (Auto-generated REST API)
 - **Real-time**: Supabase Realtime v2.30
@@ -54,7 +54,7 @@ Enterprise-ready web application for managing infrastructure data with dynamic s
                          │
                          ▼
               ┌──────────────────────┐
-              │   PostgreSQL 15.6    │
+              │   PostgreSQL 17.6    │
               │   (Port 5432)        │
               │   - auth schema      │
               │   - public schema    │

@@ -22,7 +22,7 @@ A modern, enterprise-ready web application for managing infrastructure data incl
 ### Technical Stack
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
 - **Backend**: Supabase (PostgreSQL, Auth, Real-time, Storage)
-- **Database**: PostgreSQL 15 with RLS
+- **Database**: PostgreSQL 17 with RLS
 - **Deployment**: Docker Compose
 - **API**: Auto-generated REST and GraphQL APIs via PostgREST
 
