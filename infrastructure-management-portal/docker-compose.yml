@@ -25,7 +25,7 @@ services:
 
   # Supabase Studio (Admin UI)
   studio:
-    image: supabase/studio:20241118-4265ee3
+    image: supabase/studio:latest
     container_name: imp-studio
     environment:
       STUDIO_PG_META_URL: http://meta:8080
@@ -66,7 +66,7 @@ services:
 
   # Supabase Auth
   auth:
-    image: supabase/gotrue:v2.162.1
+    image: supabase/gotrue:v2.185.0-rc.12
     container_name: imp-auth
     environment:
       GOTRUE_API_HOST: 0.0.0.0
@@ -124,7 +124,7 @@ services:
 
   # Supabase Realtime
   realtime:
-    image: supabase/realtime:v2.30.23
+    image: supabase/realtime:v2.69.1
     container_name: imp-realtime
     environment:
       PORT: 4000
@@ -154,7 +154,7 @@ services:
 
   # Supabase Storage
   storage:
-    image: supabase/storage-api:v1.11.7
+    image: supabase/storage-api:v1.33.4
     container_name: imp-storage
     environment:
       ANON_KEY: ${ANON_KEY}
@@ -200,7 +200,7 @@ services:
 
   # Supabase Meta (Database management)
   meta:
-    image: supabase/postgres-meta:v0.84.2
+    image: supabase/postgres-meta:v0.95.1
     container_name: imp-meta
     environment:
       PG_META_PORT: 8080

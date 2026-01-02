@@ -16,10 +16,10 @@ Enterprise-ready web application for managing infrastructure data with dynamic s
 
 ### Backend
 - **Database**: PostgreSQL 17.6
-- **Auth**: Supabase GoTrue v2.162
+- **Auth**: Supabase GoTrue v2.185
 - **API**: PostgREST v12.2 (Auto-generated REST API)
-- **Real-time**: Supabase Realtime v2.30
-- **Storage**: Supabase Storage v1.11
+- **Real-time**: Supabase Realtime v2.69
+- **Storage**: Supabase Storage v1.33
 - **API Gateway**: Kong 2.8
 
 ### Infrastructure
