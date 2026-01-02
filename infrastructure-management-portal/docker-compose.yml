@@ -12,7 +12,6 @@ services:
       POSTGRES_PORT: 5432
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
@@ -245,6 +244,35 @@ services:
       - auth
       - rest
     restart: unless-stopped
+
+  # Database Migration Runner
+  # Runs migrations after Supabase auth service has initialized the auth schema
+  migration:
+    image: supabase/postgres:17.6.1.067
+    container_name: imp-migration
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./supabase/migrations:/migrations:ro
+    networks:
+      - imp-network
+    depends_on:
+      auth:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: >
+      bash -c "
+        echo 'Waiting for auth service to initialize...' &&
+        sleep 10 &&
+        echo 'Running database migrations...' &&
+        for file in /migrations/*.sql; do
+          echo \"Executing $$file...\" &&
+          PGPASSWORD=${POSTGRES_PASSWORD} psql -h db -U postgres -d postgres -f \"$$file\" || exit 1
+        done &&
+        echo 'Migrations completed successfully!'
+      "
+    restart: "no"
 
 networks:
   imp-network:

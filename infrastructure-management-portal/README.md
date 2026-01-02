@@ -64,6 +64,9 @@ This will start:
 - Supabase services (Kong API Gateway on port 8000)
 - Supabase Studio (port 3001) - Database management UI
 - Next.js application (port 3002)
+- Database migration runner (runs once and exits)
+
+The migration service automatically runs after Supabase auth initializes, creating all necessary database tables and seeding the admin user.
 
 5. **Access the applications**
 - **Main Application**: http://localhost:3002
@@ -204,6 +207,19 @@ docker-compose exec -T db psql -U postgres postgres < backup_file.sql
 ```
 
 ## Troubleshooting
+
+### Migration issues
+```bash
+# Check migration logs
+docker-compose logs migration
+
+# If migrations failed, stop services and restart
+docker-compose down
+docker-compose up -d
+
+# Manually run migrations (if needed)
+docker-compose run --rm migration
+```
 
 ### Database connection issues
 ```bash

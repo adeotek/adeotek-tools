@@ -270,7 +270,10 @@ SMTP_PASS=<smtp-password>
 | studio | 3001 | Database management UI |
 | meta | 8080 | Database metadata API |
 | imgproxy | 5001 | Image transformation |
+| migration | N/A | Database migration runner (runs once) |
 | app | 3002 | Next.js application |
+
+**Note**: The `migration` service runs automatically after the `auth` service initializes, executing all SQL migration files from `supabase/migrations/` in order. It exits after successful completion.
 
 ### Volumes
 - `db-data`: PostgreSQL data persistence
