@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository description
 
-This repository contains a collection of tools written in GO and .NET.
+This repository contains a collection of tools written in GO, .NET, and TypeScript/JavaScript.
 
 ## Tools
 
@@ -46,3 +46,33 @@ The `sql-migration` tool is written in .NET and allows users to apply to databas
 - Documentation: Package and exported function comments follow .NET conventions
 - Build: the project should be built with AOT (Ahead of Time) compilation enabled, for both Linux x64 and Windows x64 platforms
 - Architecture: Follow .NET conventions with src/, tests/, and tools/ directories
+
+### `infrastructure-management-portal`
+
+A modern, enterprise-ready web application for managing infrastructure data including servers, SSL certificates, applications, and services. Built with Next.js and Supabase.
+The application features a dynamic schema management system allowing administrators to create custom data models via UI, role-based access control, audit logging, and comprehensive security with Row Level Security (RLS).
+
+#### `infrastructure-management-portal` Build/Run Commands
+- Install dependencies: `npm install`
+- Development server: `npm run dev` (requires Supabase services running)
+- Build for production: `npm run build`
+- Start production: `npm start`
+- Lint: `npm run lint`
+- Type check: `npx tsc --noEmit`
+- Docker Compose (all services): `docker-compose up -d`
+- Stop services: `docker-compose down`
+
+#### `infrastructure-management-portal` Code Style Guidelines
+- TypeScript strict mode enabled
+- React Server Components by default, Client Components when needed ('use client')
+- Formatting: Prettier with 2-space indentation
+- Imports: Group by external, internal (@/), components, types
+- Naming: PascalCase for components, camelCase for functions/variables
+- Error handling: Try-catch with user-friendly error messages
+- Testing: Jest + React Testing Library (when added)
+- Components: Functional components with TypeScript interfaces for props
+- State management: React hooks, Server Actions for mutations
+- Styling: Tailwind CSS utility classes
+- Database: Supabase client with Row Level Security (RLS)
+- API routes: Next.js App Router convention in src/app/api/
+- Architecture: Next.js App Router with src/app/, src/components/, src/lib/
