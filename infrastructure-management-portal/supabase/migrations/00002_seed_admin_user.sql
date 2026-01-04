@@ -39,7 +39,7 @@ BEGIN
             recovery_token
         ) VALUES (
             '00000000-0000-0000-0000-000000000000',
-            uuid_generate_v4(),
+            gen_random_uuid(),
             'authenticated',
             'authenticated',
             admin_email,

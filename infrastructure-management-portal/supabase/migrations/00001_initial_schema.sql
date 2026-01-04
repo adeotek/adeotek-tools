@@ -1,9 +1,8 @@
 -- Infrastructure Management Portal - Initial Schema Migration
 -- This migration creates the core database structure for the application
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Note: uuid-ossp extension has compatibility issues with Supabase PostgreSQL hooks
+-- Using pgcrypto's gen_random_uuid() instead
 
 -- Create custom schema for application
 CREATE SCHEMA IF NOT EXISTS imp;
@@ -14,7 +13,7 @@ CREATE SCHEMA IF NOT EXISTS imp;
 
 -- Roles table
 CREATE TABLE imp.roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     is_system_role BOOLEAN DEFAULT FALSE,
@@ -47,7 +46,7 @@ CREATE TABLE imp.user_profiles (
 
 -- Data models table (for dynamic schema)
 CREATE TABLE imp.data_models (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     display_name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -63,7 +62,7 @@ CREATE TABLE imp.data_models (
 
 -- Field types lookup
 CREATE TABLE imp.field_types (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     sql_type VARCHAR(100) NOT NULL,
@@ -89,7 +88,7 @@ INSERT INTO imp.field_types (name, display_name, sql_type, ui_component) VALUES
 
 -- Fields table (for dynamic fields)
 CREATE TABLE imp.fields (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     model_id UUID NOT NULL REFERENCES imp.data_models(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     display_name VARCHAR(255) NOT NULL,
@@ -111,7 +110,7 @@ CREATE TABLE imp.fields (
 
 -- Permissions table (role-based access per model)
 CREATE TABLE imp.permissions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role_id UUID NOT NULL REFERENCES imp.roles(id) ON DELETE CASCADE,
     model_id UUID NOT NULL REFERENCES imp.data_models(id) ON DELETE CASCADE,
     can_read BOOLEAN DEFAULT FALSE,
@@ -128,7 +127,7 @@ CREATE TABLE imp.permissions (
 -- =====================================================
 
 CREATE TABLE imp.audit_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id),
     user_email VARCHAR(255),
     action VARCHAR(50) NOT NULL, -- CREATE, UPDATE, DELETE, LOGIN, etc.
@@ -152,7 +151,7 @@ CREATE INDEX idx_audit_logs_created_at ON imp.audit_logs(created_at DESC);
 
 -- Servers table
 CREATE TABLE imp.servers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hostname VARCHAR(255) NOT NULL,
     ip_address INET NOT NULL,
     ram_gb INTEGER,
@@ -174,7 +173,7 @@ CREATE TABLE imp.servers (
 
 -- SSL Certificates table
 CREATE TABLE imp.ssl_certificates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     common_name VARCHAR(255) NOT NULL,
     valid_from DATE NOT NULL,
@@ -194,7 +193,7 @@ CREATE TABLE imp.ssl_certificates (
 
 -- Applications table
 CREATE TABLE imp.applications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     type VARCHAR(100),
     group_name VARCHAR(100),
@@ -213,7 +212,7 @@ CREATE TABLE imp.applications (
 
 -- Services table
 CREATE TABLE imp.services (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     type VARCHAR(100),
     group_name VARCHAR(100),
