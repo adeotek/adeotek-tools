@@ -55,7 +55,18 @@ export async function getRecordReferences(recordId: string): Promise<{
     throw new Error('Failed to fetch record references');
   }
 
-  return (data ?? []).map((ref: any) => ({
+  // Type for the nested query result
+  type ReferenceData = {
+    record_id: string;
+    attributes?: {
+      display_name?: string;
+      entities?: {
+        display_name?: string;
+      };
+    };
+  };
+
+  return (data ?? []).map((ref: ReferenceData) => ({
     recordId: ref.record_id,
     entityName: ref.attributes?.entities?.display_name || 'Unknown',
     attributeName: ref.attributes?.display_name || 'Unknown',
@@ -99,7 +110,11 @@ export async function validateRelation(
     };
   }
 
-  if (record.entity_id !== attribute.references_entity_id) {
+  // Type assertion to help TypeScript
+  const typedRecord = record as { id: string; entity_id: string };
+  const typedAttribute = attribute as { references_entity_id: string | null };
+
+  if (typedRecord.entity_id !== typedAttribute.references_entity_id) {
     return {
       valid: false,
       error: 'Referenced record is of incorrect entity type',
