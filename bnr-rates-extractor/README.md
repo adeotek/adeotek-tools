@@ -39,18 +39,18 @@ The compiled binary will be located in `bin/Release/net10.0/{runtime}/publish/`.
 ## Usage
 
 ```bash
-bnr-rates-extractor --year <year> --currency <currency-code>
+bnr-rates-extractor <year> <currency-code>
 ```
 
 ### Arguments
 
-- `--year`: The year for which to extract rates (e.g., 2024)
-- `--currency`: The currency code to extract (e.g., USD, EUR, GBP)
+- `<year>`: The year for which to extract rates (e.g., 2024)
+- `<currency-code>`: The currency code to extract (e.g., USD, EUR, GBP)
 
 ### Example
 
 ```bash
-bnr-rates-extractor --year 2024 --currency USD
+bnr-rates-extractor 2024 USD
 ```
 
 This will create a file named `USD_2024_rates.csv` in the current directory with the following format:

@@ -1,36 +1,40 @@
-using System.CommandLine;
 using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 
-var yearOption = new Option<int>(
-    name: "--year",
-    description: "The year for which to extract rates (e.g., 2024)")
-{ IsRequired = true };
-
-var currencyOption = new Option<string>(
-    name: "--currency",
-    description: "The currency code to extract (e.g., USD)")
-{ IsRequired = true };
-
-var rootCommand = new RootCommand("BNR Rates Extractor - Extracts exchange rates from National Bank of Romania");
-rootCommand.AddOption(yearOption);
-rootCommand.AddOption(currencyOption);
-
-rootCommand.SetHandler(async (int year, string currencyCode) =>
+if (args.Length != 2)
 {
-    try
-    {
-        await ExtractRatesAsync(year, currencyCode);
-    }
-    catch (Exception ex)
-    {
-        Console.Error.WriteLine($"Error: {ex.Message}");
-        Environment.Exit(1);
-    }
-}, yearOption, currencyOption);
+    Console.WriteLine("BNR Rates Extractor - Extracts exchange rates from National Bank of Romania");
+    Console.WriteLine();
+    Console.WriteLine("Usage: bnr-rates-extractor <year> <currency-code>");
+    Console.WriteLine();
+    Console.WriteLine("Arguments:");
+    Console.WriteLine("  <year>          The year for which to extract rates (e.g., 2024)");
+    Console.WriteLine("  <currency-code> The currency code to extract (e.g., USD, EUR, GBP)");
+    Console.WriteLine();
+    Console.WriteLine("Example:");
+    Console.WriteLine("  bnr-rates-extractor 2024 USD");
+    return 1;
+}
 
-return await rootCommand.InvokeAsync(args);
+if (!int.TryParse(args[0], out var year))
+{
+    Console.Error.WriteLine($"Error: Invalid year '{args[0]}'. Year must be a number.");
+    return 1;
+}
+
+var currencyCode = args[1];
+
+try
+{
+    await ExtractRatesAsync(year, currencyCode);
+    return 0;
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    return 1;
+}
 
 static async Task ExtractRatesAsync(int year, string currencyCode)
 {
