@@ -80,7 +80,7 @@ static async Task ExtractRatesAsync(int year, string currencyCode)
             continue;
 
         var rateElements = cube.Elements(ns + "Rate")
-            .Where(r => r.Attribute("currency")?.Value?.Equals(currencyCode, StringComparison.OrdinalIgnoreCase) == true);
+            .Where(r => r.Attribute("currency")?.Value.Equals(currencyCode, StringComparison.OrdinalIgnoreCase) == true);
 
         foreach (var rateElement in rateElements)
         {
