@@ -94,28 +94,43 @@ You can use environment variables instead of command-line flags. Prefix them wit
 
 ## Script Organization
 
-The tool expects SQL scripts to be organized in the following directory structure for optimal execution order:
+Within the target directory, scripts are executed in alphabetical order, and then any subdirectories are processed in the same manner in alphabetical order recursively.
+To achieve the correct result, the tool expects SQL scripts to be organized in the optimal execution order.
+
+### Example Directory Structure
 
 ```
 sql-scripts/
-├── tables/
+├── 01_tables/
+│   ├── 01_audit/
+│   │   └── 002_create_audit.sql
+│   ├── 02_custom/
+│   │   ├── 001_create_custom1.sql
+│   │   └── 002_create_custom2.sql
 │   ├── 001_create_users.sql
 │   └── 002_create_posts.sql
-├── views/
+├── 02_views/
 │   └── 001_user_posts_view.sql
-├── stored_procedures/
+├── 03_stored_procedures/
 │   └── 001_get_user_posts.sql
-└── data/
+└── 04_data/
+│   ├── 01_post_seed/
+│   │   └── 001_seed_posts.sql
     └── 001_seed_data.sql
 ```
 
-Scripts are executed in this order:
-1. `tables/` - Database table creation scripts
-2. `views/` - Database view creation scripts
-3. `stored_procedures/` - Stored procedure creation scripts
-4. `data/` - Data insertion/seeding scripts
+The above scripts will be executed in the following order:
 
-Within each directory, scripts are executed in alphabetical order.
+1. `01_tables/001_create_users.sql`
+2. `01_tables/002_create_posts.sql`
+3. `01_tables/01_audit/002_create_audit.sql`
+4. `01_tables/02_custom/001_create_custom1.sql`
+5. `01_tables/02_custom/002_create_custom2.sql`
+6. `02_views/001_user_posts_view.sql`
+7. `03_stored_procedures/001_get_user_posts.sql`
+8. `04_data/001_seed_data.sql`
+9. `04_data/01_post_seed/001_seed_posts.sql`
+
 
 ## Migration History
 
@@ -205,6 +220,83 @@ make test
 ```bash
 make clean
 ```
+
+## Publishing a New Version
+
+This tool is part of a monorepo, so version tags must be prefixed with the module path.
+
+### Steps to Publish
+
+1. **Commit all changes:**
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+2. **Create and push a version tag:**
+   ```bash
+   # Format: sql-migration/vMAJOR.MINOR.PATCH
+   git tag sql-migration/v0.4.0
+   git push origin sql-migration/v0.4.0
+   ```
+
+   Or use an annotated tag (recommended):
+   ```bash
+   git tag -a sql-migration/v0.4.0 -m "Release v0.4.0: Description of changes"
+   git push origin sql-migration/v0.4.0
+   ```
+
+3. **Wait for Go proxy indexing:**
+   The Go proxy (proxy.golang.org) needs 15-30 minutes to index the new version.
+
+4. **Verify the tag:**
+   ```bash
+   git ls-remote --tags origin | grep sql-migration
+   ```
+
+### Installing Specific Versions
+
+Users can install the latest version or a specific version:
+
+```bash
+# Install latest version
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+
+# Install specific version
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@v0.4.0
+```
+
+### Updating After a New Release
+
+To update to the latest version:
+
+```bash
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+If the new version doesn't appear immediately, try:
+
+```bash
+# Clear module cache
+go clean -modcache
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+
+# Or bypass proxy cache
+GOPROXY=direct go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+On Windows PowerShell:
+```powershell
+$env:GOPROXY="direct"; go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+### Important Notes
+
+- **Tag Format:** Must use `sql-migration/vX.Y.Z` format (not just `vX.Y.Z`)
+- **Version Prefix:** Always prefix tags with the module subdirectory name
+- **Semantic Versioning:** Follow semantic versioning (MAJOR.MINOR.PATCH)
+- **Go Proxy Cache:** Allow time for proxy.golang.org to index new versions
 
 ## License
 
