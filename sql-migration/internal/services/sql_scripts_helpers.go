@@ -23,6 +23,8 @@ func NewSqlScriptsHelpers() *SqlScriptsHelpers {
 }
 
 // ScanForSqlFiles scans a directory for SQL files and returns them in a specific order
+// Supports multiple directory levels (e.g., tables/level1/level2/level3/script.sql)
+// All subdirectories at any level are processed in alphabetical order
 func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) {
 	if directory == "" {
 		return nil, fmt.Errorf("directory path cannot be empty")
@@ -32,7 +34,7 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 		return nil, fmt.Errorf("directory '%s' does not exist", directory)
 	}
 
-  scripts := make(map[string][]string)
+	var scripts []string
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -45,12 +47,7 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 			}
 			// Convert Windows path separators to Unix-style for consistency
 			relativePath = strings.ReplaceAll(relativePath, "\\", "/")
-      // Extract first folder as prefix
-      prefix := strings.SplitN(relativePath, "/", 2)[0]
-      if _, exists := scripts[prefix]; !exists {
-        scripts[prefix] = []string{}
-      }
-      scripts[prefix] = append(scripts[prefix], relativePath)
+			scripts = append(scripts, relativePath)
 		}
 		return nil
 	})
@@ -59,29 +56,10 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 		return nil, fmt.Errorf("failed to scan directory '%s': %w", directory, err)
 	}
 
-  return sortScripts(scripts), nil
-}
+	// Sort scripts by their full path, which ensures alphabetical order at all directory levels
+	sort.Strings(scripts)
 
-// sortScripts sorts scripts by prefix (folder)
-func sortScripts(scripts map[string][]string) []string {
-	var sorted = []string{}
-
-  // Get all keys and sort them
-  keys := make([]string, 0, len(scripts))
-  for key := range scripts {
-    keys = append(keys, key)
-  }
-  sort.Strings(keys)
-
-  // Iterate over sorted keys and append scripts
-  for _, key := range keys {
-    if scripts[key] != nil {
-      sort.Strings(scripts[key])
-      sorted = append(sorted, scripts[key]...)
-    }
-  }
-
-	return sorted
+	return scripts, nil
 }
 
 // CalculateHash calculates the SHA256 hash of a file
@@ -195,5 +173,3 @@ func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 
 	return result
 }
-
-

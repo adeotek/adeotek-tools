@@ -17,7 +17,7 @@ import (
 
 // Version information
 const (
-	Version = "0.3.4"
+	Version   = "0.4.0"
 	EnvPrefix = "CLI_SQL_MIGRATION"
 )
 
@@ -43,7 +43,7 @@ func Run() {
 	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
-		// Set up environment variable support
+	// Set up environment variable support
 	viper.SetEnvPrefix(EnvPrefix)
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
