@@ -181,6 +181,75 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_Comprehensive(t *testing.T) {
 	}
 }
 
+func TestSqlScriptsHelpers_ScanForSqlFiles_NestedDirectories(t *testing.T) {
+	// Create a temporary directory structure with multiple nested levels
+	tempDir := t.TempDir()
+
+	// Create deeply nested directory structure
+	testFiles := []string{
+		"tables/level1/001_nested.sql",
+		"tables/level1/level2/002_deeper.sql",
+		"tables/level1/level2/level3/003_deepest.sql",
+		"tables/level1/level2/level3/004_another_deep.sql",
+		"tables/level1/level2/001_mid_level.sql",
+		"tables/001_root_table.sql",
+		"views/nested/001_nested_view.sql",
+		"data/deep/deeper/deepest/001_seed.sql",
+		"data/001_root_data.sql",
+	}
+
+	// Create all directories and files
+	for _, file := range testFiles {
+		fullPath := filepath.Join(tempDir, file)
+		dir := filepath.Dir(fullPath)
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			t.Fatalf("Failed to create directory for %s: %v", file, err)
+		}
+		err = os.WriteFile(fullPath, []byte("SELECT 1;"), 0644)
+		if err != nil {
+			t.Fatalf("Failed to create test file %s: %v", file, err)
+		}
+	}
+
+	// Test the scanner
+	helper := NewSqlScriptsHelpers()
+	result, err := helper.ScanForSqlFiles(tempDir)
+	if err != nil {
+		t.Fatalf("ScanForSqlFiles() error = %v", err)
+	}
+
+	// Expected order: alphabetical sorting by full path
+	// This ensures all subdirectories at any level are processed alphabetically
+	expected := []string{
+		"data/001_root_data.sql",
+		"data/deep/deeper/deepest/001_seed.sql",
+		"tables/001_root_table.sql",
+		"tables/level1/001_nested.sql",
+		"tables/level1/level2/001_mid_level.sql",
+		"tables/level1/level2/002_deeper.sql",
+		"tables/level1/level2/level3/003_deepest.sql",
+		"tables/level1/level2/level3/004_another_deep.sql",
+		"views/nested/001_nested_view.sql",
+	}
+
+	if len(result) != len(expected) {
+		t.Errorf("Expected %d files, got %d", len(expected), len(result))
+		t.Errorf("Expected: %v", expected)
+		t.Errorf("Got: %v", result)
+	}
+
+	for i, expectedFile := range expected {
+		if i >= len(result) {
+			t.Errorf("Missing expected file: %s", expectedFile)
+			continue
+		}
+		if result[i] != expectedFile {
+			t.Errorf("Expected file %s at index %d, got %s", expectedFile, i, result[i])
+		}
+	}
+}
+
 func TestSqlScriptsHelpers_ScanForSqlFiles_ErrorCases(t *testing.T) {
 	helper := NewSqlScriptsHelpers()
 
