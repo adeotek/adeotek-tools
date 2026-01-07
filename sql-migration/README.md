@@ -206,6 +206,83 @@ make test
 make clean
 ```
 
+## Publishing a New Version
+
+This tool is part of a monorepo, so version tags must be prefixed with the module path.
+
+### Steps to Publish
+
+1. **Commit all changes:**
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+2. **Create and push a version tag:**
+   ```bash
+   # Format: sql-migration/vMAJOR.MINOR.PATCH
+   git tag sql-migration/v0.4.0
+   git push origin sql-migration/v0.4.0
+   ```
+
+   Or use an annotated tag (recommended):
+   ```bash
+   git tag -a sql-migration/v0.4.0 -m "Release v0.4.0: Description of changes"
+   git push origin sql-migration/v0.4.0
+   ```
+
+3. **Wait for Go proxy indexing:**
+   The Go proxy (proxy.golang.org) needs 15-30 minutes to index the new version.
+
+4. **Verify the tag:**
+   ```bash
+   git ls-remote --tags origin | grep sql-migration
+   ```
+
+### Installing Specific Versions
+
+Users can install the latest version or a specific version:
+
+```bash
+# Install latest version
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+
+# Install specific version
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@v0.4.0
+```
+
+### Updating After a New Release
+
+To update to the latest version:
+
+```bash
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+If the new version doesn't appear immediately, try:
+
+```bash
+# Clear module cache
+go clean -modcache
+go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+
+# Or bypass proxy cache
+GOPROXY=direct go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+On Windows PowerShell:
+```powershell
+$env:GOPROXY="direct"; go install github.com/adeotek/adeotek-tools/sql-migration/cmd/sql-migration@latest
+```
+
+### Important Notes
+
+- **Tag Format:** Must use `sql-migration/vX.Y.Z` format (not just `vX.Y.Z`)
+- **Version Prefix:** Always prefix tags with the module subdirectory name
+- **Semantic Versioning:** Follow semantic versioning (MAJOR.MINOR.PATCH)
+- **Go Proxy Cache:** Allow time for proxy.golang.org to index new versions
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
