@@ -55,7 +55,10 @@ func TestSqlScriptsHelpers_ScanForSqlFiles(t *testing.T) {
 		t.Fatalf("ScanForSqlFiles() error = %v", err)
 	}
 
-	// Expected order: alphabetical by directory (data, tables, views), then alphabetical by filename within each directory
+	// Expected order: breadth-first traversal
+	// 1. Files in root (none)
+	// 2. Each subdirectory in alphabetical order (data, tables, views)
+	//    - Files directly under it
 	expected := []string{
 		"data/001_seed_data.sql",
 		"tables/001_create_users.sql",
@@ -150,8 +153,10 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_Comprehensive(t *testing.T) {
 		t.Fatalf("ScanForSqlFiles() error = %v", err)
 	}
 
-	// Expected order: alphabetical by directory, then alphabetical by filename within each directory
-	// Directories in alphabetical order: data, other, stored_procedures, tables, views
+	// Expected order: breadth-first traversal
+	// 1. Files in root (none)
+	// 2. Each subdirectory in alphabetical order: data, other, stored_procedures, tables, views
+	//    - Files directly under each
 	expected := []string{
 		"data/001_seed_users.sql",
 		"data/002_seed_posts.sql",
@@ -182,20 +187,20 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_Comprehensive(t *testing.T) {
 }
 
 func TestSqlScriptsHelpers_ScanForSqlFiles_NestedDirectories(t *testing.T) {
-	// Create a temporary directory structure with multiple nested levels
+	// Create a temporary directory structure matching the README.md example
 	tempDir := t.TempDir()
 
-	// Create deeply nested directory structure
+	// Create the exact structure from README.md
 	testFiles := []string{
-		"tables/level1/001_nested.sql",
-		"tables/level1/level2/002_deeper.sql",
-		"tables/level1/level2/level3/003_deepest.sql",
-		"tables/level1/level2/level3/004_another_deep.sql",
-		"tables/level1/level2/001_mid_level.sql",
-		"tables/001_root_table.sql",
-		"views/nested/001_nested_view.sql",
-		"data/deep/deeper/deepest/001_seed.sql",
-		"data/001_root_data.sql",
+		"01_tables/01_audit/002_create_audit.sql",
+		"01_tables/02_custom/001_create_custom1.sql",
+		"01_tables/02_custom/002_create_custom2.sql",
+		"01_tables/001_create_users.sql",
+		"01_tables/002_create_posts.sql",
+		"02_views/001_user_posts_view.sql",
+		"03_stored_procedures/001_get_user_posts.sql",
+		"04_data/01_post_seed/001_seed_posts.sql",
+		"04_data/001_seed_data.sql",
 	}
 
 	// Create all directories and files
@@ -219,18 +224,20 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_NestedDirectories(t *testing.T) {
 		t.Fatalf("ScanForSqlFiles() error = %v", err)
 	}
 
-	// Expected order: alphabetical sorting by full path
-	// This ensures all subdirectories at any level are processed alphabetically
+	// Expected order: breadth-first traversal matching README.md example
+	// 1. Files in root (none)
+	// 2. Subdirectories in alphabetical order (01_tables, 02_views, 03_stored_procedures, 04_data)
+	//    For each: files directly under it first, then subdirectories recursively
 	expected := []string{
-		"data/001_root_data.sql",
-		"data/deep/deeper/deepest/001_seed.sql",
-		"tables/001_root_table.sql",
-		"tables/level1/001_nested.sql",
-		"tables/level1/level2/001_mid_level.sql",
-		"tables/level1/level2/002_deeper.sql",
-		"tables/level1/level2/level3/003_deepest.sql",
-		"tables/level1/level2/level3/004_another_deep.sql",
-		"views/nested/001_nested_view.sql",
+		"01_tables/001_create_users.sql",              // 01_tables/ files first
+		"01_tables/002_create_posts.sql",
+		"01_tables/01_audit/002_create_audit.sql",     // then 01_tables/01_audit
+		"01_tables/02_custom/001_create_custom1.sql",  // then 01_tables/02_custom
+		"01_tables/02_custom/002_create_custom2.sql",
+		"02_views/001_user_posts_view.sql",            // 02_views/ files
+		"03_stored_procedures/001_get_user_posts.sql", // 03_stored_procedures/ files
+		"04_data/001_seed_data.sql",                   // 04_data/ files first
+		"04_data/01_post_seed/001_seed_posts.sql",     // then 04_data/01_post_seed
 	}
 
 	if len(result) != len(expected) {
@@ -245,7 +252,15 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_NestedDirectories(t *testing.T) {
 			continue
 		}
 		if result[i] != expectedFile {
-			t.Errorf("Expected file %s at index %d, got %s", expectedFile, i, result[i])
+			t.Errorf("At position %d: expected %s, got %s", i+1, expectedFile, result[i])
+		}
+	}
+
+	// Log the execution order for verification
+	if t.Failed() {
+		t.Log("Actual execution order:")
+		for i, script := range result {
+			t.Logf("%d. %s", i+1, script)
 		}
 	}
 }
