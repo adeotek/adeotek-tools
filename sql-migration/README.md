@@ -94,28 +94,43 @@ You can use environment variables instead of command-line flags. Prefix them wit
 
 ## Script Organization
 
-The tool expects SQL scripts to be organized in the following directory structure for optimal execution order:
+Within the target directory, scripts are executed in alphabetical order, and then any subdirectories are processed in the same manner in alphabetical order recursively.
+To achieve the correct result, the tool expects SQL scripts to be organized in the optimal execution order.
+
+### Example Directory Structure
 
 ```
 sql-scripts/
-├── tables/
+├── 01_tables/
+│   ├── 01_audit/
+│   │   └── 002_create_audit.sql
+│   ├── 02_custom/
+│   │   ├── 001_create_custom1.sql
+│   │   └── 002_create_custom2.sql
 │   ├── 001_create_users.sql
 │   └── 002_create_posts.sql
-├── views/
+├── 02_views/
 │   └── 001_user_posts_view.sql
-├── stored_procedures/
+├── 03_stored_procedures/
 │   └── 001_get_user_posts.sql
-└── data/
+└── 04_data/
+│   ├── 01_post_seed/
+│   │   └── 001_seed_posts.sql
     └── 001_seed_data.sql
 ```
 
-Scripts are executed in this order:
-1. `tables/` - Database table creation scripts
-2. `views/` - Database view creation scripts
-3. `stored_procedures/` - Stored procedure creation scripts
-4. `data/` - Data insertion/seeding scripts
+The above scripts will be executed in the following order:
 
-Within each directory, scripts are executed in alphabetical order.
+1. `01_tables/001_create_users.sql`
+2. `01_tables/002_create_posts.sql`
+3. `01_tables/01_audit/002_create_audit.sql`
+4. `01_tables/02_custom/001_create_custom1.sql`
+5. `01_tables/02_custom/002_create_custom2.sql`
+6. `02_views/001_user_posts_view.sql`
+7. `03_stored_procedures/001_get_user_posts.sql`
+8. `04_data/001_seed_data.sql`
+9. `04_data/01_post_seed/001_seed_posts.sql`
+
 
 ## Migration History
 

@@ -22,9 +22,12 @@ func NewSqlScriptsHelpers() *SqlScriptsHelpers {
 	return &SqlScriptsHelpers{}
 }
 
-// ScanForSqlFiles scans a directory for SQL files and returns them in a specific order
-// Supports multiple directory levels (e.g., tables/level1/level2/level3/script.sql)
-// All subdirectories at any level are processed in alphabetical order
+// ScanForSqlFiles scans a directory for SQL files and returns them in breadth-first order
+// Execution order:
+// 1. Files in the target directory (ignoring subdirectories), ordered alphabetically
+// 2. For each subdirectory in alphabetical order:
+//    - Files directly under it, ordered alphabetically
+//    - Then recursively process its subdirectories in the same manner
 func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) {
 	if directory == "" {
 		return nil, fmt.Errorf("directory path cannot be empty")
@@ -35,31 +38,68 @@ func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) 
 	}
 
 	var scripts []string
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".sql") {
-			relativePath, err := filepath.Rel(directory, path)
-			if err != nil {
-				return err
-			}
-			// Convert Windows path separators to Unix-style for consistency
-			relativePath = strings.ReplaceAll(relativePath, "\\", "/")
-			scripts = append(scripts, relativePath)
-		}
-		return nil
-	})
-
+	err := s.scanDirectoryBreadthFirst(directory, "", &scripts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan directory '%s': %w", directory, err)
 	}
 
-	// Sort scripts by their full path, which ensures alphabetical order at all directory levels
-	sort.Strings(scripts)
-
 	return scripts, nil
+}
+
+// scanDirectoryBreadthFirst performs a breadth-first scan of a directory
+// relativeDir is the relative path from the base directory (empty for root)
+func (s *SqlScriptsHelpers) scanDirectoryBreadthFirst(baseDir, relativeDir string, scripts *[]string) error {
+	currentDir := filepath.Join(baseDir, relativeDir)
+
+	entries, err := os.ReadDir(currentDir)
+	if err != nil {
+		return err
+	}
+
+	// Separate files and directories
+	var files []string
+	var dirs []string
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs = append(dirs, entry.Name())
+		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
+			files = append(files, entry.Name())
+		}
+	}
+
+	// Sort files and directories alphabetically
+	sort.Strings(files)
+	sort.Strings(dirs)
+
+	// First, add all SQL files in the current directory
+	for _, file := range files {
+		var relativePath string
+		if relativeDir == "" {
+			relativePath = file
+		} else {
+			relativePath = filepath.Join(relativeDir, file)
+		}
+		// Convert Windows path separators to Unix-style for consistency
+		relativePath = strings.ReplaceAll(relativePath, "\\", "/")
+		*scripts = append(*scripts, relativePath)
+	}
+
+	// Then, recursively process each subdirectory in alphabetical order
+	for _, dir := range dirs {
+		var subRelativeDir string
+		if relativeDir == "" {
+			subRelativeDir = dir
+		} else {
+			subRelativeDir = filepath.Join(relativeDir, dir)
+		}
+		err := s.scanDirectoryBreadthFirst(baseDir, subRelativeDir, scripts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CalculateHash calculates the SHA256 hash of a file
