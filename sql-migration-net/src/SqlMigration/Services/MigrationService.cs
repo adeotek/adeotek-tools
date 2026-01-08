@@ -8,7 +8,8 @@ public class MigrationService(
     ISqlScriptsHelpers sqlScriptsHelpers,
     IMigrationHistoryRepositoryFactory migrationHistoryRepositoryFactory,
     ILogger<MigrationService> logger,
-    bool isDryRun = false)
+    bool isDryRun = false,
+    IBackupService? backupService = null)
     : IMigrationService
 {
     public async Task<int> RunAsync(string scriptsPath, ConnectionParameters connectionParameters, CancellationToken ct = default)
@@ -34,6 +35,37 @@ public class MigrationService(
         var targetDir = Path.GetFullPath(scriptsPath);
         var scriptFiles = sqlScriptsHelpers.ScanForSqlFiles(targetDir);
         logger.LogDebug("Found {FilesCount} script files in directory {TargetDir}", scriptFiles.Count, targetDir);
+
+        // Check if there are unapplied scripts
+        var hasUnappliedScripts = false;
+        foreach (var scriptName in scriptFiles)
+        {
+            var scriptFile = Path.Combine(targetDir, scriptName);
+            var hash = sqlScriptsHelpers.CalculateHash(scriptFile);
+            var executedScript = executedScripts.FirstOrDefault(s => s.ScriptFile == scriptName);
+
+            if (executedScript == null || executedScript.ScriptHash != hash)
+            {
+                hasUnappliedScripts = true;
+                break;
+            }
+        }
+
+        // Create backup if there are unapplied scripts and backup service is provided
+        if (hasUnappliedScripts && backupService != null)
+        {
+            logger.LogInformation("Creating database backup before applying migrations...");
+            try
+            {
+                var backupPath = await backupService.CreateBackupAsync(connectionParameters, ct);
+                logger.LogInformation("Backup created successfully: {BackupPath}", backupPath);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create database backup. Migrations will not be applied.");
+                throw;
+            }
+        }
 
         var successCount = 0;
         var errorsCount = 0;
