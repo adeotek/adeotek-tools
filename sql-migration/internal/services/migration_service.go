@@ -15,14 +15,16 @@ import (
 // MigrationService handles the execution of database migrations
 type MigrationService struct {
 	scriptsHelpers *SqlScriptsHelpers
+	backupService  *BackupService
 	isDryRun       bool
 	verbose        bool
 }
 
 // NewMigrationService creates a new migration service instance
-func NewMigrationService(isDryRun, verbose bool) *MigrationService {
+func NewMigrationService(isDryRun, verbose bool, backupService *BackupService) *MigrationService {
 	return &MigrationService{
 		scriptsHelpers: NewSqlScriptsHelpers(),
+		backupService:  backupService,
 		isDryRun:       isDryRun,
 		verbose:        verbose,
 	}
@@ -88,6 +90,39 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 
 	if ms.verbose {
 		log.Printf("Found %d script files in directory %s", len(scriptFiles), targetDir)
+	}
+
+	// Check if there are unapplied scripts
+	hasUnappliedScripts := false
+	for _, scriptName := range scriptFiles {
+		scriptFile := filepath.Join(targetDir, scriptName)
+		hash, err := ms.scriptsHelpers.CalculateHash(scriptFile)
+		if err != nil {
+			continue
+		}
+
+		var executedScript *models.ScriptExecutionHistory
+		for _, script := range executedScripts {
+			if script.ScriptFile == scriptName {
+				executedScript = &script
+				break
+			}
+		}
+
+		if executedScript == nil || executedScript.ScriptHash != hash {
+			hasUnappliedScripts = true
+			break
+		}
+	}
+
+	// Create backup if there are unapplied scripts and backup service is provided
+	if hasUnappliedScripts && ms.backupService != nil {
+		log.Println("Creating database backup before applying migrations...")
+		backupPath, err := ms.backupService.CreateBackup(connectionParams)
+		if err != nil {
+			return fmt.Errorf("failed to create database backup. Migrations will not be applied: %w", err)
+		}
+		log.Printf("Backup created successfully: %s", backupPath)
 	}
 
 	// Process each script

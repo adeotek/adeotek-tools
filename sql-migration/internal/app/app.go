@@ -17,7 +17,7 @@ import (
 
 // Version information
 const (
-	Version   = "0.4.1"
+	Version   = "0.5.2"
 	EnvPrefix = "CLI_SQL_MIGRATION"
 )
 
@@ -41,6 +41,9 @@ func Run() {
 	rootCmd.Flags().StringP("password", "s", "", "Database password")
 	rootCmd.Flags().BoolP("dry-run", "d", false, "Run in dry-run mode, simulating execution without making changes")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
+	rootCmd.Flags().Bool("backup", false, "Backup the database before applying migrations (only if there are unapplied scripts)")
+	rootCmd.Flags().Bool("backup-only", false, "Create a database backup without running migrations")
+	rootCmd.Flags().Bool("restore", false, "Restore the last database backup and skip running migrations")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
 	// Set up environment variable support
@@ -59,6 +62,9 @@ func Run() {
 	viper.BindPFlag("password", rootCmd.Flags().Lookup("password"))
 	viper.BindPFlag("dry-run", rootCmd.Flags().Lookup("dry-run"))
 	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
+	viper.BindPFlag("backup", rootCmd.Flags().Lookup("backup"))
+	viper.BindPFlag("backup-only", rootCmd.Flags().Lookup("backup-only"))
+	viper.BindPFlag("restore", rootCmd.Flags().Lookup("restore"))
 	viper.BindPFlag("version", rootCmd.Flags().Lookup("version"))
 
 	// Execute the command
@@ -97,26 +103,11 @@ func runMigration(cmd *cobra.Command, args []string) {
 	password := viper.GetString("password")
 	isDryRun := viper.GetBool("dry-run")
 	verbose := viper.GetBool("verbose")
+	isBackup := viper.GetBool("backup")
+	isBackupOnly := viper.GetBool("backup-only")
+	isRestore := viper.GetBool("restore")
 
-	// Validate target path
-	if targetPath == "" {
-		log.Fatal("--target-path is required")
-	}
-
-	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-		log.Fatalf("target-path '%s' does not exist", targetPath)
-	}
-
-	// Check if directory is empty
-	entries, err := os.ReadDir(targetPath)
-	if err != nil {
-		log.Fatalf("failed to read target directory: %v", err)
-	}
-	if len(entries) == 0 {
-		log.Fatalf("target-path directory '%s' is empty", targetPath)
-	}
-
-	// Create connection parameters
+	// Create connection parameters first (needed for both restore and migration)
 	connectionParams, err := models.ParseConnectionParameters(
 		provider, connectionString, host, strconv.Itoa(port), database, user, password)
 	if err != nil {
@@ -126,6 +117,52 @@ func runMigration(cmd *cobra.Command, args []string) {
 	// Validate connection parameters
 	if valid, errors := connectionParams.IsValid(); !valid {
 		log.Fatalf("invalid connection parameters: %v", errors)
+	}
+
+	// Create backup service
+	backupService := services.NewBackupService(isDryRun, verbose)
+
+	// Handle restore flag
+	if isRestore {
+		fmt.Println("Restoring last database backup...")
+		err = backupService.RestoreLastBackup(connectionParams)
+		if err != nil {
+			log.Fatalf("Restore failed: %v", err)
+		}
+		fmt.Println("Restore DONE!")
+		return
+	}
+
+	// Handle backup-only flag
+	if isBackupOnly {
+		fmt.Println("Creating database backup...")
+		backupPath, err := backupService.CreateBackup(connectionParams)
+		if err != nil {
+			log.Fatalf("Backup failed: %v", err)
+		}
+		fmt.Printf("Backup created successfully: %s\n", backupPath)
+		fmt.Println("Backup DONE!")
+		return
+	}
+
+	// Validate target path (only required for migrations, not for restore or backup-only)
+	if !isRestore && !isBackupOnly && targetPath == "" {
+		log.Fatal("--target-path is required for migration operations")
+	}
+
+	if !isRestore && !isBackupOnly {
+		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+			log.Fatalf("target-path '%s' does not exist", targetPath)
+		}
+
+		// Check if directory is empty
+		entries, err := os.ReadDir(targetPath)
+		if err != nil {
+			log.Fatalf("failed to read target directory: %v", err)
+		}
+		if len(entries) == 0 {
+			log.Fatalf("target-path directory '%s' is empty", targetPath)
+		}
 	}
 
 	// Show configuration in verbose mode
@@ -149,7 +186,11 @@ func runMigration(cmd *cobra.Command, args []string) {
 	}
 
 	// Create and run migration service
-	migrationService := services.NewMigrationService(isDryRun, verbose)
+	var backupServiceForMigration *services.BackupService
+	if isBackup {
+		backupServiceForMigration = backupService
+	}
+	migrationService := services.NewMigrationService(isDryRun, verbose, backupServiceForMigration)
 
 	if isDryRun {
 		fmt.Println("Executing SQL migration command in [DryRun] mode...")

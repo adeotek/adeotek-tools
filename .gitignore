@@ -4,3 +4,6 @@
 # IDEs
 .idea
 .vscode
+
+# Database backups
+.db-backups

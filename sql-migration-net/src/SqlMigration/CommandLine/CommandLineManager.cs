@@ -13,6 +13,8 @@ public static class CommandLineManager
         SqlMigrationCommand.CommandOptions.ForEach(rootCommand.Options.Add);
         rootCommand.Options.Add(DryRunOption);
         rootCommand.Options.Add(VerboseOption);
+        rootCommand.Options.Add(BackupOption);
+        rootCommand.Options.Add(RestoreOption);
         rootCommand.SetAction(SqlMigrationCommand.ExecuteAsync);
         return await rootCommand.Parse(ProcessArgs(args)).InvokeAsync();
     }
@@ -27,6 +29,18 @@ public static class CommandLineManager
         new("--verbose", "-v")
         {
             Description = "Enable verbose output, providing detailed information about the command execution."
+        };
+
+    public static readonly Option<bool> BackupOption =
+        new("--backup")
+        {
+            Description = "Backup the database before applying migrations (only if there are unapplied scripts)."
+        };
+
+    public static readonly Option<bool> RestoreOption =
+        new("--restore")
+        {
+            Description = "Restore the last database backup and skip running migrations."
         };
 
     private static string[] ProcessArgs(string[] args)
