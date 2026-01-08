@@ -14,7 +14,7 @@ import (
 	"github.com/adeotek/adeotek-tools/sql-migration/internal/models"
 )
 
-const backupDirectoryName = ".sql-migration-backups"
+const backupDirectoryName = ".db-backups"
 
 // BackupService handles database backup and restore operations
 type BackupService struct {

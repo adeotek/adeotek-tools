@@ -69,3 +69,6 @@ Desktop.ini
 
 # Mac specific files
 .DS_Store
+
+# Database backups
+.db-backups/

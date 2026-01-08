@@ -20,7 +20,7 @@ public class BackupServiceTests
     {
         // Arrange
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, "test.db", null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         // Clean up before test
         if (Directory.Exists(backupDir))
@@ -65,7 +65,7 @@ public class BackupServiceTests
         await File.WriteAllTextAsync(testDbPath, testContent);
 
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, testDbPath, null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         try
         {
@@ -100,7 +100,7 @@ public class BackupServiceTests
         await File.WriteAllTextAsync(testDbPath, "test data");
 
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, testDbPath, null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         try
         {
@@ -136,7 +136,7 @@ public class BackupServiceTests
         await File.WriteAllTextAsync(testDbPath, originalContent);
 
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, testDbPath, null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         try
         {
@@ -185,7 +185,7 @@ public class BackupServiceTests
     {
         // Arrange
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, "nonexistent.db", null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         // Clean up before test
         if (Directory.Exists(backupDir))
@@ -208,7 +208,7 @@ public class BackupServiceTests
         await File.WriteAllTextAsync(testDbPath, "test data");
 
         var connectionParams = new ConnectionParameters("SQLite", null, null, null, testDbPath, null, null);
-        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".sql-migration-backups");
+        var backupDir = Path.Combine(Directory.GetCurrentDirectory(), ".db-backups");
 
         try
         {

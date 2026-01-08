@@ -176,7 +176,7 @@ sql-migration \
 
 **Backup behavior:**
 - Backups are only created if there are unapplied migration scripts
-- Backup files are stored in `.sql-migration-backups` directory in the current working directory
+- Backup files are stored in `.db-backups` directory in the current working directory
 - Backup filenames include a timestamp: `{database}_backup_{yyyyMMdd_HHmmss}.{ext}`
 - PostgreSQL backups use `pg_dump` and create `.sql` files
 - SQLite backups are simple file copies with `.db` extension
@@ -213,7 +213,7 @@ sql-migration \
 - No migrations are run when `--backup-only` flag is used
 - The `--target-path` flag is not required for backup-only operations
 - Uses the same backup mechanism as `--backup` flag (pg_dump for PostgreSQL, file copy for SQLite)
-- Backup files are stored in `.sql-migration-backups` directory with timestamps
+- Backup files are stored in `.db-backups` directory with timestamps
 
 ### Restore
 
@@ -238,7 +238,7 @@ sql-migration \
 ```
 
 **Restore behavior:**
-- Restores the most recent backup from `.sql-migration-backups` directory
+- Restores the most recent backup from `.db-backups` directory
 - No migrations are run when `--restore` flag is used
 - The `--target-path` flag is not required for restore operations
 - PostgreSQL restore uses `psql` command

@@ -6,7 +6,7 @@ namespace SqlMigration.Services;
 
 public class BackupService(ILogger<BackupService> logger, bool isDryRun = false) : IBackupService
 {
-    private const string BackupDirectoryName = ".sql-migration-backups";
+    private const string BackupDirectoryName = ".db-backups";
 
     public async Task<string> CreateBackupAsync(ConnectionParameters connectionParameters, CancellationToken ct = default)
     {

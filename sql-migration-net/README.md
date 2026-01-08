@@ -20,7 +20,7 @@ dotnet run --project src/SqlMigration/SqlMigration.csproj -- --target-path <path
 - `--password|-s`: The database password.
 - `--dry-run|-d`: Run the command in dry-run mode, which simulates the execution without making any changes.
 - `--verbose|-v`: Enable verbose output, providing detailed information about the command execution.
-- `--backup`: Backup the database before applying migrations (only if there are unapplied scripts). Backups are stored in `.sql-migration-backups` directory.
+- `--backup`: Backup the database before applying migrations (only if there are unapplied scripts). Backups are stored in `.db-backups` directory.
 - `--restore`: Restore the last database backup and skip running migrations.
 
 Connection details can also be provided as environment variables with the `CLI_SQL_MIGRATION_` prefix. For example, `CLI_SQL_MIGRATION_HOST`, `CLI_SQL_MIGRATION_PORT`, etc.
@@ -61,7 +61,7 @@ dotnet run --project src/SqlMigration/SqlMigration.csproj -- \
 
 **Backup behavior:**
 - Backups are only created if there are unapplied migration scripts
-- Backup files are stored in `.sql-migration-backups` directory in the current working directory
+- Backup files are stored in `.db-backups` directory in the current working directory
 - Backup filenames include a timestamp: `{database}_backup_{yyyyMMdd_HHmmss}.{ext}`
 - PostgreSQL backups use `pg_dump` and create `.sql` files
 - SQLite backups are simple file copies with `.db` extension
@@ -94,7 +94,7 @@ dotnet run --project src/SqlMigration/SqlMigration.csproj -- \
 ```
 
 **Restore behavior:**
-- Restores the most recent backup from `.sql-migration-backups` directory
+- Restores the most recent backup from `.db-backups` directory
 - No migrations are run when `--restore` flag is used
 - The `--target-path` flag is not required for restore operations
 - PostgreSQL restore uses `psql` command
