@@ -146,21 +146,23 @@ func runMigration(cmd *cobra.Command, args []string) {
 	}
 
 	// Validate target path (only required for migrations, not for restore or backup-only)
-	if targetPath == "" {
-		log.Fatal("--target-path is required")
+	if !isRestore && !isBackupOnly && targetPath == "" {
+		log.Fatal("--target-path is required for migration operations")
 	}
 
-	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-		log.Fatalf("target-path '%s' does not exist", targetPath)
-	}
+	if !isRestore && !isBackupOnly {
+		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+			log.Fatalf("target-path '%s' does not exist", targetPath)
+		}
 
-	// Check if directory is empty
-	entries, err := os.ReadDir(targetPath)
-	if err != nil {
-		log.Fatalf("failed to read target directory: %v", err)
-	}
-	if len(entries) == 0 {
-		log.Fatalf("target-path directory '%s' is empty", targetPath)
+		// Check if directory is empty
+		entries, err := os.ReadDir(targetPath)
+		if err != nil {
+			log.Fatalf("failed to read target directory: %v", err)
+		}
+		if len(entries) == 0 {
+			log.Fatalf("target-path directory '%s' is empty", targetPath)
+		}
 	}
 
 	// Show configuration in verbose mode
