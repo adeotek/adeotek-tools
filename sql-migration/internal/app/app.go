@@ -17,7 +17,7 @@ import (
 
 // Version information
 const (
-	Version   = "0.4.1"
+	Version   = "0.5.0"
 	EnvPrefix = "CLI_SQL_MIGRATION"
 )
 
