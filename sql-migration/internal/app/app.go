@@ -42,6 +42,7 @@ func Run() {
 	rootCmd.Flags().BoolP("dry-run", "d", false, "Run in dry-run mode, simulating execution without making changes")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
 	rootCmd.Flags().Bool("backup", false, "Backup the database before applying migrations (only if there are unapplied scripts)")
+	rootCmd.Flags().Bool("backup-only", false, "Create a database backup without running migrations")
 	rootCmd.Flags().Bool("restore", false, "Restore the last database backup and skip running migrations")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
@@ -62,6 +63,7 @@ func Run() {
 	viper.BindPFlag("dry-run", rootCmd.Flags().Lookup("dry-run"))
 	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
 	viper.BindPFlag("backup", rootCmd.Flags().Lookup("backup"))
+	viper.BindPFlag("backup-only", rootCmd.Flags().Lookup("backup-only"))
 	viper.BindPFlag("restore", rootCmd.Flags().Lookup("restore"))
 	viper.BindPFlag("version", rootCmd.Flags().Lookup("version"))
 
@@ -102,6 +104,7 @@ func runMigration(cmd *cobra.Command, args []string) {
 	isDryRun := viper.GetBool("dry-run")
 	verbose := viper.GetBool("verbose")
 	isBackup := viper.GetBool("backup")
+	isBackupOnly := viper.GetBool("backup-only")
 	isRestore := viper.GetBool("restore")
 
 	// Create connection parameters first (needed for both restore and migration)
@@ -130,7 +133,19 @@ func runMigration(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Validate target path (only required for migrations, not for restore)
+	// Handle backup-only flag
+	if isBackupOnly {
+		fmt.Println("Creating database backup...")
+		backupPath, err := backupService.CreateBackup(connectionParams)
+		if err != nil {
+			log.Fatalf("Backup failed: %v", err)
+		}
+		fmt.Printf("Backup created successfully: %s\n", backupPath)
+		fmt.Println("Backup DONE!")
+		return
+	}
+
+	// Validate target path (only required for migrations, not for restore or backup-only)
 	if targetPath == "" {
 		log.Fatal("--target-path is required")
 	}

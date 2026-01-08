@@ -68,7 +68,7 @@ sql-migration --target-path /path/to/sql/scripts --provider postgresql --host lo
 
 | Flag | Short | Description | Required |
 |------|-------|-------------|----------|
-| `--target-path` | `-t` | Path to the SQL scripts directory | Yes (except for --restore) |
+| `--target-path` | `-t` | Path to the SQL scripts directory | Yes (except for --restore and --backup-only) |
 | `--provider` | `-r` | Database provider (postgresql/sqlite) | No (default: postgresql) |
 | `--connection-string` | `-c` | Database connection string | No |
 | `--host` | `-o` | Database host | No |
@@ -79,6 +79,7 @@ sql-migration --target-path /path/to/sql/scripts --provider postgresql --host lo
 | `--dry-run` | `-d` | Run in dry-run mode | No |
 | `--verbose` | `-v` | Enable verbose output | No |
 | `--backup` | | Backup database before applying migrations | No |
+| `--backup-only` | | Create database backup without running migrations | No |
 | `--restore` | | Restore last database backup and skip migrations | No |
 | `--version` | | Show version information | No |
 
@@ -184,6 +185,35 @@ sql-migration \
 **Prerequisites for PostgreSQL:**
 - `pg_dump` must be installed and accessible in PATH
 - User must have sufficient privileges to dump the database
+
+### Backup Only
+
+Use the `--backup-only` flag to create a backup without running any migrations:
+
+```bash
+# PostgreSQL example
+sql-migration \
+  --provider postgresql \
+  --host localhost \
+  --port 5432 \
+  --database mydb \
+  --user myuser \
+  --password mypass \
+  --backup-only
+
+# SQLite example
+sql-migration \
+  --provider sqlite \
+  --database ./mydb.db \
+  --backup-only
+```
+
+**Backup-only behavior:**
+- Creates a backup regardless of whether there are unapplied scripts
+- No migrations are run when `--backup-only` flag is used
+- The `--target-path` flag is not required for backup-only operations
+- Uses the same backup mechanism as `--backup` flag (pg_dump for PostgreSQL, file copy for SQLite)
+- Backup files are stored in `.sql-migration-backups` directory with timestamps
 
 ### Restore
 
