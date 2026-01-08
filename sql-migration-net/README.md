@@ -18,8 +18,10 @@ dotnet run --project src/SqlMigration/SqlMigration.csproj -- --target-path <path
 - `--database|-b`: The database name.
 - `--user|-u`: The database user.
 - `--password|-s`: The database password.
-- `--dry-run|-d`: The database password.
-- `--verbose|-v`: The database password.
+- `--dry-run|-d`: Run the command in dry-run mode, which simulates the execution without making any changes.
+- `--verbose|-v`: Enable verbose output, providing detailed information about the command execution.
+- `--backup`: Backup the database before applying migrations (only if there are unapplied scripts). Backups are stored in `.sql-migration-backups` directory.
+- `--restore`: Restore the last database backup and skip running migrations.
 
 Connection details can also be provided as environment variables with the `CLI_SQL_MIGRATION_` prefix. For example, `CLI_SQL_MIGRATION_HOST`, `CLI_SQL_MIGRATION_PORT`, etc.
 

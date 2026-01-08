@@ -15,6 +15,9 @@ public static class SqlMigrationCommand
     {
         var isVerbose = parseResult.GetValue(CommandLineManager.VerboseOption);
         var isDryRun = parseResult.GetValue(CommandLineManager.DryRunOption);
+        var isBackup = parseResult.GetValue(CommandLineManager.BackupOption);
+        var isRestore = parseResult.GetValue(CommandLineManager.RestoreOption);
+
         ConsoleLogger.WriteSuccess(isDryRun
             ? "Executing SQL migration command in [DryRun] mode..."
             : "Executing SQL migration command...");
@@ -25,17 +28,35 @@ public static class SqlMigrationCommand
 
         try
         {
-            // Extract and validate the target path
-            var result = ValidateTargetPath(parseResult, out var targetPath);
-            if (result != 0) return result;
             // Extract and validate connection parameters
-            result = ValidateConnectionParameters(parseResult, out var connectionParameters);
+            var result = ValidateConnectionParameters(parseResult, out var connectionParameters);
+            if (result != 0) return result;
+
+            var backupLogger = new ConsoleLogger<BackupService>(LogLevel.Debug);
+            var backupService = new BackupService(backupLogger, isDryRun);
+
+            // Handle restore flag
+            if (isRestore)
+            {
+                ConsoleLogger.WriteSuccess("Restoring last database backup...");
+                await backupService.RestoreLastBackupAsync(connectionParameters, ct).ConfigureAwait(false);
+                ConsoleLogger.WriteSuccess("DONE!!!");
+                return 0;
+            }
+
+            // Extract and validate the target path for migrations
+            result = ValidateTargetPath(parseResult, out var targetPath);
             if (result != 0) return result;
 
             var logger = new ConsoleLogger<MigrationService>(LogLevel.Debug);
             var sqlScriptsHelpers = new SqlScriptsHelpers();
             var migrationHistoryRepositoryFactory = new MigrationHistoryRepositoryFactory();
-            var migrationService = new MigrationService(sqlScriptsHelpers, migrationHistoryRepositoryFactory, logger, isDryRun);
+            var migrationService = new MigrationService(
+                sqlScriptsHelpers,
+                migrationHistoryRepositoryFactory,
+                logger,
+                isDryRun,
+                isBackup ? backupService : null);
             await migrationService.RunAsync(targetPath, connectionParameters, ct).ConfigureAwait(false);
 
             ConsoleLogger.WriteSuccess("DONE!!!");
