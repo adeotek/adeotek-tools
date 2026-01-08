@@ -41,6 +41,8 @@ func Run() {
 	rootCmd.Flags().StringP("password", "s", "", "Database password")
 	rootCmd.Flags().BoolP("dry-run", "d", false, "Run in dry-run mode, simulating execution without making changes")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
+	rootCmd.Flags().Bool("backup", false, "Backup the database before applying migrations (only if there are unapplied scripts)")
+	rootCmd.Flags().Bool("restore", false, "Restore the last database backup and skip running migrations")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
 	// Set up environment variable support
@@ -59,6 +61,8 @@ func Run() {
 	viper.BindPFlag("password", rootCmd.Flags().Lookup("password"))
 	viper.BindPFlag("dry-run", rootCmd.Flags().Lookup("dry-run"))
 	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
+	viper.BindPFlag("backup", rootCmd.Flags().Lookup("backup"))
+	viper.BindPFlag("restore", rootCmd.Flags().Lookup("restore"))
 	viper.BindPFlag("version", rootCmd.Flags().Lookup("version"))
 
 	// Execute the command
@@ -97,8 +101,36 @@ func runMigration(cmd *cobra.Command, args []string) {
 	password := viper.GetString("password")
 	isDryRun := viper.GetBool("dry-run")
 	verbose := viper.GetBool("verbose")
+	isBackup := viper.GetBool("backup")
+	isRestore := viper.GetBool("restore")
 
-	// Validate target path
+	// Create connection parameters first (needed for both restore and migration)
+	connectionParams, err := models.ParseConnectionParameters(
+		provider, connectionString, host, strconv.Itoa(port), database, user, password)
+	if err != nil {
+		log.Fatalf("failed to parse connection parameters: %v", err)
+	}
+
+	// Validate connection parameters
+	if valid, errors := connectionParams.IsValid(); !valid {
+		log.Fatalf("invalid connection parameters: %v", errors)
+	}
+
+	// Create backup service
+	backupService := services.NewBackupService(isDryRun, verbose)
+
+	// Handle restore flag
+	if isRestore {
+		fmt.Println("Restoring last database backup...")
+		err = backupService.RestoreLastBackup(connectionParams)
+		if err != nil {
+			log.Fatalf("Restore failed: %v", err)
+		}
+		fmt.Println("Restore DONE!")
+		return
+	}
+
+	// Validate target path (only required for migrations, not for restore)
 	if targetPath == "" {
 		log.Fatal("--target-path is required")
 	}
@@ -114,18 +146,6 @@ func runMigration(cmd *cobra.Command, args []string) {
 	}
 	if len(entries) == 0 {
 		log.Fatalf("target-path directory '%s' is empty", targetPath)
-	}
-
-	// Create connection parameters
-	connectionParams, err := models.ParseConnectionParameters(
-		provider, connectionString, host, strconv.Itoa(port), database, user, password)
-	if err != nil {
-		log.Fatalf("failed to parse connection parameters: %v", err)
-	}
-
-	// Validate connection parameters
-	if valid, errors := connectionParams.IsValid(); !valid {
-		log.Fatalf("invalid connection parameters: %v", errors)
 	}
 
 	// Show configuration in verbose mode
@@ -149,7 +169,11 @@ func runMigration(cmd *cobra.Command, args []string) {
 	}
 
 	// Create and run migration service
-	migrationService := services.NewMigrationService(isDryRun, verbose)
+	var backupServiceForMigration *services.BackupService
+	if isBackup {
+		backupServiceForMigration = backupService
+	}
+	migrationService := services.NewMigrationService(isDryRun, verbose, backupServiceForMigration)
 
 	if isDryRun {
 		fmt.Println("Executing SQL migration command in [DryRun] mode...")

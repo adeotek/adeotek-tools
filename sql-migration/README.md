@@ -6,6 +6,8 @@ A command-line tool for executing SQL migration scripts against PostgreSQL and S
 
 - Support for PostgreSQL and SQLite databases
 - Migration history tracking to avoid re-running scripts
+- Automatic database backup before applying migrations
+- Database restore from backup
 - Dry-run mode for testing migrations without applying changes
 - Ordered execution of scripts (tables → views → stored procedures → data)
 - SHA256 hash verification to detect script changes
@@ -66,7 +68,7 @@ sql-migration --target-path /path/to/sql/scripts --provider postgresql --host lo
 
 | Flag | Short | Description | Required |
 |------|-------|-------------|----------|
-| `--target-path` | `-t` | Path to the SQL scripts directory | Yes |
+| `--target-path` | `-t` | Path to the SQL scripts directory | Yes (except for --restore) |
 | `--provider` | `-r` | Database provider (postgresql/sqlite) | No (default: postgresql) |
 | `--connection-string` | `-c` | Database connection string | No |
 | `--host` | `-o` | Database host | No |
@@ -76,6 +78,8 @@ sql-migration --target-path /path/to/sql/scripts --provider postgresql --host lo
 | `--password` | `-s` | Database password | No |
 | `--dry-run` | `-d` | Run in dry-run mode | No |
 | `--verbose` | `-v` | Enable verbose output | No |
+| `--backup` | | Backup database before applying migrations | No |
+| `--restore` | | Restore last database backup and skip migrations | No |
 | `--version` | | Show version information | No |
 
 ## Environment Variables
@@ -140,6 +144,98 @@ The tool creates a `__migrations_history` table to track executed scripts. This 
 - Execution timestamp
 
 Scripts are only re-executed if their content has changed (detected by hash comparison).
+
+## Backup and Restore
+
+The tool supports automatic database backup before applying migrations and manual restore of previous backups.
+
+### Backup
+
+Use the `--backup` flag to create a backup before applying migrations:
+
+```bash
+# PostgreSQL example
+sql-migration \
+  --target-path ./sql-scripts \
+  --provider postgresql \
+  --host localhost \
+  --port 5432 \
+  --database mydb \
+  --user myuser \
+  --password mypass \
+  --backup
+
+# SQLite example
+sql-migration \
+  --target-path ./sql-scripts \
+  --provider sqlite \
+  --database ./mydb.db \
+  --backup
+```
+
+**Backup behavior:**
+- Backups are only created if there are unapplied migration scripts
+- Backup files are stored in `.sql-migration-backups` directory in the current working directory
+- Backup filenames include a timestamp: `{database}_backup_{yyyyMMdd_HHmmss}.{ext}`
+- PostgreSQL backups use `pg_dump` and create `.sql` files
+- SQLite backups are simple file copies with `.db` extension
+- If backup fails, migrations will not be applied
+
+**Prerequisites for PostgreSQL:**
+- `pg_dump` must be installed and accessible in PATH
+- User must have sufficient privileges to dump the database
+
+### Restore
+
+Use the `--restore` flag to restore the most recent backup:
+
+```bash
+# PostgreSQL example
+sql-migration \
+  --provider postgresql \
+  --host localhost \
+  --port 5432 \
+  --database mydb \
+  --user myuser \
+  --password mypass \
+  --restore
+
+# SQLite example
+sql-migration \
+  --provider sqlite \
+  --database ./mydb.db \
+  --restore
+```
+
+**Restore behavior:**
+- Restores the most recent backup from `.sql-migration-backups` directory
+- No migrations are run when `--restore` flag is used
+- The `--target-path` flag is not required for restore operations
+- PostgreSQL restore uses `psql` command
+- SQLite restore overwrites the database file with the backup copy
+
+**Prerequisites for PostgreSQL:**
+- `psql` must be installed and accessible in PATH
+- User must have sufficient privileges to restore the database
+
+### Dry-run Mode
+
+Both backup and restore operations respect the `--dry-run` flag:
+
+```bash
+# Simulate backup without creating actual backup file
+sql-migration \
+  --target-path ./sql-scripts \
+  --database mydb \
+  --backup \
+  --dry-run
+
+# Simulate restore without actually restoring
+sql-migration \
+  --database mydb \
+  --restore \
+  --dry-run
+```
 
 ## Examples
 
