@@ -1,11 +1,8 @@
-# Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
-# Install git for go mod download
 RUN apk add --no-cache git
 
-# Set working directory
-WORKDIR /app
+WORKDIR /build
 
 # Copy go mod files
 COPY go.mod go.sum ./
@@ -19,30 +16,25 @@ COPY . .
 # Build the application
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o sql-migration ./cmd/sql-migration
 
-# Runtime stage
+
 FROM alpine:latest
 
-# Install ca-certificates for SSL connections
-RUN apk --no-cache add ca-certificates
-
-# Create non-root user
-RUN addgroup -g 1000 -S appgroup && \
-    adduser -u 1000 -S appuser -G appgroup
-
-# Set working directory
 WORKDIR /app
 
-# Copy binary from builder stage
-COPY --from=builder /app/sql-migration .
+COPY --from=builder /build/sql-migration /usr/local/bin/
+COPY --from=builder /build/backup_worker.sh /app/
+COPY --from=builder /build/backup.yaml.example /app/config.yaml.example
 
-# Change ownership of the binary
-RUN chown appuser:appgroup sql-migration
+RUN chmod +x /app/backup_worker.sh
 
-# Switch to non-root user
-USER appuser
+# Data volume
+VOLUME /data
 
-# Expose port (if needed for health checks)
-EXPOSE 8080
+# Environment variables for config
+ENV DBB_CONFIG=""
+ENV DBB_BACKUP_INTERVAL="86400"
+ENV DBB_VERBOSE="false"
 
-# Command to run the application
-ENTRYPOINT ["./sql-migration"]
+# USER 99:98
+# Default to worker script which can handle both config modes
+ENTRYPOINT ["/app/backup_worker.sh"]

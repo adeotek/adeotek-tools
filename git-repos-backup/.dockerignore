@@ -1,0 +1,58 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Test files and directories
+*_test.go
+test-scripts/
+integration-test.sh
+tests/
+
+# Build artifacts
+build/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Scripts
+backup_worker.sh
+build.sh
+Makefile
+
+# Docker files (no need to copy into image)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Temporary files
+*.tmp
+*.log
+tmp/
+temp/
+
+# Go specific
+vendor/
+*.out
+go.sum.backup

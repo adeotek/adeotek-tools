@@ -1,0 +1,39 @@
+# sql-migration backup-only configuration example
+# Usage: sql-migration backup-only --config backup.yaml [--verbose] [--dry-run]
+
+defaults:
+  output_dir: "./backups"
+  compress: true              # gzip compression, enabled by default
+  upload_to_s3: false         # upload to S3 if s3 is configured, per-db overridable
+  no_owner: true              # exclude ownership statements from dump
+  clean: true                 # include DROP IF EXISTS before CREATE
+  # schemas: ["public"]       # omit or leave empty for full backup (all schemas)
+
+databases:
+  # - name: "myapp_prod"
+  #   host: "db.example.com"
+  #   port: 5432
+  #   database: "myapp"
+  #   user: "backup_user"
+  #   password: "secret"
+  #   ssl_mode: "disable"
+  #   output_dir: "./backups/prod"      # per-db override
+  #   compress: true
+  #   upload_to_s3: true                # per-db override (default: from defaults)
+  #   delete_local_after_upload: true   # per-db override (default: from s3 config)
+  #   schemas: ["public", "audit"]
+  #   exclude_tables: ["sessions", "cache"]
+
+  # - name: "myapp_staging"
+  #   connection_string: "host=staging port=5432 dbname=myapp user=admin password=pass sslmode=disable"
+  #   upload_to_s3: false           # skip S3 upload for this database
+
+# s3:
+#   enabled: false
+#   bucket: "my-db-backups"
+#   region: "us-east-1"
+#   prefix: "sql-migration/"
+#   access_key_id: ""            # or use AWS_ACCESS_KEY_ID env var
+#   secret_access_key: ""
+#   endpoint: ""                 # for MinIO/S3-compatible storage
+#   delete_local_after_upload: false

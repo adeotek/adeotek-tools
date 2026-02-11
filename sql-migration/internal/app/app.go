@@ -46,6 +46,9 @@ func Run() {
 	rootCmd.Flags().Bool("restore", false, "Restore the last database backup and skip running migrations")
 	rootCmd.Flags().Bool("version", false, "Show version information and exit")
 
+	// Add subcommands
+	rootCmd.AddCommand(newBackupOnlyCmd())
+
 	// Set up environment variable support
 	viper.SetEnvPrefix(EnvPrefix)
 	viper.AutomaticEnv()
