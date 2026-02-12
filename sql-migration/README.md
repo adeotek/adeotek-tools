@@ -8,6 +8,8 @@ A command-line tool for executing SQL migration scripts against PostgreSQL and S
 - Migration history tracking to avoid re-running scripts
 - Automatic database backup before applying migrations
 - Database restore from backup
+- Multi-database backup via YAML config (`backup-only` subcommand) with optional gzip compression and S3 upload
+- Pure Go PostgreSQL dump (no `pg_dump` binary required for `backup-only`)
 - Dry-run mode for testing migrations without applying changes
 - Ordered execution of scripts (tables → views → stored procedures → data)
 - SHA256 hash verification to detect script changes
@@ -266,6 +268,161 @@ sql-migration \
   --restore \
   --dry-run
 ```
+
+## Multi-Database Backup (`backup-only` Subcommand)
+
+The `backup-only` subcommand provides a YAML-driven multi-database backup workflow for PostgreSQL databases. Unlike the `--backup-only` flag on the root command (which uses `pg_dump`), this subcommand uses a pure Go implementation and supports backing up multiple databases, gzip compression, and S3/S3-compatible storage upload.
+
+### Quick Start
+
+1. Copy the example config and edit it:
+   ```bash
+   cp backup.yaml.example backup.yaml
+   # Edit backup.yaml with your database connection details
+   ```
+
+2. Run the backup:
+   ```bash
+   sql-migration backup-only --config backup.yaml --verbose
+   ```
+
+3. Preview with dry-run:
+   ```bash
+   sql-migration backup-only --config backup.yaml --dry-run
+   ```
+
+### Subcommand Flags
+
+| Flag | Short | Description | Required |
+|------|-------|-------------|----------|
+| `--config` | `-c` | Path to the backup YAML configuration file | Yes |
+| `--verbose` | `-v` | Enable verbose output | No |
+| `--dry-run` | `-d` | Simulate execution without making changes | No |
+
+### YAML Configuration
+
+The configuration file defines default settings, one or more database targets, and optional S3 upload settings.
+
+```yaml
+defaults:
+  output_dir: "./backups"
+  compress: true              # gzip compression, enabled by default
+  upload_to_s3: false         # upload to S3 if s3 is configured, per-db overridable
+  no_owner: true              # exclude ownership statements from dump
+  clean: true                 # include DROP IF EXISTS before CREATE
+  schemas: ["public"]         # omit or leave empty for full backup (all schemas)
+
+databases:
+  - name: "myapp_prod"
+    host: "db.example.com"
+    port: 5432
+    database: "myapp"
+    user: "backup_user"
+    password: "secret"
+    ssl_mode: "disable"
+    output_dir: "./backups/prod"      # per-db override
+    compress: true
+    upload_to_s3: true                # per-db override
+    delete_local_after_upload: true   # per-db override (default: from s3 config)
+    schemas: ["public", "audit"]
+    exclude_tables: ["sessions", "cache"]
+
+  - name: "myapp_staging"
+    connection_string: "host=staging port=5432 dbname=myapp user=admin password=pass sslmode=disable"
+    upload_to_s3: false               # skip S3 upload for this database
+
+s3:
+  enabled: false
+  bucket: "my-db-backups"
+  region: "us-east-1"
+  prefix: "sql-migration/"
+  access_key_id: ""            # or use AWS_ACCESS_KEY_ID env var
+  secret_access_key: ""
+  endpoint: ""                 # for MinIO/S3-compatible storage
+  delete_local_after_upload: false
+```
+
+### Configuration Reference
+
+#### `defaults`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `output_dir` | string | `./backups` | Default output directory for dump files |
+| `compress` | bool | `true` | Enable gzip compression |
+| `upload_to_s3` | bool | `false` | Upload to S3 after dump |
+| `no_owner` | bool | `true` | Exclude ownership statements |
+| `clean` | bool | `true` | Include `DROP IF EXISTS` before `CREATE` |
+| `schemas` | []string | (all) | Schemas to include; empty means all non-system schemas |
+
+#### `databases[]`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Identifier for this database (used in file names and S3 keys) |
+| `host` | string | Yes* | Database host |
+| `port` | int | No | Database port (default: 5432) |
+| `database` | string | Yes* | Database name |
+| `user` | string | No | Database user |
+| `password` | string | No | Database password |
+| `ssl_mode` | string | No | SSL mode (default: `disable`) |
+| `connection_string` | string | Yes* | Full connection string (alternative to individual params) |
+| `output_dir` | string | No | Per-db output directory override |
+| `compress` | bool | No | Per-db compression override |
+| `upload_to_s3` | bool | No | Per-db S3 upload override |
+| `delete_local_after_upload` | bool | No | Delete local file after S3 upload (falls back to `s3.delete_local_after_upload`) |
+| `schemas` | []string | No | Per-db schema filter override |
+| `exclude_tables` | []string | No | Tables to exclude from dump |
+| `no_owner` | bool | No | Per-db no-owner override |
+| `clean` | bool | No | Per-db clean override |
+
+\* Either `connection_string` or `host` + `database` must be provided.
+
+#### `s3`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable S3 upload globally |
+| `bucket` | string | | S3 bucket name (required when enabled) |
+| `region` | string | | AWS region |
+| `prefix` | string | | Key prefix for all uploads |
+| `access_key_id` | string | | AWS access key (or use `AWS_ACCESS_KEY_ID` env var) |
+| `secret_access_key` | string | | AWS secret key (or use `AWS_SECRET_ACCESS_KEY` env var) |
+| `endpoint` | string | | Custom endpoint for MinIO/S3-compatible storage |
+| `delete_local_after_upload` | bool | `false` | Default for deleting local files after upload |
+
+### What Gets Dumped
+
+The pure Go dump produces SQL output covering:
+
+- Extensions
+- Schemas
+- Enum types
+- Sequences
+- Tables (columns, defaults, NOT NULL, primary keys, unique constraints)
+- Views
+- Functions
+- Table data (as INSERT statements)
+- Indexes (post-data)
+- Foreign keys (post-data)
+- Triggers (post-data)
+
+### Backup Output
+
+- Plain SQL files: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
+- Compressed files: `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+- S3 keys: `{prefix}{name}/{filename}`
+
+### Differences from `--backup-only` Flag
+
+| | `--backup-only` flag | `backup-only` subcommand |
+|---|---|---|
+| Database support | Single database | Multiple databases |
+| Configuration | CLI flags | YAML config file |
+| Dump method | Shells out to `pg_dump` | Pure Go (no external binary) |
+| Compression | No | Optional gzip |
+| S3 upload | No | Yes (AWS S3 / MinIO) |
+| SQLite support | Yes | No (PostgreSQL only) |
 
 ## Examples
 
