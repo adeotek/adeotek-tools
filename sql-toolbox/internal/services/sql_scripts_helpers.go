@@ -1,0 +1,215 @@
+package services
+
+import (
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/database"
+	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
+)
+
+// SqlScriptsHelpers provides utilities for SQL script operations
+type SqlScriptsHelpers struct{}
+
+// NewSqlScriptsHelpers creates a new SqlScriptsHelpers instance
+func NewSqlScriptsHelpers() *SqlScriptsHelpers {
+	return &SqlScriptsHelpers{}
+}
+
+// ScanForSqlFiles scans a directory for SQL files and returns them in breadth-first order
+// Execution order:
+// 1. Files in the target directory (ignoring subdirectories), ordered alphabetically
+// 2. For each subdirectory in alphabetical order:
+//    - Files directly under it, ordered alphabetically
+//    - Then recursively process its subdirectories in the same manner
+func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) {
+	if directory == "" {
+		return nil, fmt.Errorf("directory path cannot be empty")
+	}
+
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		return nil, fmt.Errorf("directory '%s' does not exist", directory)
+	}
+
+	var scripts []string
+	err := s.scanDirectoryBreadthFirst(directory, "", &scripts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan directory '%s': %w", directory, err)
+	}
+
+	return scripts, nil
+}
+
+// scanDirectoryBreadthFirst performs a breadth-first scan of a directory
+// relativeDir is the relative path from the base directory (empty for root)
+func (s *SqlScriptsHelpers) scanDirectoryBreadthFirst(baseDir, relativeDir string, scripts *[]string) error {
+	currentDir := filepath.Join(baseDir, relativeDir)
+
+	entries, err := os.ReadDir(currentDir)
+	if err != nil {
+		return err
+	}
+
+	// Separate files and directories
+	var files []string
+	var dirs []string
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs = append(dirs, entry.Name())
+		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
+			files = append(files, entry.Name())
+		}
+	}
+
+	// Sort files and directories alphabetically
+	sort.Strings(files)
+	sort.Strings(dirs)
+
+	// First, add all SQL files in the current directory
+	for _, file := range files {
+		var relativePath string
+		if relativeDir == "" {
+			relativePath = file
+		} else {
+			relativePath = filepath.Join(relativeDir, file)
+		}
+		// Convert Windows path separators to Unix-style for consistency
+		relativePath = strings.ReplaceAll(relativePath, "\\", "/")
+		*scripts = append(*scripts, relativePath)
+	}
+
+	// Then, recursively process each subdirectory in alphabetical order
+	for _, dir := range dirs {
+		var subRelativeDir string
+		if relativeDir == "" {
+			subRelativeDir = dir
+		} else {
+			subRelativeDir = filepath.Join(relativeDir, dir)
+		}
+		err := s.scanDirectoryBreadthFirst(baseDir, subRelativeDir, scripts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CalculateHash calculates the SHA256 hash of a file
+func (s *SqlScriptsHelpers) CalculateHash(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file '%s': %w", filePath, err)
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", fmt.Errorf("failed to calculate hash for file '%s': %w", filePath, err)
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+// ExecuteScript executes a SQL script against the database
+func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams *models.ConnectionParameters) error {
+	dbFactory := database.NewFactory(connectionParams)
+	db, err := dbFactory.CreateConnection()
+	if err != nil {
+		return fmt.Errorf("failed to create database connection: %w", err)
+	}
+	defer db.Close()
+
+	// Split script into individual statements for better error handling
+	statements := s.SplitSqlStatements(scriptContent)
+
+	for _, statement := range statements {
+		statement = strings.TrimSpace(statement)
+		if statement == "" {
+			continue
+		}
+
+		_, err := db.Exec(statement)
+		if err != nil {
+			return fmt.Errorf("failed to execute SQL statement: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// SplitSqlStatements splits a SQL script into individual statements
+// This handles complex scripts including stored procedures, functions, and other constructs
+func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
+	var result []string
+	var current strings.Builder
+
+	lines := strings.Split(script, "\n")
+	inBlock := false
+	blockDelimiter := ""
+
+	// Regex pattern for PostgreSQL dollar-quoted strings: $tag$ where tag can be empty or contain letters, digits, underscores
+	dollarQuotePattern := regexp.MustCompile(`\$([A-Za-z0-9_]*)\$`)
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+
+		// Skip empty lines and comments when not in a block
+		if !inBlock && (trimmedLine == "" || strings.HasPrefix(trimmedLine, "--")) {
+			continue
+		}
+
+		// Check for block delimiters ($$, $tag$, etc.)
+		if !inBlock {
+			// Look for PostgreSQL dollar-quoted strings or PL/pgSQL blocks
+			matches := dollarQuotePattern.FindAllString(trimmedLine, -1)
+			if len(matches) > 0 {
+				// Use the first valid delimiter found
+				blockDelimiter = matches[0]
+				inBlock = true
+			}
+		}
+
+		// Add the line to current statement
+		if current.Len() > 0 {
+			current.WriteString("\n")
+		}
+		current.WriteString(line)
+
+		// Check if we're ending a block
+		if inBlock && blockDelimiter != "" && strings.Contains(trimmedLine, blockDelimiter) {
+			// Count occurrences to handle multiple delimiters in same line
+			openCount := strings.Count(current.String(), blockDelimiter)
+			if openCount%2 == 0 { // Even number means block is closed
+				inBlock = false
+				blockDelimiter = ""
+			}
+		}
+
+		// If not in a block and line ends with semicolon, it's end of statement
+		if !inBlock && strings.HasSuffix(trimmedLine, ";") {
+			stmt := strings.TrimSpace(current.String())
+			if stmt != "" && stmt != ";" {
+				result = append(result, stmt)
+			}
+			current.Reset()
+		}
+	}
+
+	// Add any remaining content as final statement
+	if current.Len() > 0 {
+		stmt := strings.TrimSpace(current.String())
+		if stmt != "" && stmt != ";" {
+			result = append(result, stmt)
+		}
+	}
+
+	return result
+}
