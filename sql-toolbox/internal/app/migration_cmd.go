@@ -34,6 +34,7 @@ func newMigrationCmd() *cobra.Command {
 	cmd.Flags().Bool("backup", false, "Backup the database before applying migrations (only if there are unapplied scripts)")
 	cmd.Flags().Bool("backup-only", false, "Create a database backup without running migrations")
 	cmd.Flags().Bool("restore", false, "Restore the last database backup and skip running migrations")
+	cmd.Flags().String("backup-method", "", "Backup method: pg_dump (external binary, default) or go (pure Go dump)")
 	cmd.Flags().StringP("config", "f", "", "Path to a YAML configuration file (optional, CLI flags override config values)")
 
 	// Bind flags to viper
@@ -55,6 +56,7 @@ func newMigrationCmd() *cobra.Command {
 	v.BindPFlag("backup", cmd.Flags().Lookup("backup"))
 	v.BindPFlag("backup-only", cmd.Flags().Lookup("backup-only"))
 	v.BindPFlag("restore", cmd.Flags().Lookup("restore"))
+	v.BindPFlag("backup-method", cmd.Flags().Lookup("backup-method"))
 	v.BindPFlag("config", cmd.Flags().Lookup("config"))
 
 	// Store viper instance in command context
@@ -96,6 +98,7 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	isBackup := resolveBool(v, "backup", migConfig, func(c *models.MigrationConfig) bool { return c.Backup })
 	isBackupOnly := resolveBool(v, "backup-only", migConfig, func(c *models.MigrationConfig) bool { return c.BackupOnly })
 	isRestore := resolveBool(v, "restore", migConfig, func(c *models.MigrationConfig) bool { return c.Restore })
+	backupMethod := resolveString(v, "backup-method", migConfig, func(c *models.MigrationConfig) string { return c.BackupMethod })
 
 	// Default provider if empty
 	if provider == "" {
@@ -115,7 +118,7 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create backup service
-	backupService := services.NewBackupService(isDryRun, verbose, "")
+	backupService := services.NewBackupService(isDryRun, verbose, backupMethod)
 
 	// Handle restore flag
 	if isRestore {
