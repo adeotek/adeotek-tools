@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
+	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/tunnel"
 	_ "github.com/lib/pq"
 )
 
@@ -99,6 +100,31 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 		log.Printf("Starting backup for database: %s", dbTarget.Name)
 	}
 
+	// Establish SSH tunnel if configured
+	var sshTunnel *tunnel.SSHTunnel
+	sshConfig := dbTarget.GetEffectiveSSHTunnel()
+	if sshConfig != nil && sshConfig.Enabled && !o.dryRun {
+		if o.verbose {
+			log.Printf("Establishing SSH tunnel for %s to %s:%d...",
+				dbTarget.Name, sshConfig.Host, sshConfig.GetEffectivePort())
+		}
+
+		var err error
+		sshTunnel, err = tunnel.EstablishIfNeeded(sshConfig, dbTarget.Host, dbTarget.Port)
+		if err != nil {
+			result.Error = fmt.Errorf("failed to establish SSH tunnel: %w", err)
+			return result
+		}
+
+		if sshTunnel != nil {
+			defer sshTunnel.Close()
+			if o.verbose {
+				log.Printf("SSH tunnel established for %s: %s -> %s:%d",
+					dbTarget.Name, sshTunnel.GetLocalAddress(), dbTarget.Host, dbTarget.Port)
+			}
+		}
+	}
+
 	// Create output directory
 	outputDir := dbTarget.GetEffectiveOutputDir()
 	if !o.dryRun {
@@ -160,6 +186,11 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 			connParams.RawConnectionString = dbTarget.ConnectionString
 		}
 
+		// Set active tunnel if established
+		if sshTunnel != nil {
+			connParams.SetActiveTunnel(sshTunnel)
+		}
+
 		dumper, dErr := NewDatabaseDumper(BackupMethodPgDump, connParams, nil, options)
 		if dErr != nil {
 			result.Error = fmt.Errorf("failed to create dumper: %w", dErr)
@@ -173,6 +204,13 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 	} else {
 		// Use pure Go dump - needs DB connection
 		connStr := dbTarget.ToConnectionString()
+
+		// If SSH tunnel is active, modify connection string to use tunnel's local address
+		if sshTunnel != nil {
+			connStr = fmt.Sprintf("host=127.0.0.1 port=%d dbname=%s user=%s password=%s sslmode=disable",
+				sshTunnel.GetLocalPort(), dbTarget.Database, dbTarget.User, dbTarget.Password)
+		}
+
 		db, dErr := o.dbConnector(connStr)
 		if dErr != nil {
 			result.Error = fmt.Errorf("failed to connect to database: %w", dErr)

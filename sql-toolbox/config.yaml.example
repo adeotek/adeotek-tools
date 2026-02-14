@@ -17,6 +17,17 @@
 #   backup_only: false
 #   restore: false
 #   backup_method: "pg_dump"  # backup method: "pg_dump" (external binary, default) or "go" (pure Go)
+#
+#   # SSH tunnel configuration (optional)
+#   ssh_tunnel:
+#     enabled: true
+#     host: "bastion.example.com"     # SSH bastion host
+#     port: 22                         # SSH port (default: 22)
+#     user: "sshuser"                  # SSH username
+#     auth_method: "key"               # "key", "password", or "agent"
+#     key_file: "~/.ssh/id_rsa"        # Path to private key (for "key" method)
+#     # password: "sshpass"            # SSH password (for "password" method)
+#     local_port: 0                    # Local port (0 = auto-assign, or specify explicit port like 5433)
 
 # backup section (required for `sql-toolbox backup --config`)
 backup:
@@ -29,9 +40,19 @@ backup:
     backup_method: "go"         # backup method: "go" (pure Go, default) or "pg_dump" (external binary)
     # schemas: ["public"]       # omit or leave empty for full backup (all schemas)
 
+    # SSH tunnel configuration (optional, applied to all databases unless overridden)
+    # ssh_tunnel:
+    #   enabled: true
+    #   host: "bastion.example.com"
+    #   port: 22
+    #   user: "sshuser"
+    #   auth_method: "agent"              # Use SSH agent (most secure, no credentials in config)
+    #   local_port: 0                     # Auto-assign local port
+
   databases:
+    # Example 1: Database behind SSH bastion (inherits ssh_tunnel from defaults)
     # - name: "myapp_prod"
-    #   host: "db.example.com"
+    #   host: "db.internal.example.com"   # Internal database host (not directly accessible)
     #   port: 5432
     #   database: "myapp"
     #   user: "backup_user"
@@ -45,9 +66,35 @@ backup:
     #   exclude_tables: ["sessions", "cache"]
     #   backup_method: "go"               # per-db override (default: from defaults)
 
+    # Example 2: Database with per-db SSH tunnel override (different bastion)
     # - name: "myapp_staging"
-    #   connection_string: "host=staging port=5432 dbname=myapp user=admin password=pass sslmode=disable"
-    #   upload_to_s3: false           # skip S3 upload for this database
+    #   host: "staging-db.internal.example.com"
+    #   port: 5432
+    #   database: "myapp_staging"
+    #   user: "admin"
+    #   password: "pass"
+    #   upload_to_s3: false               # skip S3 upload for this database
+    #   ssh_tunnel:                       # Override SSH tunnel for this database
+    #     enabled: true
+    #     host: "staging-bastion.example.com"
+    #     user: "sshuser"
+    #     auth_method: "password"
+    #     password: "sshpass"
+
+    # Example 3: Database with SSH key authentication
+    # - name: "myapp_dev"
+    #   host: "dev-db.internal.example.com"
+    #   port: 5432
+    #   database: "myapp_dev"
+    #   user: "devuser"
+    #   password: "devpass"
+    #   ssh_tunnel:
+    #     enabled: true
+    #     host: "dev-bastion.example.com"
+    #     user: "sshuser"
+    #     auth_method: "key"
+    #     key_file: "~/.ssh/dev_key"
+    #     local_port: 5433                # Explicit local port (optional)
 
   # s3:
   #   enabled: false

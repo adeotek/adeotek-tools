@@ -17,34 +17,36 @@ type BackupConfig struct {
 
 // BackupDefaults holds the default settings applied to all databases
 type BackupDefaults struct {
-	OutputDir    string   `yaml:"output_dir"`
-	Compress     *bool    `yaml:"compress"`
-	UploadToS3   *bool    `yaml:"upload_to_s3"`
-	NoOwner      *bool    `yaml:"no_owner"`
-	Clean        *bool    `yaml:"clean"`
-	Schemas      []string `yaml:"schemas"`
-	BackupMethod *string  `yaml:"backup_method"`
+	OutputDir    string           `yaml:"output_dir"`
+	Compress     *bool            `yaml:"compress"`
+	UploadToS3   *bool            `yaml:"upload_to_s3"`
+	NoOwner      *bool            `yaml:"no_owner"`
+	Clean        *bool            `yaml:"clean"`
+	Schemas      []string         `yaml:"schemas"`
+	BackupMethod *string          `yaml:"backup_method"`
+	SSHTunnel    *SSHTunnelConfig `yaml:"ssh_tunnel"`
 }
 
 // DatabaseTarget represents a single database to back up
 type DatabaseTarget struct {
-	Name                    string   `yaml:"name"`
-	Host                    string   `yaml:"host"`
-	Port                    int      `yaml:"port"`
-	Database                string   `yaml:"database"`
-	User                    string   `yaml:"user"`
-	Password                string   `yaml:"password"`
-	SSLMode                 string   `yaml:"ssl_mode"`
-	ConnectionString        string   `yaml:"connection_string"`
-	OutputDir               string   `yaml:"output_dir"`
-	Compress                *bool    `yaml:"compress"`
-	UploadToS3              *bool    `yaml:"upload_to_s3"`
-	DeleteLocalAfterUpload  *bool    `yaml:"delete_local_after_upload"`
-	Schemas                 []string `yaml:"schemas"`
-	ExcludeTables           []string `yaml:"exclude_tables"`
-	NoOwner                 *bool    `yaml:"no_owner"`
-	Clean                   *bool    `yaml:"clean"`
-	BackupMethod            *string  `yaml:"backup_method"`
+	Name                    string           `yaml:"name"`
+	Host                    string           `yaml:"host"`
+	Port                    int              `yaml:"port"`
+	Database                string           `yaml:"database"`
+	User                    string           `yaml:"user"`
+	Password                string           `yaml:"password"`
+	SSLMode                 string           `yaml:"ssl_mode"`
+	ConnectionString        string           `yaml:"connection_string"`
+	OutputDir               string           `yaml:"output_dir"`
+	Compress                *bool            `yaml:"compress"`
+	UploadToS3              *bool            `yaml:"upload_to_s3"`
+	DeleteLocalAfterUpload  *bool            `yaml:"delete_local_after_upload"`
+	Schemas                 []string         `yaml:"schemas"`
+	ExcludeTables           []string         `yaml:"exclude_tables"`
+	NoOwner                 *bool            `yaml:"no_owner"`
+	Clean                   *bool            `yaml:"clean"`
+	BackupMethod            *string          `yaml:"backup_method"`
+	SSHTunnel               *SSHTunnelConfig `yaml:"ssh_tunnel"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -201,6 +203,17 @@ func (dt *DatabaseTarget) GetEffectiveSchemas() []string {
 	}
 	if dt.defaults != nil && len(dt.defaults.Schemas) > 0 {
 		return dt.defaults.Schemas
+	}
+	return nil
+}
+
+// GetEffectiveSSHTunnel returns the SSH tunnel config for this database, falling back to defaults
+func (dt *DatabaseTarget) GetEffectiveSSHTunnel() *SSHTunnelConfig {
+	if dt.SSHTunnel != nil {
+		return dt.SSHTunnel
+	}
+	if dt.defaults != nil && dt.defaults.SSHTunnel != nil {
+		return dt.defaults.SSHTunnel
 	}
 	return nil
 }

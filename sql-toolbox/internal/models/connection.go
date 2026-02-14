@@ -42,13 +42,15 @@ func ParseDatabaseProvider(provider string) DatabaseProvider {
 
 // ConnectionParameters holds the database connection parameters
 type ConnectionParameters struct {
-	Provider           string
+	Provider            string
 	RawConnectionString string
-	Host               string
-	Port               int
-	DatabaseName       string
-	User               string
-	Password           string
+	Host                string
+	Port                int
+	DatabaseName        string
+	User                string
+	Password            string
+	SSHTunnel           *SSHTunnelConfig
+	activeTunnel        interface{} // Holds *tunnel.SSHTunnel when active
 }
 
 // GetDbProvider returns the parsed database provider
@@ -102,13 +104,38 @@ func (cp *ConnectionParameters) GetConnectionString() (string, error) {
 	provider := cp.GetDbProvider()
 	switch provider {
 	case PostgreSQL:
+		host := cp.Host
+		port := cp.Port
+
+		// Use tunnel's local address if active
+		if cp.activeTunnel != nil {
+			// Type assertion to access GetLocalPort() method
+			type localPortGetter interface {
+				GetLocalPort() int
+			}
+			if tunnel, ok := cp.activeTunnel.(localPortGetter); ok {
+				host = "127.0.0.1"
+				port = tunnel.GetLocalPort()
+			}
+		}
+
 		return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
-			cp.Host, cp.Port, cp.DatabaseName, cp.User, cp.Password), nil
+			host, port, cp.DatabaseName, cp.User, cp.Password), nil
 	case SQLite:
 		return cp.DatabaseName, nil
 	default:
 		return "", errors.New("unknown database provider")
 	}
+}
+
+// SetActiveTunnel stores the active SSH tunnel reference
+func (cp *ConnectionParameters) SetActiveTunnel(tunnel interface{}) {
+	cp.activeTunnel = tunnel
+}
+
+// GetActiveTunnel retrieves the active SSH tunnel reference
+func (cp *ConnectionParameters) GetActiveTunnel() interface{} {
+	return cp.activeTunnel
 }
 
 // ParseConnectionParameters creates ConnectionParameters from command line arguments

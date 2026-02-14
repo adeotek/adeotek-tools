@@ -15,18 +15,19 @@ type Config struct {
 
 // MigrationConfig holds migration-specific configuration loaded from YAML
 type MigrationConfig struct {
-	TargetPath       string `yaml:"target_path"`
-	Provider         string `yaml:"provider"`
-	Host             string `yaml:"host"`
-	Port             int    `yaml:"port"`
-	Database         string `yaml:"database"`
-	User             string `yaml:"user"`
-	Password         string `yaml:"password"`
-	ConnectionString string `yaml:"connection_string"`
-	Backup           bool   `yaml:"backup"`
-	BackupOnly       bool   `yaml:"backup_only"`
-	Restore          bool   `yaml:"restore"`
-	BackupMethod     string `yaml:"backup_method"`
+	TargetPath       string           `yaml:"target_path"`
+	Provider         string           `yaml:"provider"`
+	Host             string           `yaml:"host"`
+	Port             int              `yaml:"port"`
+	Database         string           `yaml:"database"`
+	User             string           `yaml:"user"`
+	Password         string           `yaml:"password"`
+	ConnectionString string           `yaml:"connection_string"`
+	Backup           bool             `yaml:"backup"`
+	BackupOnly       bool             `yaml:"backup_only"`
+	Restore          bool             `yaml:"restore"`
+	BackupMethod     string           `yaml:"backup_method"`
+	SSHTunnel        *SSHTunnelConfig `yaml:"ssh_tunnel"`
 }
 
 // LoadConfig parses a unified YAML configuration file

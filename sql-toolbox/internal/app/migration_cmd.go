@@ -9,6 +9,7 @@ import (
 
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/services"
+	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/tunnel"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -115,6 +116,29 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	// Validate connection parameters
 	if valid, errors := connectionParams.IsValid(); !valid {
 		return fmt.Errorf("invalid connection parameters: %v", errors)
+	}
+
+	// Establish SSH tunnel if configured
+	if migConfig != nil && migConfig.SSHTunnel != nil && migConfig.SSHTunnel.Enabled {
+		if verbose {
+			fmt.Printf("Establishing SSH tunnel to %s:%d...\n",
+				migConfig.SSHTunnel.Host, migConfig.SSHTunnel.GetEffectivePort())
+		}
+
+		sshTunnel, err := tunnel.EstablishIfNeeded(migConfig.SSHTunnel, connectionParams.Host, connectionParams.Port)
+		if err != nil {
+			return fmt.Errorf("failed to establish SSH tunnel: %w", err)
+		}
+
+		if sshTunnel != nil {
+			defer sshTunnel.Close()
+			connectionParams.SetActiveTunnel(sshTunnel)
+
+			if verbose {
+				fmt.Printf("SSH tunnel established: %s -> %s:%d\n",
+					sshTunnel.GetLocalAddress(), connectionParams.Host, connectionParams.Port)
+			}
+		}
 	}
 
 	// Create backup service

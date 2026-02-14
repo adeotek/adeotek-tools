@@ -34,9 +34,24 @@ func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 			"--format=custom",
 		}
 	} else {
+		host := d.connParams.Host
+		port := d.connParams.Port
+
+		// Use tunnel's local address if active
+		if tunnel := d.connParams.GetActiveTunnel(); tunnel != nil {
+			// Type assertion to access GetLocalPort() method
+			type localPortGetter interface {
+				GetLocalPort() int
+			}
+			if t, ok := tunnel.(localPortGetter); ok {
+				host = "127.0.0.1"
+				port = t.GetLocalPort()
+			}
+		}
+
 		args = []string{
-			fmt.Sprintf("--host=%s", d.connParams.Host),
-			fmt.Sprintf("--port=%d", d.connParams.Port),
+			fmt.Sprintf("--host=%s", host),
+			fmt.Sprintf("--port=%d", port),
 			fmt.Sprintf("--username=%s", d.connParams.User),
 			fmt.Sprintf("--dbname=%s", d.connParams.DatabaseName),
 			"--format=custom",
