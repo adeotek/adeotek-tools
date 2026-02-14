@@ -31,7 +31,7 @@ func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 	if d.connParams.RawConnectionString != "" {
 		args = []string{
 			fmt.Sprintf("--dbname=%s", d.connParams.RawConnectionString),
-			"--format=plain",
+			"--format=custom",
 		}
 	} else {
 		args = []string{
@@ -39,7 +39,7 @@ func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 			fmt.Sprintf("--port=%d", d.connParams.Port),
 			fmt.Sprintf("--username=%s", d.connParams.User),
 			fmt.Sprintf("--dbname=%s", d.connParams.DatabaseName),
-			"--format=plain",
+			"--format=custom",
 		}
 	}
 

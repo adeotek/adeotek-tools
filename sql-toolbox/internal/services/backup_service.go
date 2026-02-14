@@ -100,11 +100,12 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 	}
 
 	provider := connectionParams.GetDbProvider()
-	var extension string
+	var extensions []string
 	if provider == models.PostgreSQL {
-		extension = ".sql"
+		// Support both .sql (pure Go) and .dump (pg_dump custom format)
+		extensions = []string{".sql", ".dump"}
 	} else {
-		extension = ".db"
+		extensions = []string{".db"}
 	}
 
 	entries, err := os.ReadDir(backupDir)
@@ -114,8 +115,14 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 
 	var backupFiles []string
 	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), extension) {
-			backupFiles = append(backupFiles, filepath.Join(backupDir, entry.Name()))
+		if entry.IsDir() {
+			continue
+		}
+		for _, ext := range extensions {
+			if strings.HasSuffix(entry.Name(), ext) {
+				backupFiles = append(backupFiles, filepath.Join(backupDir, entry.Name()))
+				break
+			}
 		}
 	}
 
@@ -134,7 +141,12 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 }
 
 func (bs *BackupService) createPostgresBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
-	backupPath := filepath.Join(backupDir, backupFileName+".sql")
+	// Use .dump extension for pg_dump custom format, .sql for pure Go plain format
+	extension := ".sql"
+	if bs.backupMethod == BackupMethodPgDump {
+		extension = ".dump"
+	}
+	backupPath := filepath.Join(backupDir, backupFileName+extension)
 	log.Printf("Creating PostgreSQL backup: %s (method: %s)", backupPath, bs.backupMethod)
 
 	if bs.isDryRun {
@@ -179,7 +191,7 @@ func (bs *BackupService) createPostgresBackup(connectionParams *models.Connectio
 		return "", fmt.Errorf("backup failed: %w", err)
 	}
 
-	log.Printf("PostgreSQL backup created successfully: %s", backupPath)
+	log.Printf("PostgreSQL backup created successfully: %s (method: %s)", backupPath, bs.backupMethod)
 	return backupPath, nil
 }
 
@@ -220,22 +232,41 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 func (bs *BackupService) restorePostgresBackup(connectionParams *models.ConnectionParameters, backupPath string) error {
 	log.Printf("Restoring PostgreSQL backup from: %s", backupPath)
 
-	args := []string{
-		fmt.Sprintf("--host=%s", connectionParams.Host),
-		fmt.Sprintf("--port=%d", connectionParams.Port),
-		fmt.Sprintf("--username=%s", connectionParams.User),
-		fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-		fmt.Sprintf("--file=%s", backupPath),
+	var cmd *exec.Cmd
+	var cmdName string
+
+	// Use pg_restore for custom format (.dump), psql for plain format (.sql)
+	if strings.HasSuffix(backupPath, ".dump") {
+		cmdName = "pg_restore"
+		args := []string{
+			fmt.Sprintf("--host=%s", connectionParams.Host),
+			fmt.Sprintf("--port=%d", connectionParams.Port),
+			fmt.Sprintf("--username=%s", connectionParams.User),
+			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
+			"--clean",
+			"--if-exists",
+			backupPath,
+		}
+		cmd = exec.Command(cmdName, args...)
+	} else {
+		cmdName = "psql"
+		args := []string{
+			fmt.Sprintf("--host=%s", connectionParams.Host),
+			fmt.Sprintf("--port=%d", connectionParams.Port),
+			fmt.Sprintf("--username=%s", connectionParams.User),
+			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
+			fmt.Sprintf("--file=%s", backupPath),
+		}
+		cmd = exec.Command(cmdName, args...)
 	}
 
-	cmd := exec.Command("psql", args...)
 	if connectionParams.Password != "" {
 		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", connectionParams.Password))
 	}
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("psql restore failed: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("%s restore failed: %w\nOutput: %s", cmdName, err, string(output))
 	}
 
 	log.Printf("PostgreSQL backup restored successfully")
