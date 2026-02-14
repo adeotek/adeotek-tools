@@ -25,12 +25,22 @@ func NewPgDumpBinaryDumper(connParams *models.ConnectionParameters, options PgDu
 
 // Dump executes pg_dump and writes output to the provided writer
 func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
-	args := []string{
-		fmt.Sprintf("--host=%s", d.connParams.Host),
-		fmt.Sprintf("--port=%d", d.connParams.Port),
-		fmt.Sprintf("--username=%s", d.connParams.User),
-		fmt.Sprintf("--dbname=%s", d.connParams.DatabaseName),
-		"--format=plain",
+	var args []string
+
+	// pg_dump accepts a conninfo string as the --dbname argument
+	if d.connParams.RawConnectionString != "" {
+		args = []string{
+			fmt.Sprintf("--dbname=%s", d.connParams.RawConnectionString),
+			"--format=plain",
+		}
+	} else {
+		args = []string{
+			fmt.Sprintf("--host=%s", d.connParams.Host),
+			fmt.Sprintf("--port=%d", d.connParams.Port),
+			fmt.Sprintf("--username=%s", d.connParams.User),
+			fmt.Sprintf("--dbname=%s", d.connParams.DatabaseName),
+			"--format=plain",
+		}
 	}
 
 	if d.options.NoOwner {
@@ -49,7 +59,7 @@ func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 	cmd := exec.Command("pg_dump", args...)
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
-	if d.connParams.Password != "" {
+	if d.connParams.RawConnectionString == "" && d.connParams.Password != "" {
 		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", d.connParams.Password))
 	}
 
