@@ -17,7 +17,8 @@ func newBackupCmd() *cobra.Command {
 		Long: `Back up one or more remote PostgreSQL databases using a YAML configuration file.
 Supports optional gzip compression and S3/S3-compatible storage upload.
 Uses pure Go PostgreSQL dump (no pg_dump binary required).`,
-		RunE: runBackup,
+		RunE:         runBackup,
+		SilenceUsage: true, // Don't show usage on execution errors, only on argument errors
 	}
 
 	cmd.Flags().StringP("config", "c", "", "[required] Path to the YAML configuration file")

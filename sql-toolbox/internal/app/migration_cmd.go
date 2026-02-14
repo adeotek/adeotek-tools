@@ -16,10 +16,11 @@ import (
 
 func newMigrationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migration",
-		Short: "Execute SQL migration scripts against a database",
-		Long:  "Execute SQL migration scripts against PostgreSQL and SQLite databases with migration history tracking.",
-		RunE:  runMigration,
+		Use:          "migration",
+		Short:        "Execute SQL migration scripts against a database",
+		Long:         "Execute SQL migration scripts against PostgreSQL and SQLite databases with migration history tracking.",
+		RunE:         runMigration,
+		SilenceUsage: true, // Don't show usage on execution errors
 	}
 
 	cmd.Flags().StringP("target-path", "t", "", "[required] Target path (path to the SQL scripts directory)")
