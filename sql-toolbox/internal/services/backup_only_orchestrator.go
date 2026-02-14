@@ -129,20 +129,6 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 		return result
 	}
 
-	// Connect to database
-	connStr := dbTarget.ToConnectionString()
-	db, err := o.dbConnector(connStr)
-	if err != nil {
-		result.Error = fmt.Errorf("failed to connect to database: %w", err)
-		return result
-	}
-	defer db.Close()
-
-	if err := db.Ping(); err != nil {
-		result.Error = fmt.Errorf("failed to ping database: %w", err)
-		return result
-	}
-
 	// Create output file with optional compression
 	writer, closer, err := createOutputWriter(filePath, compress)
 	if err != nil {
@@ -151,21 +137,68 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 	}
 	defer closer()
 
-	// Run dump
+	// Run dump using the configured backup method
+	method := dbTarget.GetEffectiveBackupMethod()
 	options := PgDumpOptions{
 		Schemas:       dbTarget.GetEffectiveSchemas(),
 		ExcludeTables: dbTarget.ExcludeTables,
 		NoOwner:       dbTarget.GetEffectiveNoOwner(),
 		Clean:         dbTarget.GetEffectiveClean(),
 	}
-	dumpService := NewPgDumpService(db, options, writer)
-	if err := dumpService.Dump(); err != nil {
-		result.Error = fmt.Errorf("dump failed: %w", err)
-		return result
+
+	if method == BackupMethodPgDump {
+		// Use external pg_dump binary - no DB connection needed
+		connParams := &models.ConnectionParameters{
+			Provider:     "postgresql",
+			Host:         dbTarget.Host,
+			Port:         dbTarget.Port,
+			DatabaseName: dbTarget.Database,
+			User:         dbTarget.User,
+			Password:     dbTarget.Password,
+		}
+		if dbTarget.ConnectionString != "" {
+			connParams.RawConnectionString = dbTarget.ConnectionString
+		}
+
+		dumper, dErr := NewDatabaseDumper(BackupMethodPgDump, connParams, nil, options)
+		if dErr != nil {
+			result.Error = fmt.Errorf("failed to create dumper: %w", dErr)
+			return result
+		}
+
+		if dErr = dumper.Dump(writer); dErr != nil {
+			result.Error = fmt.Errorf("dump failed: %w", dErr)
+			return result
+		}
+	} else {
+		// Use pure Go dump - needs DB connection
+		connStr := dbTarget.ToConnectionString()
+		db, dErr := o.dbConnector(connStr)
+		if dErr != nil {
+			result.Error = fmt.Errorf("failed to connect to database: %w", dErr)
+			return result
+		}
+		defer db.Close()
+
+		if dErr = db.Ping(); dErr != nil {
+			result.Error = fmt.Errorf("failed to ping database: %w", dErr)
+			return result
+		}
+
+		dumper, dErr := NewDatabaseDumper(BackupMethodGo, nil, db, options)
+		if dErr != nil {
+			result.Error = fmt.Errorf("failed to create dumper: %w", dErr)
+			return result
+		}
+
+		if dErr = dumper.Dump(writer); dErr != nil {
+			result.Error = fmt.Errorf("dump failed: %w", dErr)
+			return result
+		}
 	}
 
 	if o.verbose {
-		log.Printf("Dump completed: %s", filePath)
+		log.Printf("Dump completed: %s (method: %s)", filePath, method)
 	}
 
 	// Upload to S3 if configured
