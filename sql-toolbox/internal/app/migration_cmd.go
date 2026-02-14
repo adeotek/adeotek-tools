@@ -115,7 +115,7 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create backup service
-	backupService := services.NewBackupService(isDryRun, verbose)
+	backupService := services.NewBackupService(isDryRun, verbose, "")
 
 	// Handle restore flag
 	if isRestore {

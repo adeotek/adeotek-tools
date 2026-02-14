@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -12,21 +13,27 @@ import (
 	"time"
 
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
+	_ "github.com/lib/pq"
 )
 
 const backupDirectoryName = ".db-backups"
 
 // BackupService handles database backup and restore operations
 type BackupService struct {
-	isDryRun bool
-	verbose  bool
+	isDryRun     bool
+	verbose      bool
+	backupMethod string
 }
 
 // NewBackupService creates a new backup service instance
-func NewBackupService(isDryRun, verbose bool) *BackupService {
+func NewBackupService(isDryRun, verbose bool, backupMethod string) *BackupService {
+	if backupMethod == "" {
+		backupMethod = BackupMethodPgDump
+	}
 	return &BackupService{
-		isDryRun: isDryRun,
-		verbose:  verbose,
+		isDryRun:     isDryRun,
+		verbose:      verbose,
+		backupMethod: backupMethod,
 	}
 }
 
@@ -128,34 +135,48 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 
 func (bs *BackupService) createPostgresBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
 	backupPath := filepath.Join(backupDir, backupFileName+".sql")
-	log.Printf("Creating PostgreSQL backup: %s", backupPath)
+	log.Printf("Creating PostgreSQL backup: %s (method: %s)", backupPath, bs.backupMethod)
 
 	if bs.isDryRun {
-		log.Printf("Dry run: would create PostgreSQL backup at %s", backupPath)
+		log.Printf("Dry run: would create PostgreSQL backup at %s (method: %s)", backupPath, bs.backupMethod)
 		return backupPath, nil
 	}
 
-	args := []string{
-		fmt.Sprintf("--host=%s", connectionParams.Host),
-		fmt.Sprintf("--port=%d", connectionParams.Port),
-		fmt.Sprintf("--username=%s", connectionParams.User),
-		fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-		fmt.Sprintf("--file=%s", backupPath),
-		"--format=plain",
-		"--no-owner",
-		"--no-acl",
-		"--clean",
-		"--if-exists",
+	options := PgDumpOptions{
+		NoOwner: true,
+		Clean:   true,
 	}
 
-	cmd := exec.Command("pg_dump", args...)
-	if connectionParams.Password != "" {
-		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", connectionParams.Password))
+	// For "go" method, we need a database connection
+	var db *sql.DB
+	if bs.backupMethod == BackupMethodGo {
+		connStr, err := connectionParams.GetConnectionString()
+		if err != nil {
+			return "", fmt.Errorf("failed to build connection string: %w", err)
+		}
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			return "", fmt.Errorf("failed to connect to database: %w", err)
+		}
+		defer db.Close()
+		if err := db.Ping(); err != nil {
+			return "", fmt.Errorf("failed to ping database: %w", err)
+		}
 	}
 
-	output, err := cmd.CombinedOutput()
+	dumper, err := NewDatabaseDumper(bs.backupMethod, connectionParams, db, options)
 	if err != nil {
-		return "", fmt.Errorf("pg_dump failed: %w\nOutput: %s", err, string(output))
+		return "", fmt.Errorf("failed to create database dumper: %w", err)
+	}
+
+	file, err := os.Create(backupPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create backup file: %w", err)
+	}
+	defer file.Close()
+
+	if err := dumper.Dump(file); err != nil {
+		return "", fmt.Errorf("backup failed: %w", err)
 	}
 
 	log.Printf("PostgreSQL backup created successfully: %s", backupPath)

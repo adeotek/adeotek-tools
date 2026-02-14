@@ -25,7 +25,7 @@ func TestBackupService_CreateBackup_SQLite(t *testing.T) {
 	}
 
 	// Create backup service
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	// Create backup
 	backupPath, err := backupService.CreateBackup(connectionParams)
@@ -69,7 +69,7 @@ func TestBackupService_CreateBackup_DryRun(t *testing.T) {
 	}
 
 	// Create backup service in dry-run mode
-	backupService := NewBackupService(true, false)
+	backupService := NewBackupService(true, false, "")
 
 	// Create backup (dry-run)
 	backupPath, err := backupService.CreateBackup(connectionParams)
@@ -99,7 +99,7 @@ func TestBackupService_GetLastBackupPath(t *testing.T) {
 	}
 
 	// Create backup service
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	// Create first backup
 	backup1, err := backupService.CreateBackup(connectionParams)
@@ -147,7 +147,7 @@ func TestBackupService_GetLastBackupPath_NoBackup(t *testing.T) {
 	}
 
 	// Create backup service
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	// Get last backup path (should return empty string)
 	lastBackupPath, err := backupService.GetLastBackupPath(connectionParams)
@@ -177,7 +177,7 @@ func TestBackupService_RestoreLastBackup_SQLite(t *testing.T) {
 	}
 
 	// Create backup service
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	// Create backup
 	backupPath, err := backupService.CreateBackup(connectionParams)
@@ -227,7 +227,7 @@ func TestBackupService_RestoreLastBackup_NoBackup(t *testing.T) {
 	}
 
 	// Create backup service
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	// Try to restore (should fail with no backup)
 	err := backupService.RestoreLastBackup(connectionParams)
@@ -237,7 +237,7 @@ func TestBackupService_RestoreLastBackup_NoBackup(t *testing.T) {
 }
 
 func TestBackupService_GetDatabaseName(t *testing.T) {
-	backupService := NewBackupService(false, false)
+	backupService := NewBackupService(false, false, "")
 
 	tests := []struct {
 		name     string
