@@ -382,6 +382,43 @@ func TestDatabaseTarget_GetEffectiveBackupMethod(t *testing.T) {
 	}
 }
 
+func TestDatabaseTarget_GetEffectiveS3Prefix(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected string
+	}{
+		{
+			name:     "per-db override",
+			db:       DatabaseTarget{S3Prefix: "production/"},
+			expected: "production/",
+		},
+		{
+			name:     "s3 config fallback",
+			db:       DatabaseTarget{s3Config: &S3Config{Prefix: "backups/"}},
+			expected: "backups/",
+		},
+		{
+			name:     "per-db overrides s3 config",
+			db:       DatabaseTarget{S3Prefix: "staging/", s3Config: &S3Config{Prefix: "backups/"}},
+			expected: "staging/",
+		},
+		{
+			name:     "empty when no prefix set",
+			db:       DatabaseTarget{s3Config: &S3Config{}},
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.db.GetEffectiveS3Prefix()
+			if got != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, got)
+			}
+		})
+	}
+}
+
 func writeTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()

@@ -147,7 +147,8 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 	if o.dryRun {
 		log.Printf("[DRY RUN] Would backup %s to %s", dbTarget.Name, filePath)
 		if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled {
-			s3Key := BuildS3Key(dbTarget.Name, filePath)
+			s3Prefix := dbTarget.GetEffectiveS3Prefix()
+			s3Key := BuildS3Key(s3Prefix, dbTarget.Name, filePath)
 			log.Printf("[DRY RUN] Would upload to S3: %s", s3Key)
 			result.UploadedToS3 = true
 			result.S3Key = s3Key
@@ -241,7 +242,8 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 
 	// Upload to S3 if configured
 	if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled && s3Uploader != nil {
-		s3Key := BuildS3Key(dbTarget.Name, filePath)
+		s3Prefix := dbTarget.GetEffectiveS3Prefix()
+		s3Key := BuildS3Key(s3Prefix, dbTarget.Name, filePath)
 		if o.verbose {
 			log.Printf("Uploading to S3: %s", s3Key)
 		}

@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -95,10 +96,154 @@ func (cp *ConnectionParameters) IsValid() (bool, []string) {
 	return len(errors) == 0, errors
 }
 
+// normalizeConnectionString converts various connection string formats to lib/pq format
+func normalizeConnectionString(connStr string) (string, error) {
+	connStr = strings.TrimSpace(connStr)
+
+	// Check if it's a PostgreSQL URL format (postgresql://... or postgres://...)
+	if strings.HasPrefix(connStr, "postgresql://") || strings.HasPrefix(connStr, "postgres://") {
+		return convertPostgreSQLURL(connStr)
+	}
+
+	// Check if it's .NET format (contains semicolons)
+	if strings.Contains(connStr, ";") {
+		return convertDotNetFormat(connStr)
+	}
+
+	// Assume it's already in lib/pq format (space-separated key=value pairs)
+	return connStr, nil
+}
+
+// convertPostgreSQLURL converts PostgreSQL URL format to lib/pq format
+// Example: postgresql://user:password@host:5432/dbname?sslmode=disable
+func convertPostgreSQLURL(connStr string) (string, error) {
+	u, err := url.Parse(connStr)
+	if err != nil {
+		return "", fmt.Errorf("invalid PostgreSQL URL: %w", err)
+	}
+
+	var parts []string
+
+	// Host
+	if u.Hostname() != "" {
+		parts = append(parts, fmt.Sprintf("host=%s", u.Hostname()))
+	}
+
+	// Port
+	if u.Port() != "" {
+		parts = append(parts, fmt.Sprintf("port=%s", u.Port()))
+	} else {
+		parts = append(parts, "port=5432") // Default PostgreSQL port
+	}
+
+	// Database name (from path)
+	dbname := strings.TrimPrefix(u.Path, "/")
+	if dbname != "" {
+		parts = append(parts, fmt.Sprintf("dbname=%s", dbname))
+	}
+
+	// User
+	if u.User != nil && u.User.Username() != "" {
+		parts = append(parts, fmt.Sprintf("user=%s", u.User.Username()))
+	}
+
+	// Password
+	if u.User != nil {
+		if password, ok := u.User.Password(); ok {
+			parts = append(parts, fmt.Sprintf("password=%s", password))
+		}
+	}
+
+	// Query parameters (e.g., sslmode)
+	for key, values := range u.Query() {
+		if len(values) > 0 {
+			parts = append(parts, fmt.Sprintf("%s=%s", key, values[0]))
+		}
+	}
+
+	// Add sslmode=disable if not specified
+	if !strings.Contains(connStr, "sslmode") {
+		parts = append(parts, "sslmode=disable")
+	}
+
+	return strings.Join(parts, " "), nil
+}
+
+// convertDotNetFormat converts .NET connection string format to lib/pq format
+// Example: Server=host;Port=5432;Database=mydb;Username=user;Password=pass;SslMode=Disable;
+func convertDotNetFormat(connStr string) (string, error) {
+	// Parse .NET format (semicolon-separated key=value pairs)
+	dotNetParams := make(map[string]string)
+	pairs := strings.Split(connStr, ";")
+
+	for _, pair := range pairs {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+		dotNetParams[strings.ToLower(key)] = value
+	}
+
+	// Map .NET keys to lib/pq keys
+	var parts []string
+
+	if val, ok := dotNetParams["server"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("host=%s", val))
+	} else if val, ok := dotNetParams["host"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("host=%s", val))
+	}
+
+	if val, ok := dotNetParams["port"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("port=%s", val))
+	}
+
+	if val, ok := dotNetParams["database"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("dbname=%s", val))
+	}
+
+	if val, ok := dotNetParams["username"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("user=%s", val))
+	} else if val, ok := dotNetParams["user id"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("user=%s", val))
+	} else if val, ok := dotNetParams["user"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("user=%s", val))
+	}
+
+	if val, ok := dotNetParams["password"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("password=%s", val))
+	}
+
+	// Handle SSL mode
+	if val, ok := dotNetParams["sslmode"]; ok && val != "" {
+		parts = append(parts, fmt.Sprintf("sslmode=%s", strings.ToLower(val)))
+	} else {
+		parts = append(parts, "sslmode=disable")
+	}
+
+	if len(parts) == 0 {
+		return "", fmt.Errorf("no valid connection parameters found in .NET format string")
+	}
+
+	return strings.Join(parts, " "), nil
+}
+
 // GetConnectionString builds the connection string based on the provider
 func (cp *ConnectionParameters) GetConnectionString() (string, error) {
 	if cp.RawConnectionString != "" {
-		return cp.RawConnectionString, nil
+		// Normalize connection string to lib/pq format
+		normalized, err := normalizeConnectionString(cp.RawConnectionString)
+		if err != nil {
+			return "", fmt.Errorf("failed to normalize connection string: %w", err)
+		}
+		return normalized, nil
 	}
 
 	provider := cp.GetDbProvider()

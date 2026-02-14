@@ -23,34 +23,52 @@ func (m *MockS3Uploader) Upload(localPath, key string) error {
 func TestBuildS3Key(t *testing.T) {
 	tests := []struct {
 		name     string
+		prefix   string
 		dbName   string
 		filePath string
 		expected string
 	}{
 		{
-			name:     "simple path",
+			name:     "simple path without prefix",
+			prefix:   "",
 			dbName:   "mydb",
 			filePath: "/backups/mydb_backup_20240115.sql",
 			expected: "mydb/mydb_backup_20240115.sql",
 		},
 		{
-			name:     "gzip path",
+			name:     "gzip path without prefix",
+			prefix:   "",
 			dbName:   "mydb",
 			filePath: "/backups/mydb_backup_20240115.sql.gz",
 			expected: "mydb/mydb_backup_20240115.sql.gz",
 		},
 		{
-			name:     "nested path",
+			name:     "nested path without prefix",
+			prefix:   "",
 			dbName:   "production",
 			filePath: "/var/backups/prod/db_20240115.sql",
 			expected: "production/db_20240115.sql",
 		},
+		{
+			name:     "with prefix",
+			prefix:   "backups/",
+			dbName:   "mydb",
+			filePath: "/backups/mydb_backup_20240115.sql",
+			expected: "backups/mydb/mydb_backup_20240115.sql",
+		},
+		{
+			name:     "with nested prefix",
+			prefix:   "production/sql-backups/",
+			dbName:   "mydb",
+			filePath: "/backups/mydb_backup_20240115.sql.gz",
+			expected: "production/sql-backups/mydb/mydb_backup_20240115.sql.gz",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BuildS3Key(tt.dbName, tt.filePath)
+			got := BuildS3Key(tt.prefix, tt.dbName, tt.filePath)
 			if got != tt.expected {
-				t.Errorf("BuildS3Key(%q, %q) = %q, want %q", tt.dbName, tt.filePath, got, tt.expected)
+				t.Errorf("BuildS3Key(%q, %q, %q) = %q, want %q", tt.prefix, tt.dbName, tt.filePath, got, tt.expected)
 			}
 		})
 	}

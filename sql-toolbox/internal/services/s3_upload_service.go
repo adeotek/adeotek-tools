@@ -69,6 +69,7 @@ func NewS3UploadService(s3Config models.S3Config) (*S3UploadService, error) {
 }
 
 // Upload uploads a local file to S3 with the given key
+// Note: The key should include any desired prefix (use BuildS3Key to construct it)
 func (svc *S3UploadService) Upload(localPath, key string) error {
 	file, err := os.Open(localPath)
 	if err != nil {
@@ -76,7 +77,8 @@ func (svc *S3UploadService) Upload(localPath, key string) error {
 	}
 	defer file.Close()
 
-	fullKey := svc.prefix + key
+	// Key is expected to already include the prefix
+	fullKey := key
 
 	contentType := "application/sql"
 	if strings.HasSuffix(localPath, ".gz") {
@@ -96,7 +98,11 @@ func (svc *S3UploadService) Upload(localPath, key string) error {
 	return nil
 }
 
-// BuildS3Key constructs the S3 object key from a local file path and database name
-func BuildS3Key(dbName, filePath string) string {
-	return dbName + "/" + filepath.Base(filePath)
+// BuildS3Key constructs the S3 object key from a local file path, database name, and optional prefix
+func BuildS3Key(prefix, dbName, filePath string) string {
+	key := dbName + "/" + filepath.Base(filePath)
+	if prefix != "" {
+		return prefix + key
+	}
+	return key
 }

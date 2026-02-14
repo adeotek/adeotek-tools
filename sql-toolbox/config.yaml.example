@@ -12,7 +12,14 @@
 #   database: "myapp"
 #   user: "admin"
 #   password: "secret"
+#
+#   # Connection string (optional, overrides individual parameters)
+#   # Supports three formats:
+#   # 1. lib/pq format: "host=localhost port=5432 dbname=myapp user=admin password=secret sslmode=disable"
+#   # 2. .NET format: "Server=localhost;Port=5432;Database=myapp;Username=admin;Password=secret;SslMode=Disable;"
+#   # 3. PostgreSQL URL: "postgresql://admin:secret@localhost:5432/myapp"
 #   connection_string: ""
+#
 #   backup: false
 #   backup_only: false
 #   restore: false
@@ -62,18 +69,20 @@ backup:
     #   compress: true
     #   upload_to_s3: true                # per-db override (default: from defaults)
     #   delete_local_after_upload: true   # per-db override (default: from s3 config)
+    #   s3_prefix: "production/"          # per-db S3 prefix override (default: from s3 config)
     #   schemas: ["public", "audit"]
     #   exclude_tables: ["sessions", "cache"]
     #   backup_method: "go"               # per-db override (default: from defaults)
 
-    # Example 2: Database with per-db SSH tunnel override (different bastion)
+    # Example 2: Database with per-db SSH tunnel override and S3 prefix
     # - name: "myapp_staging"
     #   host: "staging-db.internal.example.com"
     #   port: 5432
     #   database: "myapp_staging"
     #   user: "admin"
     #   password: "pass"
-    #   upload_to_s3: false               # skip S3 upload for this database
+    #   upload_to_s3: true
+    #   s3_prefix: "staging/"             # Custom S3 prefix for staging backups
     #   ssh_tunnel:                       # Override SSH tunnel for this database
     #     enabled: true
     #     host: "staging-bastion.example.com"
@@ -96,12 +105,30 @@ backup:
     #     key_file: "~/.ssh/dev_key"
     #     local_port: 5433                # Explicit local port (optional)
 
+    # Example 4: Database using connection_string (supports multiple formats)
+    # - name: "myapp_prod"
+    #   # Option 1: lib/pq format
+    #   connection_string: "host=prod-db.example.com port=5432 dbname=myapp user=produser password=prodpass sslmode=disable"
+    #
+    #   # Option 2: .NET format
+    #   # connection_string: "Server=prod-db.example.com;Port=5432;Database=myapp;Username=produser;Password=prodpass;SslMode=Disable;"
+    #
+    #   # Option 3: PostgreSQL URL
+    #   # connection_string: "postgresql://produser:prodpass@prod-db.example.com:5432/myapp"
+
   # s3:
   #   enabled: false
   #   bucket: "my-db-backups"
-  #   region: "us-east-1"
+  #   region: "us-east-1"           # Required for AWS S3, can be any value for MinIO/RustFS
   #   prefix: "sql-toolbox/"
-  #   access_key_id: ""            # or use AWS_ACCESS_KEY_ID env var
-  #   secret_access_key: ""
-  #   endpoint: ""                 # for MinIO/S3-compatible storage
+  #   access_key_id: ""             # or use AWS_ACCESS_KEY_ID env var
+  #   secret_access_key: ""         # or use AWS_SECRET_ACCESS_KEY env var
+  #
+  #   # For MinIO/RustFS/S3-compatible storage, set the endpoint URL:
+  #   # Examples:
+  #   #   MinIO:   "http://localhost:9000" or "https://minio.example.com"
+  #   #   RustFS:  "http://localhost:8080" or "https://rustfs.example.com"
+  #   # Note: Include the protocol (http:// or https://) and port if not standard
+  #   endpoint: ""
+  #
   #   delete_local_after_upload: false

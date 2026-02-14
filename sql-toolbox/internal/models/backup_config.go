@@ -47,6 +47,7 @@ type DatabaseTarget struct {
 	Clean                   *bool            `yaml:"clean"`
 	BackupMethod            *string          `yaml:"backup_method"`
 	SSHTunnel               *SSHTunnelConfig `yaml:"ssh_tunnel"`
+	S3Prefix                string           `yaml:"s3_prefix"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -218,10 +219,28 @@ func (dt *DatabaseTarget) GetEffectiveSSHTunnel() *SSHTunnelConfig {
 	return nil
 }
 
+// GetEffectiveS3Prefix returns the S3 prefix for this database, falling back to global S3 config
+func (dt *DatabaseTarget) GetEffectiveS3Prefix() string {
+	if dt.S3Prefix != "" {
+		return dt.S3Prefix
+	}
+	if dt.s3Config != nil {
+		return dt.s3Config.Prefix
+	}
+	return ""
+}
+
 // ToConnectionString builds a lib/pq connection string from individual parameters
 func (dt *DatabaseTarget) ToConnectionString() string {
 	if dt.ConnectionString != "" {
-		return dt.ConnectionString
+		// Normalize connection string to lib/pq format
+		normalized, err := normalizeConnectionString(dt.ConnectionString)
+		if err != nil {
+			// If normalization fails, return original string
+			// (error will be caught during actual database connection)
+			return dt.ConnectionString
+		}
+		return normalized
 	}
 
 	parts := []string{
