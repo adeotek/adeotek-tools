@@ -26,6 +26,7 @@ type MigrationConfig struct {
 	Backup           bool   `yaml:"backup"`
 	BackupOnly       bool   `yaml:"backup_only"`
 	Restore          bool   `yaml:"restore"`
+	BackupMethod     string `yaml:"backup_method"`
 }
 
 // LoadConfig parses a unified YAML configuration file

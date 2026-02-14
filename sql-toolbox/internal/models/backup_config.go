@@ -17,12 +17,13 @@ type BackupConfig struct {
 
 // BackupDefaults holds the default settings applied to all databases
 type BackupDefaults struct {
-	OutputDir  string   `yaml:"output_dir"`
-	Compress   *bool    `yaml:"compress"`
-	UploadToS3 *bool    `yaml:"upload_to_s3"`
-	NoOwner    *bool    `yaml:"no_owner"`
-	Clean      *bool    `yaml:"clean"`
-	Schemas    []string `yaml:"schemas"`
+	OutputDir    string   `yaml:"output_dir"`
+	Compress     *bool    `yaml:"compress"`
+	UploadToS3   *bool    `yaml:"upload_to_s3"`
+	NoOwner      *bool    `yaml:"no_owner"`
+	Clean        *bool    `yaml:"clean"`
+	Schemas      []string `yaml:"schemas"`
+	BackupMethod *string  `yaml:"backup_method"`
 }
 
 // DatabaseTarget represents a single database to back up
@@ -43,6 +44,7 @@ type DatabaseTarget struct {
 	ExcludeTables           []string `yaml:"exclude_tables"`
 	NoOwner                 *bool    `yaml:"no_owner"`
 	Clean                   *bool    `yaml:"clean"`
+	BackupMethod            *string  `yaml:"backup_method"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -179,6 +181,17 @@ func (dt *DatabaseTarget) GetEffectiveClean() bool {
 		return *dt.defaults.Clean
 	}
 	return true
+}
+
+// GetEffectiveBackupMethod returns the backup method for this database
+func (dt *DatabaseTarget) GetEffectiveBackupMethod() string {
+	if dt.BackupMethod != nil {
+		return *dt.BackupMethod
+	}
+	if dt.defaults != nil && dt.defaults.BackupMethod != nil {
+		return *dt.defaults.BackupMethod
+	}
+	return "go"
 }
 
 // GetEffectiveSchemas returns the schemas to back up, nil/empty means all non-system schemas

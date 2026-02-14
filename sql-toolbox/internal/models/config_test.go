@@ -1,6 +1,7 @@
 package models
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -144,6 +145,34 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 	_, err := LoadConfig(filepath.Join(t.TempDir(), "nonexistent.yaml"))
 	if err == nil {
 		t.Fatal("expected error for missing file")
+	}
+}
+
+func TestLoadConfig_MigrationBackupMethod(t *testing.T) {
+	yamlContent := `
+migration:
+  target_path: "./scripts"
+  provider: "postgresql"
+  host: "localhost"
+  port: 5432
+  database: "testdb"
+  backup_method: "go"
+`
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	config, err := LoadConfig(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if config.Migration == nil {
+		t.Fatal("expected migration config")
+	}
+	if config.Migration.BackupMethod != "go" {
+		t.Errorf("expected backup_method 'go', got '%s'", config.Migration.BackupMethod)
 	}
 }
 

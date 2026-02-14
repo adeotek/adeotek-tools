@@ -341,6 +341,47 @@ func TestDatabaseTarget_ToConnectionString(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
+func TestDatabaseTarget_GetEffectiveBackupMethod(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected string
+	}{
+		{
+			name:     "per-db override pg_dump",
+			db:       DatabaseTarget{BackupMethod: strPtr("pg_dump")},
+			expected: "pg_dump",
+		},
+		{
+			name:     "per-db override go",
+			db:       DatabaseTarget{BackupMethod: strPtr("go")},
+			expected: "go",
+		},
+		{
+			name:     "defaults fallback pg_dump",
+			db:       DatabaseTarget{defaults: &BackupDefaults{BackupMethod: strPtr("pg_dump")}},
+			expected: "pg_dump",
+		},
+		{
+			name:     "hardcoded default go",
+			db:       DatabaseTarget{defaults: &BackupDefaults{}},
+			expected: "go",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.db.GetEffectiveBackupMethod()
+			if got != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, got)
+			}
+		})
+	}
+}
+
 func writeTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()
