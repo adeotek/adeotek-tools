@@ -16,6 +16,7 @@
 #   backup: false
 #   backup_only: false
 #   restore: false
+#   backup_method: "pg_dump"  # backup method: "pg_dump" (external binary, default) or "go" (pure Go)
 
 # backup section (required for `sql-toolbox backup --config`)
 backup:
@@ -25,6 +26,7 @@ backup:
     upload_to_s3: false         # upload to S3 if s3 is configured, per-db overridable
     no_owner: true              # exclude ownership statements from dump
     clean: true                 # include DROP IF EXISTS before CREATE
+    backup_method: "go"         # backup method: "go" (pure Go, default) or "pg_dump" (external binary)
     # schemas: ["public"]       # omit or leave empty for full backup (all schemas)
 
   databases:
@@ -41,6 +43,7 @@ backup:
     #   delete_local_after_upload: true   # per-db override (default: from s3 config)
     #   schemas: ["public", "audit"]
     #   exclude_tables: ["sessions", "cache"]
+    #   backup_method: "go"               # per-db override (default: from defaults)
 
     # - name: "myapp_staging"
     #   connection_string: "host=staging port=5432 dbname=myapp user=admin password=pass sslmode=disable"
