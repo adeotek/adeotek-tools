@@ -2,9 +2,13 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /build
 
+# Copy go mod files
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
+# Copy source code
 COPY . .
 
 RUN apk add --no-cache git
