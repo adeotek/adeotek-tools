@@ -1,0 +1,163 @@
+# sql-toolbox unified configuration example
+# Usage:
+#   sql-toolbox migration --config config.yaml [--verbose] [--dry-run]
+#   sql-toolbox backup --config config.yaml [--verbose] [--dry-run]
+
+# migration section (optional, for `sql-toolbox migration --config`)
+# migration:
+#   target_path: "./sql-scripts"
+#   provider: "postgresql"
+#   host: "localhost"
+#   port: 5432
+#   database: "myapp"
+#   user: "admin"
+#   password: "secret"
+#
+#   # Connection string (optional, overrides individual parameters)
+#   # Supports three formats:
+#   # 1. lib/pq format: "host=localhost port=5432 dbname=myapp user=admin password=secret sslmode=disable"
+#   # 2. .NET format: "Server=localhost;Port=5432;Database=myapp;Username=admin;Password=secret;SslMode=Disable;"
+#   # 3. PostgreSQL URL: "postgresql://admin:secret@localhost:5432/myapp"
+#   connection_string: ""
+#
+#   backup: false
+#   backup_only: false
+#   restore: false
+#   backup_method: "pg_dump"  # backup method: "pg_dump" (external binary, default) or "go" (pure Go)
+#
+#   # SSH tunnel configuration (optional)
+#   ssh_tunnel:
+#     enabled: true
+#     host: "bastion.example.com"     # SSH bastion host
+#     port: 22                         # SSH port (default: 22)
+#     user: "sshuser"                  # SSH username
+#     auth_method: "key"               # "key", "password", or "agent"
+#     key_file: "~/.ssh/id_rsa"        # Path to private key (for "key" method)
+#     # password: "sshpass"            # SSH password (for "password" method)
+#     local_port: 0                    # Local port (0 = auto-assign, or specify explicit port like 5433)
+
+# backup section (required for `sql-toolbox backup --config`)
+backup:
+  defaults:
+    output_dir: "./backups"
+    compress: true              # gzip compression, enabled by default
+    upload_to_s3: false         # upload to S3 if s3 is configured, per-db overridable
+    no_owner: true              # exclude ownership statements from dump
+    clean: true                 # include DROP IF EXISTS before CREATE
+    backup_method: "go"         # backup method: "go" (pure Go, default) or "pg_dump" (external binary)
+    # schemas: ["public"]       # omit or leave empty for full backup (all schemas)
+
+    # SSH tunnel configuration (optional, applied to all databases unless overridden)
+    # ssh_tunnel:
+    #   enabled: true
+    #   host: "bastion.example.com"
+    #   port: 22
+    #   user: "sshuser"
+    #   auth_method: "agent"              # Use SSH agent (most secure, no credentials in config)
+    #   local_port: 0                     # Auto-assign local port
+
+  databases:
+    # Example 1: Backup all databases on a server (wildcard)
+    # - name: "all_production_dbs"
+    #   host: "prod-db.example.com"
+    #   port: 5432
+    #   database: "*"                         # Wildcard: backup all databases
+    #   user: "backup_user"
+    #   password: "secret"
+    #   exclude_db:                           # Databases to exclude from wildcard expansion
+    #     - "test_db"
+    #     - "temp_db"
+    #   compress: true
+    #   upload_to_s3: true
+    #   s3_prefix: "production/"
+
+    # Example 2: Database behind SSH bastion (inherits ssh_tunnel from defaults)
+    # - name: "myapp_prod"
+    #   host: "db.internal.example.com"   # Internal database host (not directly accessible)
+    #   port: 5432
+    #   database: "myapp"
+    #   user: "backup_user"
+    #   password: "secret"
+    #   ssl_mode: "disable"
+    #   output_dir: "./backups/prod"      # per-db override
+    #   compress: true
+    #   upload_to_s3: true                # per-db override (default: from defaults)
+    #   delete_local_after_upload: true   # per-db override (default: from s3 config)
+    #   s3_prefix: "production/"          # per-db S3 prefix override (default: from s3 config)
+    #   s3_bucket: "prod-db-backups"      # per-db S3 bucket override (default: from s3 config)
+    #   schemas: ["public", "audit"]
+    #   exclude_tables: ["sessions", "cache"]
+    #   backup_method: "go"               # per-db override (default: from defaults)
+
+    # Example 3: Database with per-db SSH tunnel, S3 bucket, and prefix overrides
+    # - name: "myapp_staging"
+    #   host: "staging-db.internal.example.com"
+    #   port: 5432
+    #   database: "myapp_staging"
+    #   user: "admin"
+    #   password: "pass"
+    #   upload_to_s3: true
+    #   s3_bucket: "staging-backups"      # Use different bucket for staging
+    #   s3_prefix: "staging/"             # Custom S3 prefix for staging backups
+    #   ssh_tunnel:                       # Override SSH tunnel for this database
+    #     enabled: true
+    #     host: "staging-bastion.example.com"
+    #     user: "sshuser"
+    #     auth_method: "password"
+    #     password: "sshpass"
+
+    # Example 4: Database with SSH key authentication
+    # - name: "myapp_dev"
+    #   host: "dev-db.internal.example.com"
+    #   port: 5432
+    #   database: "myapp_dev"
+    #   user: "devuser"
+    #   password: "devpass"
+    #   ssh_tunnel:
+    #     enabled: true
+    #     host: "dev-bastion.example.com"
+    #     user: "sshuser"
+    #     auth_method: "key"
+    #     key_file: "~/.ssh/dev_key"
+    #     local_port: 5433                # Explicit local port (optional)
+
+    # Example 5: Database using connection_string (supports multiple formats)
+    # - name: "myapp_prod"
+    #   # Option 1: lib/pq format
+    #   connection_string: "host=prod-db.example.com port=5432 dbname=myapp user=produser password=prodpass sslmode=disable"
+    #
+    #   # Option 2: .NET format
+    #   # connection_string: "Server=prod-db.example.com;Port=5432;Database=myapp;Username=produser;Password=prodpass;SslMode=Disable;"
+    #
+    #   # Option 3: PostgreSQL URL
+    #   # connection_string: "postgresql://produser:prodpass@prod-db.example.com:5432/myapp"
+
+    # Example 6: Database with custom S3 credentials (different from global)
+    # - name: "tenant_db"
+    #   host: "tenant-db.example.com"
+    #   port: 5432
+    #   database: "tenant_production"
+    #   user: "backup_user"
+    #   password: "secret"
+    #   upload_to_s3: true
+    #   s3_bucket: "tenant-specific-bucket"           # Override global S3 bucket
+    #   s3_prefix: "tenant-backups/"                  # Override global S3 prefix
+    #   s3_access_key_id: "TENANT_ACCESS_KEY"         # Override global S3 access key
+    #   s3_secret_access_key: "tenant_secret_key"     # Override global S3 secret key
+
+  # s3:
+  #   enabled: false
+  #   bucket: "my-db-backups"       # Default bucket (can be overridden per database with s3_bucket)
+  #   region: "us-east-1"           # Required for AWS S3, can be any value for MinIO/RustFS
+  #   prefix: "sql-toolbox/"        # Default prefix (can be overridden per database with s3_prefix)
+  #   access_key_id: ""             # or use AWS_ACCESS_KEY_ID env var
+  #   secret_access_key: ""         # or use AWS_SECRET_ACCESS_KEY env var
+  #
+  #   # For MinIO/RustFS/S3-compatible storage, set the endpoint URL:
+  #   # Examples:
+  #   #   MinIO:   "http://localhost:9000" or "https://minio.example.com"
+  #   #   RustFS:  "http://localhost:8080" or "https://rustfs.example.com"
+  #   # Note: Include the protocol (http:// or https://) and port if not standard
+  #   endpoint: ""
+  #
+  #   delete_local_after_upload: false

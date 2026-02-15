@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository description
 
-This repository contains a collection of tools written in GO and .NET.
+This repository contains a collection of tools written in Go.
 
 ## Tools
 
@@ -33,16 +33,32 @@ The `git-repos-backup` tool is written in Go and provides a simple command-line 
 - Documentation: Package and exported function comments follow Go conventions
 - Architecture: Follow Go conventions with cmd/, internal/, pkg/ directories
 
-### `sql-migration`
+### `sql-toolbox`
 
-A tool to manage and apply SQL database migrations (SQL scripts). It supports PostgreSQL and SQLite databases and provides a simple command-line interface for managing migrations.
-The `sql-migration` tool is written in .NET and allows users to apply to databases migrations (in the form of a collection of SQL scripts).
+A command-line tool for executing SQL migration scripts and performing database backups for PostgreSQL and SQLite databases.
+The `sql-toolbox` tool is written in Go and provides two subcommands: `migration` for managing SQL database migrations and `backup` for multi-database backup with optional gzip compression and S3 upload.
 
-#### `sql-migration` Code Style Guidelines
-- .NET version: .NET 9.0 or later
-- Formatting: standard .NET formatting (dotnet format)
-- Error handling: prefere using return values instead of exceptions for expected errors, use exceptions for unexpected errors only when absolutely necessary
-- Testing: Standard .NET testing package using xUnit, and NSubstitute for mocking
-- Documentation: Package and exported function comments follow .NET conventions
-- Build: the project should be built with AOT (Ahead of Time) compilation enabled, for both Linux x64 and Windows x64 platforms
-- Architecture: Follow .NET conventions with src/, tests/, and tools/ directories
+#### Key Features
+- SSH tunnel support for secure connections through bastion hosts
+- Multiple connection string formats: lib/pq, .NET (semicolon-separated), and PostgreSQL URL
+- **Wildcard database backup**: Use `database: "*"` to automatically back up all databases on a server with exclude list support
+- Per-database S3 overrides (bucket, prefix, credentials) for flexible backup organization
+- Pure Go PostgreSQL dump or external `pg_dump` binary support
+- S3-compatible storage support (AWS S3, MinIO, RustFS)
+
+#### `sql-toolbox` Build/Lint/Test Commands
+- Build: `make build`
+- Build all platforms: `make build-all`
+- Run all tests: `make test` or `go test -v ./...`
+- Run single test: `go test -v ./path/to/package -run TestName`
+- Run integration tests: `bash integration-test.sh`
+
+#### `sql-toolbox` Code Style Guidelines
+- Imports: Standard library first, third-party next, grouped with blank lines
+- Formatting: Go standard (go fmt)
+- Types: Exported types have comments, use structs for configs and models
+- Naming: PascalCase for exported identifiers, camelCase for unexported
+- Error handling: Check immediately, descriptive messages, wrap errors with context
+- Testing: Standard Go testing package, mock dependencies
+- Documentation: Package and exported function comments follow Go conventions
+- Architecture: Follow Go conventions with cmd/, internal/ directories
