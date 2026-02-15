@@ -540,7 +540,7 @@ func TestExpandWildcardDatabases_NonWildcard(t *testing.T) {
 		Password: "secret",
 	}
 
-	expanded, err := ExpandWildcardDatabases(target, false)
+	expanded, err := ExpandWildcardDatabasesWithConnStr(target, false, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -571,7 +571,7 @@ func TestExpandWildcardDatabases_EmptyExcludeDb(t *testing.T) {
 
 	// This test will fail if there's no PostgreSQL database running
 	// So we just verify the error handling
-	_, err := ExpandWildcardDatabases(target, false)
+	_, err := ExpandWildcardDatabasesWithConnStr(target, false, "")
 	// We expect either a connection error or successful expansion
 	// If PostgreSQL is running, it should succeed; if not, it should fail gracefully
 	if err != nil {

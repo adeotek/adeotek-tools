@@ -52,8 +52,8 @@ func runBackup(cmd *cobra.Command, args []string) error {
 
 	config := unifiedConfig.Backup
 
-	// Expand wildcard database entries
-	if err := config.ExpandWildcards(verbose); err != nil {
+	// Expand wildcard database entries (with SSH tunnel support)
+	if err := services.ExpandWildcardsWithTunnels(config, verbose); err != nil {
 		return fmt.Errorf("failed to expand wildcard databases: %w", err)
 	}
 

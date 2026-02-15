@@ -154,12 +154,15 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 	var compress bool
 
 	if method == BackupMethodPgDump {
-		// pg_dump custom format is already compressed, so no gzip needed
-		fileName = fmt.Sprintf("%s_backup_%s.dump", dbTarget.Name, timestamp)
-		compress = false
+		// pg_dump custom format - optionally compress with gzip
+		fileName = fmt.Sprintf("%s_backup_%s.dump", dbTarget.Database, timestamp)
+		compress = dbTarget.GetEffectiveCompress()
+		if compress {
+			fileName += ".gz"
+		}
 	} else {
 		// Go method produces SQL, optionally compressed with gzip
-		fileName = fmt.Sprintf("%s_backup_%s.sql", dbTarget.Name, timestamp)
+		fileName = fmt.Sprintf("%s_backup_%s.sql", dbTarget.Database, timestamp)
 		compress = dbTarget.GetEffectiveCompress()
 		if compress {
 			fileName += ".gz"
@@ -173,7 +176,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		log.Printf("[DRY RUN] Would backup %s to %s", dbTarget.Name, filePath)
 		if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled {
 			s3Prefix := dbTarget.GetEffectiveS3Prefix()
-			s3Key := BuildS3Key(s3Prefix, dbTarget.Name, filePath)
+			s3Key := BuildS3Key(s3Prefix, dbTarget.Database, filePath)
 			log.Printf("[DRY RUN] Would upload to S3: %s", s3Key)
 			result.UploadedToS3 = true
 			result.S3Key = s3Key
@@ -268,7 +271,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 	if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled && s3Uploader != nil {
 		s3Prefix := dbTarget.GetEffectiveS3Prefix()
 		s3Bucket := dbTarget.GetEffectiveS3Bucket()
-		s3Key := BuildS3Key(s3Prefix, dbTarget.Name, filePath)
+		s3Key := BuildS3Key(s3Prefix, dbTarget.Database, filePath)
 		if o.verbose {
 			log.Printf("Uploading to S3 bucket '%s': %s", s3Bucket, s3Key)
 		}

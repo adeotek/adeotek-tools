@@ -420,10 +420,10 @@ backup:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Identifier for this database (used in file names and S3 keys) |
+| `name` | string | Yes | Identifier for this database configuration (used in logs; file names and S3 keys use the actual database name) |
 | `host` | string | Yes* | Database host |
 | `port` | int | No | Database port (default: 5432) |
-| `database` | string | Yes* | Database name (use `*` for wildcard expansion) |
+| `database` | string | Yes* | Database name (use `*` for wildcard expansion; used in file names and S3 keys) |
 | `exclude_db` | []string | No | Databases to exclude when using wildcard (`database: "*"`) |
 | `user` | string | No | Database user |
 | `password` | string | No | Database password |
@@ -539,18 +539,20 @@ backup:
 
 - **Local files:**
   - **`go` method (pure Go dump):**
-    - Plain SQL: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
-    - Compressed SQL (gzip): `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+    - Plain SQL: `{database}_backup_{yyyyMMdd_HHmmss}.sql`
+    - Compressed SQL (gzip): `{database}_backup_{yyyyMMdd_HHmmss}.sql.gz`
   - **`pg_dump` method (external binary):**
-    - Custom format: `{name}_backup_{yyyyMMdd_HHmmss}.dump`
-    - Note: Custom format is already compressed internally, no additional gzip compression applied
+    - Custom format: `{database}_backup_{yyyyMMdd_HHmmss}.dump`
+    - Compressed custom format (gzip): `{database}_backup_{yyyyMMdd_HHmmss}.dump.gz`
+    - Note: Custom format is already compressed internally, additional gzip compression is optional
 
 - **S3 uploads:**
   - Bucket: Per-database `s3_bucket` or global `bucket` setting
-  - Key: `{prefix}{name}/{filename}` where prefix is per-database `s3_prefix` or global `prefix`
+  - Key: `{prefix}{database}/{filename}` where prefix is per-database `s3_prefix` or global `prefix`
   - Examples:
     - Go method: `production/myapp_prod/myapp_prod_backup_20240115_120000.sql.gz`
-    - pg_dump method: `production/myapp_prod/myapp_prod_backup_20240115_120000.dump`
+    - pg_dump method (uncompressed): `production/myapp_prod/myapp_prod_backup_20240115_120000.dump`
+    - pg_dump method (compressed): `production/myapp_prod/myapp_prod_backup_20240115_120000.dump.gz`
 
 ### Differences from `--backup-only` Flag
 
@@ -559,7 +561,7 @@ backup:
 | Database support | Single database | Multiple databases |
 | Configuration | CLI flags | YAML config file |
 | Dump method | `pg_dump` (external binary) | Pure Go or `pg_dump` (configurable) |
-| Compression | No | Optional gzip (Go method only; pg_dump uses compressed custom format) |
+| Compression | No | Optional gzip for both methods |
 | S3 upload | No | Yes (AWS S3 / MinIO / RustFS) |
 | S3 customization | N/A | Per-database bucket/prefix overrides |
 | SSH tunnel support | No | Yes (key/password/agent auth) |

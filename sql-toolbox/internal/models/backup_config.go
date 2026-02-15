@@ -314,12 +314,14 @@ func (dt *DatabaseTarget) ToConnectionString() string {
 
 // QueryDatabases connects to PostgreSQL and retrieves list of all databases
 // excluding templates and the postgres database
-func QueryDatabases(target *DatabaseTarget, baseExclusions []string) ([]string, error) {
-	// Build connection string to postgres database (for querying system tables)
-	connTarget := *target
-	connTarget.Database = "postgres" // Connect to postgres database to query pg_database
-
-	connStr := connTarget.ToConnectionString()
+// connStr parameter allows caller to provide a custom connection string (e.g., with SSH tunnel)
+func QueryDatabases(target *DatabaseTarget, baseExclusions []string, connStr string) ([]string, error) {
+	// Build connection string to postgres database if not provided
+	if connStr == "" {
+		connTarget := *target
+		connTarget.Database = "postgres" // Connect to postgres database to query pg_database
+		connStr = connTarget.ToConnectionString()
+	}
 
 	// Connect to database
 	db, err := sql.Open("postgres", connStr)
@@ -376,9 +378,10 @@ func QueryDatabases(target *DatabaseTarget, baseExclusions []string) ([]string, 
 	return databases, nil
 }
 
-// ExpandWildcardDatabases takes a DatabaseTarget with database: "*" and expands it
+// ExpandWildcardDatabasesWithConnStr takes a DatabaseTarget with database: "*" and expands it
 // into multiple DatabaseTarget entries, one per discovered database
-func ExpandWildcardDatabases(template DatabaseTarget, verbose bool) ([]DatabaseTarget, error) {
+// connStr parameter allows passing a custom connection string (e.g., with SSH tunnel)
+func ExpandWildcardDatabasesWithConnStr(template DatabaseTarget, verbose bool, connStr string) ([]DatabaseTarget, error) {
 	if template.Database != "*" {
 		return []DatabaseTarget{template}, nil // Not a wildcard, return as-is
 	}
@@ -388,7 +391,7 @@ func ExpandWildcardDatabases(template DatabaseTarget, verbose bool) ([]DatabaseT
 	}
 
 	// Query databases using QueryDatabases
-	databases, err := QueryDatabases(&template, nil)
+	databases, err := QueryDatabases(&template, nil, connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to enumerate databases for wildcard: %w", err)
 	}
@@ -421,11 +424,12 @@ func ExpandWildcardDatabases(template DatabaseTarget, verbose bool) ([]DatabaseT
 }
 
 // ExpandWildcards processes all DatabaseTarget entries and expands any with database: "*"
+// This function does NOT support SSH tunnels - use ExpandWildcardsWithTunnels from services package instead
 func (c *BackupConfig) ExpandWildcards(verbose bool) error {
 	var expandedDatabases []DatabaseTarget
 
 	for _, dbTarget := range c.Databases {
-		expanded, err := ExpandWildcardDatabases(dbTarget, verbose)
+		expanded, err := ExpandWildcardDatabasesWithConnStr(dbTarget, verbose, "")
 		if err != nil {
 			return fmt.Errorf("failed to expand wildcard for '%s': %w", dbTarget.Name, err)
 		}
