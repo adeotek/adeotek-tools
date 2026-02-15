@@ -180,9 +180,9 @@ func (s *PgDumpService) dumpSequences() error {
 		// Query sequence properties
 		var startValue, minValue, maxValue, incrementBy, cacheValue int64
 		var isCycled bool
-		err := s.db.QueryRow(fmt.Sprintf(
+		err := s.db.QueryRow(
 			`SELECT start_value, min_value, max_value, increment_by, cache_size, cycle
-			 FROM pg_sequences WHERE schemaname = $1 AND sequencename = $2`),
+			 FROM pg_sequences WHERE schemaname = $1 AND sequencename = $2`,
 			seq.schema, seq.name).Scan(&startValue, &minValue, &maxValue, &incrementBy, &cacheValue, &isCycled)
 		if err != nil {
 			return fmt.Errorf("querying sequence properties for %s: %w", qname, err)

@@ -87,9 +87,14 @@ func (svc *S3UploadService) Upload(localPath, key, bucket string) error {
 	// Key is expected to already include the prefix
 	fullKey := key
 
-	contentType := "application/sql"
+	// Determine content type based on file extension
+	contentType := "application/octet-stream" // default
 	if strings.HasSuffix(localPath, ".gz") {
 		contentType = "application/gzip"
+	} else if strings.HasSuffix(localPath, ".sql") {
+		contentType = "application/sql"
+	} else if strings.HasSuffix(localPath, ".dump") {
+		contentType = "application/octet-stream" // PostgreSQL custom format binary
 	}
 
 	_, err = svc.client.PutObject(context.Background(), &s3.PutObjectInput{
