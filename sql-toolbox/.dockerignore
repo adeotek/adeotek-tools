@@ -23,7 +23,7 @@ bin/
 *.dylib
 
 # Scripts
-backup_worker.sh
+# backup_worker.sh is needed in the Docker image
 build.sh
 Makefile
 
