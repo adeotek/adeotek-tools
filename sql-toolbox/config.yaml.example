@@ -70,11 +70,12 @@ backup:
     #   upload_to_s3: true                # per-db override (default: from defaults)
     #   delete_local_after_upload: true   # per-db override (default: from s3 config)
     #   s3_prefix: "production/"          # per-db S3 prefix override (default: from s3 config)
+    #   s3_bucket: "prod-db-backups"      # per-db S3 bucket override (default: from s3 config)
     #   schemas: ["public", "audit"]
     #   exclude_tables: ["sessions", "cache"]
     #   backup_method: "go"               # per-db override (default: from defaults)
 
-    # Example 2: Database with per-db SSH tunnel override and S3 prefix
+    # Example 2: Database with per-db SSH tunnel, S3 bucket, and prefix overrides
     # - name: "myapp_staging"
     #   host: "staging-db.internal.example.com"
     #   port: 5432
@@ -82,6 +83,7 @@ backup:
     #   user: "admin"
     #   password: "pass"
     #   upload_to_s3: true
+    #   s3_bucket: "staging-backups"      # Use different bucket for staging
     #   s3_prefix: "staging/"             # Custom S3 prefix for staging backups
     #   ssh_tunnel:                       # Override SSH tunnel for this database
     #     enabled: true
@@ -118,9 +120,9 @@ backup:
 
   # s3:
   #   enabled: false
-  #   bucket: "my-db-backups"
+  #   bucket: "my-db-backups"       # Default bucket (can be overridden per database with s3_bucket)
   #   region: "us-east-1"           # Required for AWS S3, can be any value for MinIO/RustFS
-  #   prefix: "sql-toolbox/"
+  #   prefix: "sql-toolbox/"        # Default prefix (can be overridden per database with s3_prefix)
   #   access_key_id: ""             # or use AWS_ACCESS_KEY_ID env var
   #   secret_access_key: ""         # or use AWS_SECRET_ACCESS_KEY env var
   #

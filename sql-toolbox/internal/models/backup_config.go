@@ -48,6 +48,7 @@ type DatabaseTarget struct {
 	BackupMethod            *string          `yaml:"backup_method"`
 	SSHTunnel               *SSHTunnelConfig `yaml:"ssh_tunnel"`
 	S3Prefix                string           `yaml:"s3_prefix"`
+	S3Bucket                string           `yaml:"s3_bucket"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -226,6 +227,17 @@ func (dt *DatabaseTarget) GetEffectiveS3Prefix() string {
 	}
 	if dt.s3Config != nil {
 		return dt.s3Config.Prefix
+	}
+	return ""
+}
+
+// GetEffectiveS3Bucket returns the S3 bucket for this database, falling back to global S3 config
+func (dt *DatabaseTarget) GetEffectiveS3Bucket() string {
+	if dt.S3Bucket != "" {
+		return dt.S3Bucket
+	}
+	if dt.s3Config != nil {
+		return dt.s3Config.Bucket
 	}
 	return ""
 }

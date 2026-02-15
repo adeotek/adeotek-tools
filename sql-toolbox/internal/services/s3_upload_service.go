@@ -16,7 +16,7 @@ import (
 
 // S3Uploader defines the interface for uploading files to S3
 type S3Uploader interface {
-	Upload(localPath, key string) error
+	Upload(localPath, key, bucket string) error
 }
 
 // S3UploadService implements S3Uploader using AWS SDK v2
@@ -68,14 +68,21 @@ func NewS3UploadService(s3Config models.S3Config) (*S3UploadService, error) {
 	}, nil
 }
 
-// Upload uploads a local file to S3 with the given key
+// Upload uploads a local file to S3 with the given key and bucket
 // Note: The key should include any desired prefix (use BuildS3Key to construct it)
-func (svc *S3UploadService) Upload(localPath, key string) error {
+// The bucket parameter overrides the service's default bucket if provided (non-empty)
+func (svc *S3UploadService) Upload(localPath, key, bucket string) error {
 	file, err := os.Open(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to open file for upload: %w", err)
 	}
 	defer file.Close()
+
+	// Use provided bucket or fall back to service's default bucket
+	targetBucket := bucket
+	if targetBucket == "" {
+		targetBucket = svc.bucket
+	}
 
 	// Key is expected to already include the prefix
 	fullKey := key
@@ -86,7 +93,7 @@ func (svc *S3UploadService) Upload(localPath, key string) error {
 	}
 
 	_, err = svc.client.PutObject(context.Background(), &s3.PutObjectInput{
-		Bucket:      aws.String(svc.bucket),
+		Bucket:      aws.String(targetBucket),
 		Key:         aws.String(fullKey),
 		Body:        file,
 		ContentType: aws.String(contentType),

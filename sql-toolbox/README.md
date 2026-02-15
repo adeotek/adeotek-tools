@@ -5,11 +5,15 @@ A command-line tool for executing SQL migration scripts and performing database 
 ## Features
 
 - Support for PostgreSQL and SQLite databases
+- **SSH tunnel support** for secure connections through bastion hosts (migration and backup)
+- **Multiple connection string formats**: lib/pq, .NET, and PostgreSQL URL formats
 - Migration history tracking to avoid re-running scripts
 - Automatic database backup before applying migrations
 - Database restore from backup
 - Multi-database backup via YAML config (`backup` subcommand) with optional gzip compression and S3 upload
+- **Per-database S3 bucket and prefix overrides** for flexible backup organization
 - Pure Go PostgreSQL dump (no `pg_dump` binary required for `backup`)
+- Support for external `pg_dump` binary (optional backup method)
 - Dry-run mode for testing migrations without applying changes
 - Ordered execution of scripts (tables → views → stored procedures → data)
 - SHA256 hash verification to detect script changes
@@ -66,6 +70,59 @@ sql-toolbox migration --config config.yaml
 ```
 
 CLI flags and environment variables override values from the config file.
+
+#### Connection String Formats
+
+The tool supports three connection string formats that are automatically detected and normalized:
+
+1. **lib/pq format** (PostgreSQL driver format):
+   ```
+   host=localhost port=5432 dbname=mydb user=myuser password=mypass sslmode=disable
+   ```
+
+2. **.NET format** (semicolon-separated):
+   ```
+   Server=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypass;SslMode=Disable;
+   ```
+
+3. **PostgreSQL URL format**:
+   ```
+   postgresql://myuser:mypass@localhost:5432/mydb
+   postgres://myuser:mypass@localhost:5432/mydb?sslmode=require
+   ```
+
+All formats are automatically converted to lib/pq format internally. Use any format with the `--connection-string` flag or in YAML configuration.
+
+#### SSH Tunnel Support
+
+Connect to databases through SSH bastion hosts for enhanced security. Supports three authentication methods:
+- Private key file (`auth_method: "key"`)
+- Password (`auth_method: "password"`)
+- SSH agent (`auth_method: "agent"`)
+
+Example YAML configuration:
+
+```yaml
+migration:
+  target_path: "./sql-scripts"
+  provider: "postgresql"
+  host: "db.internal.example.com"  # Internal database host
+  port: 5432
+  database: "myapp"
+  user: "dbuser"
+  password: "dbpass"
+
+  ssh_tunnel:
+    enabled: true
+    host: "bastion.example.com"
+    port: 22
+    user: "sshuser"
+    auth_method: "key"
+    key_file: "~/.ssh/id_rsa"
+    local_port: 0  # 0 = auto-assign
+```
+
+The tunnel is automatically established before database operations and cleaned up afterward. Works with both `migration` and `backup` commands.
 
 #### Dry Run Mode
 
@@ -355,6 +412,8 @@ backup:
 | `no_owner` | bool | `true` | Exclude ownership statements |
 | `clean` | bool | `true` | Include `DROP IF EXISTS` before `CREATE` |
 | `schemas` | []string | (all) | Schemas to include; empty means all non-system schemas |
+| `backup_method` | string | `go` | Backup method: `go` (pure Go) or `pg_dump` (external binary) |
+| `ssh_tunnel` | object | | Default SSH tunnel configuration for all databases |
 
 #### `backup.databases[]`
 
@@ -367,7 +426,7 @@ backup:
 | `user` | string | No | Database user |
 | `password` | string | No | Database password |
 | `ssl_mode` | string | No | SSL mode (default: `disable`) |
-| `connection_string` | string | Yes* | Full connection string (alternative to individual params) |
+| `connection_string` | string | Yes* | Full connection string (lib/pq, .NET, or URL format) |
 | `output_dir` | string | No | Per-db output directory override |
 | `compress` | bool | No | Per-db compression override |
 | `upload_to_s3` | bool | No | Per-db S3 upload override |
@@ -376,6 +435,10 @@ backup:
 | `exclude_tables` | []string | No | Tables to exclude from dump |
 | `no_owner` | bool | No | Per-db no-owner override |
 | `clean` | bool | No | Per-db clean override |
+| `backup_method` | string | No | Per-db backup method override (`go` or `pg_dump`) |
+| `ssh_tunnel` | object | No | Per-db SSH tunnel configuration override |
+| `s3_prefix` | string | No | Per-db S3 key prefix override (default: from s3 config) |
+| `s3_bucket` | string | No | Per-db S3 bucket override (default: from s3 config) |
 
 \* Either `connection_string` or `host` + `database` must be provided.
 
@@ -384,13 +447,19 @@ backup:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | bool | `false` | Enable S3 upload globally |
-| `bucket` | string | | S3 bucket name (required when enabled) |
-| `region` | string | | AWS region |
-| `prefix` | string | | Key prefix for all uploads |
+| `bucket` | string | | S3 bucket name (default, can be overridden per database) |
+| `region` | string | | AWS region (required for AWS S3, can be any value for MinIO/RustFS) |
+| `prefix` | string | | Key prefix for all uploads (default, can be overridden per database) |
 | `access_key_id` | string | | AWS access key (or use `AWS_ACCESS_KEY_ID` env var) |
 | `secret_access_key` | string | | AWS secret key (or use `AWS_SECRET_ACCESS_KEY` env var) |
-| `endpoint` | string | | Custom endpoint for MinIO/S3-compatible storage |
+| `endpoint` | string | | Custom endpoint for MinIO/RustFS/S3-compatible storage (see below) |
 | `delete_local_after_upload` | bool | `false` | Default for deleting local files after upload |
+
+**Endpoint format for MinIO/RustFS:**
+- Include protocol and port: `http://localhost:9000` or `https://minio.example.com`
+- MinIO example: `http://localhost:9000`
+- RustFS example: `http://localhost:8080`
+- No trailing slash
 
 ### What Gets Dumped
 
@@ -410,19 +479,27 @@ The pure Go dump produces SQL output covering:
 
 ### Backup Output
 
-- Plain SQL files: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
-- Compressed files: `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
-- S3 keys: `{prefix}{name}/{filename}`
+- **Local files:**
+  - Plain SQL: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
+  - Compressed: `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+
+- **S3 uploads:**
+  - Bucket: Per-database `s3_bucket` or global `bucket` setting
+  - Key: `{prefix}{name}/{filename}` where prefix is per-database `s3_prefix` or global `prefix`
+  - Example: `production/myapp_prod/myapp_prod_backup_20240115_120000.sql.gz`
 
 ### Differences from `--backup-only` Flag
 
-| | `--backup-only` flag | `backup` subcommand |
+| Feature | `--backup-only` flag | `backup` subcommand |
 |---|---|---|
 | Database support | Single database | Multiple databases |
 | Configuration | CLI flags | YAML config file |
-| Dump method | Shells out to `pg_dump` | Pure Go (no external binary) |
+| Dump method | `pg_dump` (external binary) | Pure Go or `pg_dump` (configurable) |
 | Compression | No | Optional gzip |
-| S3 upload | No | Yes (AWS S3 / MinIO) |
+| S3 upload | No | Yes (AWS S3 / MinIO / RustFS) |
+| S3 customization | N/A | Per-database bucket/prefix overrides |
+| SSH tunnel support | No | Yes (key/password/agent auth) |
+| Connection formats | lib/pq only | lib/pq, .NET, PostgreSQL URL |
 | SQLite support | Yes | No (PostgreSQL only) |
 
 ## Examples

@@ -13,10 +13,11 @@ type MockS3Uploader struct {
 type mockUploadCall struct {
 	LocalPath string
 	Key       string
+	Bucket    string
 }
 
-func (m *MockS3Uploader) Upload(localPath, key string) error {
-	m.UploadCalls = append(m.UploadCalls, mockUploadCall{LocalPath: localPath, Key: key})
+func (m *MockS3Uploader) Upload(localPath, key, bucket string) error {
+	m.UploadCalls = append(m.UploadCalls, mockUploadCall{LocalPath: localPath, Key: key, Bucket: bucket})
 	return m.UploadError
 }
 
@@ -76,7 +77,7 @@ func TestBuildS3Key(t *testing.T) {
 
 func TestMockS3Uploader(t *testing.T) {
 	mock := &MockS3Uploader{}
-	err := mock.Upload("/path/to/file.sql", "db/file.sql")
+	err := mock.Upload("/path/to/file.sql", "db/file.sql", "test-bucket")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -88,5 +89,8 @@ func TestMockS3Uploader(t *testing.T) {
 	}
 	if mock.UploadCalls[0].Key != "db/file.sql" {
 		t.Errorf("expected key 'db/file.sql', got '%s'", mock.UploadCalls[0].Key)
+	}
+	if mock.UploadCalls[0].Bucket != "test-bucket" {
+		t.Errorf("expected bucket 'test-bucket', got '%s'", mock.UploadCalls[0].Bucket)
 	}
 }

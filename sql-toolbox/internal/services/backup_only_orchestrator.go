@@ -243,11 +243,12 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 	// Upload to S3 if configured
 	if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled && s3Uploader != nil {
 		s3Prefix := dbTarget.GetEffectiveS3Prefix()
+		s3Bucket := dbTarget.GetEffectiveS3Bucket()
 		s3Key := BuildS3Key(s3Prefix, dbTarget.Name, filePath)
 		if o.verbose {
-			log.Printf("Uploading to S3: %s", s3Key)
+			log.Printf("Uploading to S3 bucket '%s': %s", s3Bucket, s3Key)
 		}
-		if err := s3Uploader.Upload(filePath, s3Key); err != nil {
+		if err := s3Uploader.Upload(filePath, s3Key, s3Bucket); err != nil {
 			result.Error = fmt.Errorf("S3 upload failed: %w", err)
 			return result
 		}

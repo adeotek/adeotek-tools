@@ -38,6 +38,13 @@ The `git-repos-backup` tool is written in Go and provides a simple command-line 
 A command-line tool for executing SQL migration scripts and performing database backups for PostgreSQL and SQLite databases.
 The `sql-toolbox` tool is written in Go and provides two subcommands: `migration` for managing SQL database migrations and `backup` for multi-database backup with optional gzip compression and S3 upload.
 
+#### Key Features
+- SSH tunnel support for secure connections through bastion hosts
+- Multiple connection string formats: lib/pq, .NET (semicolon-separated), and PostgreSQL URL
+- Per-database S3 bucket and prefix overrides for flexible backup organization
+- Pure Go PostgreSQL dump or external `pg_dump` binary support
+- S3-compatible storage support (AWS S3, MinIO, RustFS)
+
 #### `sql-toolbox` Build/Lint/Test Commands
 - Build: `make build`
 - Build all platforms: `make build-all`

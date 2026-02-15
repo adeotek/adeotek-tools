@@ -419,6 +419,43 @@ func TestDatabaseTarget_GetEffectiveS3Prefix(t *testing.T) {
 	}
 }
 
+func TestDatabaseTarget_GetEffectiveS3Bucket(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected string
+	}{
+		{
+			name:     "per-db override",
+			db:       DatabaseTarget{S3Bucket: "my-custom-bucket"},
+			expected: "my-custom-bucket",
+		},
+		{
+			name:     "s3 config fallback",
+			db:       DatabaseTarget{s3Config: &S3Config{Bucket: "default-bucket"}},
+			expected: "default-bucket",
+		},
+		{
+			name:     "per-db overrides s3 config",
+			db:       DatabaseTarget{S3Bucket: "override-bucket", s3Config: &S3Config{Bucket: "default-bucket"}},
+			expected: "override-bucket",
+		},
+		{
+			name:     "empty when no bucket set",
+			db:       DatabaseTarget{s3Config: &S3Config{}},
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.db.GetEffectiveS3Bucket()
+			if got != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, got)
+			}
+		})
+	}
+}
+
 func writeTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()

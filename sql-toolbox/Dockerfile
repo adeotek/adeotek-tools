@@ -19,6 +19,9 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o sql-toolbox ./cmd
 
 FROM alpine:latest
 
+# Install PostgreSQL client for pg_dump support
+RUN apk update && apk add --no-cache postgresql-client
+
 WORKDIR /app
 
 COPY --from=builder /build/sql-toolbox /usr/local/bin/
