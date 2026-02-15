@@ -190,7 +190,8 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		result.Error = fmt.Errorf("failed to create output file: %w", err)
 		return result
 	}
-	defer closer()
+	// Note: We explicitly close the writer before S3 upload instead of using defer
+	// to ensure gzip-compressed data is fully flushed to disk before upload
 
 	// Run dump using the configured backup method
 	options := PgDumpOptions{
@@ -265,6 +266,12 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 
 	if o.verbose {
 		log.Printf("Dump completed: %s (method: %s)", filePath, method)
+	}
+
+	// Close the writer to flush all buffered data to disk before S3 upload
+	if err := closer(); err != nil {
+		result.Error = fmt.Errorf("failed to close output file: %w", err)
+		return result
 	}
 
 	// Upload to S3 if configured
