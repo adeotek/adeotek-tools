@@ -51,3 +51,10 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Database backups
+.db-backups
+
+# Test configs
+test-backup-config.yaml
+test-backup-config.yml
