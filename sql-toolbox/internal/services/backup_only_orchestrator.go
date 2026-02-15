@@ -64,18 +64,8 @@ func (o *BackupOnlyOrchestrator) Run() (*BackupSummary, error) {
 		Total: len(o.config.Databases),
 	}
 
-	// Set up S3 uploader if needed
-	var s3Uploader S3Uploader
-	if o.config.S3.Enabled {
-		var err error
-		s3Uploader, err = o.s3UploaderFactory(o.config.S3)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create S3 uploader: %w", err)
-		}
-	}
-
 	for _, dbTarget := range o.config.Databases {
-		result := o.backupDatabase(dbTarget, s3Uploader)
+		result := o.backupDatabase(dbTarget)
 		summary.Results = append(summary.Results, result)
 		if result.Error != nil {
 			summary.Failed++
@@ -91,13 +81,36 @@ func (o *BackupOnlyOrchestrator) Run() (*BackupSummary, error) {
 	return summary, nil
 }
 
-func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, s3Uploader S3Uploader) DatabaseBackupResult {
+func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) DatabaseBackupResult {
 	result := DatabaseBackupResult{
 		DatabaseName: dbTarget.Name,
 	}
 
 	if o.verbose {
 		log.Printf("Starting backup for database: %s", dbTarget.Name)
+	}
+
+	// Set up S3 uploader if needed (per-database or global)
+	var s3Uploader S3Uploader
+	if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled && !o.dryRun {
+		// Build S3 config for this database (using per-db overrides if available)
+		s3Config := models.S3Config{
+			Enabled:                o.config.S3.Enabled,
+			Bucket:                 dbTarget.GetEffectiveS3Bucket(),
+			Region:                 o.config.S3.Region,
+			Prefix:                 dbTarget.GetEffectiveS3Prefix(),
+			AccessKeyID:            dbTarget.GetEffectiveS3AccessKeyID(),
+			SecretAccessKey:        dbTarget.GetEffectiveS3SecretAccessKey(),
+			Endpoint:               o.config.S3.Endpoint,
+			DeleteLocalAfterUpload: o.config.S3.DeleteLocalAfterUpload,
+		}
+
+		var err error
+		s3Uploader, err = o.s3UploaderFactory(s3Config)
+		if err != nil {
+			result.Error = fmt.Errorf("failed to create S3 uploader: %w", err)
+			return result
+		}
 	}
 
 	// Establish SSH tunnel if configured
@@ -134,13 +147,25 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 		}
 	}
 
-	// Build file path
+	// Build file path based on backup method
 	timestamp := time.Now().UTC().Format("20060102_150405")
-	fileName := fmt.Sprintf("%s_backup_%s.sql", dbTarget.Name, timestamp)
-	compress := dbTarget.GetEffectiveCompress()
-	if compress {
-		fileName += ".gz"
+	method := dbTarget.GetEffectiveBackupMethod()
+	var fileName string
+	var compress bool
+
+	if method == BackupMethodPgDump {
+		// pg_dump custom format is already compressed, so no gzip needed
+		fileName = fmt.Sprintf("%s_backup_%s.dump", dbTarget.Name, timestamp)
+		compress = false
+	} else {
+		// Go method produces SQL, optionally compressed with gzip
+		fileName = fmt.Sprintf("%s_backup_%s.sql", dbTarget.Name, timestamp)
+		compress = dbTarget.GetEffectiveCompress()
+		if compress {
+			fileName += ".gz"
+		}
 	}
+
 	filePath := filepath.Join(outputDir, fileName)
 	result.FilePath = filePath
 
@@ -165,7 +190,6 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget, 
 	defer closer()
 
 	// Run dump using the configured backup method
-	method := dbTarget.GetEffectiveBackupMethod()
 	options := PgDumpOptions{
 		Schemas:       dbTarget.GetEffectiveSchemas(),
 		ExcludeTables: dbTarget.ExcludeTables,

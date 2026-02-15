@@ -11,7 +11,8 @@ A command-line tool for executing SQL migration scripts and performing database 
 - Automatic database backup before applying migrations
 - Database restore from backup
 - Multi-database backup via YAML config (`backup` subcommand) with optional gzip compression and S3 upload
-- **Per-database S3 bucket and prefix overrides** for flexible backup organization
+- **Wildcard database backup** for backing up all databases on a PostgreSQL server with exclude list support
+- **Per-database S3 overrides** (bucket, prefix, credentials) for flexible backup organization
 - Pure Go PostgreSQL dump (no `pg_dump` binary required for `backup`)
 - Support for external `pg_dump` binary (optional backup method)
 - Dry-run mode for testing migrations without applying changes
@@ -412,7 +413,7 @@ backup:
 | `no_owner` | bool | `true` | Exclude ownership statements |
 | `clean` | bool | `true` | Include `DROP IF EXISTS` before `CREATE` |
 | `schemas` | []string | (all) | Schemas to include; empty means all non-system schemas |
-| `backup_method` | string | `go` | Backup method: `go` (pure Go) or `pg_dump` (external binary) |
+| `backup_method` | string | `go` | Backup method: `go` (pure Go, .sql files) or `pg_dump` (external binary, .dump files) |
 | `ssh_tunnel` | object | | Default SSH tunnel configuration for all databases |
 
 #### `backup.databases[]`
@@ -422,7 +423,8 @@ backup:
 | `name` | string | Yes | Identifier for this database (used in file names and S3 keys) |
 | `host` | string | Yes* | Database host |
 | `port` | int | No | Database port (default: 5432) |
-| `database` | string | Yes* | Database name |
+| `database` | string | Yes* | Database name (use `*` for wildcard expansion) |
+| `exclude_db` | []string | No | Databases to exclude when using wildcard (`database: "*"`) |
 | `user` | string | No | Database user |
 | `password` | string | No | Database password |
 | `ssl_mode` | string | No | SSL mode (default: `disable`) |
@@ -435,10 +437,12 @@ backup:
 | `exclude_tables` | []string | No | Tables to exclude from dump |
 | `no_owner` | bool | No | Per-db no-owner override |
 | `clean` | bool | No | Per-db clean override |
-| `backup_method` | string | No | Per-db backup method override (`go` or `pg_dump`) |
+| `backup_method` | string | No | Per-db backup method override: `go` (.sql) or `pg_dump` (.dump) |
 | `ssh_tunnel` | object | No | Per-db SSH tunnel configuration override |
 | `s3_prefix` | string | No | Per-db S3 key prefix override (default: from s3 config) |
 | `s3_bucket` | string | No | Per-db S3 bucket override (default: from s3 config) |
+| `s3_access_key_id` | string | No | Per-db S3 access key ID override (default: from s3 config) |
+| `s3_secret_access_key` | string | No | Per-db S3 secret access key override (default: from s3 config) |
 
 \* Either `connection_string` or `host` + `database` must be provided.
 
@@ -463,7 +467,7 @@ backup:
 
 ### What Gets Dumped
 
-The pure Go dump produces SQL output covering:
+**Go method** (pure Go dump) produces SQL output covering:
 
 - Extensions
 - Schemas
@@ -477,16 +481,76 @@ The pure Go dump produces SQL output covering:
 - Foreign keys (post-data)
 - Triggers (post-data)
 
+**pg_dump method** (external binary) produces PostgreSQL custom format archives containing:
+- Complete database structure and data
+- Binary format optimized for size and restoration speed
+- Can be restored using `pg_restore` command
+
+### Wildcard Database Backup
+
+The `backup` subcommand supports wildcard database expansion, allowing you to back up all databases on a PostgreSQL server without listing them individually.
+
+**Usage:**
+- Set `database: "*"` in your configuration to enable wildcard expansion
+- Use `exclude_db` to specify databases to skip (the `postgres` system database is always excluded)
+- Each discovered database gets its own backup file with `{name}_{database}` naming
+
+**Example configuration:**
+
+```yaml
+backup:
+  defaults:
+    output_dir: "./backups"
+    compress: true
+
+  databases:
+    - name: "all_production_dbs"
+      host: "prod-db.example.com"
+      port: 5432
+      database: "*"                  # Wildcard: backup all databases
+      user: "backup_user"
+      password: "secret"
+      exclude_db:                     # Databases to skip
+        - "test_db"
+        - "temp_db"
+      upload_to_s3: true
+      s3_prefix: "production/"
+```
+
+**How it works:**
+1. Connects to the `postgres` database to enumerate all non-template databases
+2. Excludes the `postgres` system database and any databases in `exclude_db`
+3. Expands the wildcard into individual database backup targets
+4. Each database gets backed up with name pattern: `{name}_{database}_backup_{timestamp}.sql.gz`
+
+**Example:** If the server has databases `app1`, `app2`, and `analytics`, the wildcard configuration above would create:
+- `all_production_dbs_app1_backup_20240115_120000.sql.gz`
+- `all_production_dbs_app2_backup_20240115_120000.sql.gz`
+- `all_production_dbs_analytics_backup_20240115_120000.sql.gz`
+
+**Use cases:**
+- Multi-tenant applications where each tenant has a separate database
+- Development environments with many feature-branch databases
+- Simplified backup configuration for servers with dynamic database inventory
+
+**Permissions:** The backup user must have `CONNECT` privilege on the `postgres` database to query the database catalog.
+
 ### Backup Output
 
 - **Local files:**
-  - Plain SQL: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
-  - Compressed: `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+  - **`go` method (pure Go dump):**
+    - Plain SQL: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
+    - Compressed SQL (gzip): `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+  - **`pg_dump` method (external binary):**
+    - Custom format: `{name}_backup_{yyyyMMdd_HHmmss}.dump`
+    - Note: Custom format is already compressed internally, no additional gzip compression applied
 
 - **S3 uploads:**
   - Bucket: Per-database `s3_bucket` or global `bucket` setting
   - Key: `{prefix}{name}/{filename}` where prefix is per-database `s3_prefix` or global `prefix`
-  - Example: `production/myapp_prod/myapp_prod_backup_20240115_120000.sql.gz`
+  - Examples:
+    - Go method: `production/myapp_prod/myapp_prod_backup_20240115_120000.sql.gz`
+    - pg_dump method: `production/myapp_prod/myapp_prod_backup_20240115_120000.dump`
 
 ### Differences from `--backup-only` Flag
 
@@ -495,7 +559,7 @@ The pure Go dump produces SQL output covering:
 | Database support | Single database | Multiple databases |
 | Configuration | CLI flags | YAML config file |
 | Dump method | `pg_dump` (external binary) | Pure Go or `pg_dump` (configurable) |
-| Compression | No | Optional gzip |
+| Compression | No | Optional gzip (Go method only; pg_dump uses compressed custom format) |
 | S3 upload | No | Yes (AWS S3 / MinIO / RustFS) |
 | S3 customization | N/A | Per-database bucket/prefix overrides |
 | SSH tunnel support | No | Yes (key/password/agent auth) |

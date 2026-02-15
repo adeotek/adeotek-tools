@@ -52,9 +52,14 @@ func runBackup(cmd *cobra.Command, args []string) error {
 
 	config := unifiedConfig.Backup
 
-	// Validate the backup config
+	// Expand wildcard database entries
+	if err := config.ExpandWildcards(verbose); err != nil {
+		return fmt.Errorf("failed to expand wildcard databases: %w", err)
+	}
+
+	// Validate the backup config (validation happens in LoadBackupConfig, but check count)
 	if len(config.Databases) == 0 {
-		return fmt.Errorf("at least one database must be configured in the backup section")
+		return fmt.Errorf("no databases to backup after wildcard expansion")
 	}
 
 	// Link defaults and S3 config to each database target

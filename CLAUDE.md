@@ -41,7 +41,8 @@ The `sql-toolbox` tool is written in Go and provides two subcommands: `migration
 #### Key Features
 - SSH tunnel support for secure connections through bastion hosts
 - Multiple connection string formats: lib/pq, .NET (semicolon-separated), and PostgreSQL URL
-- Per-database S3 bucket and prefix overrides for flexible backup organization
+- **Wildcard database backup**: Use `database: "*"` to automatically back up all databases on a server with exclude list support
+- Per-database S3 overrides (bucket, prefix, credentials) for flexible backup organization
 - Pure Go PostgreSQL dump or external `pg_dump` binary support
 - S3-compatible storage support (AWS S3, MinIO, RustFS)
 

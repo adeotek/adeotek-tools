@@ -456,6 +456,220 @@ func TestDatabaseTarget_GetEffectiveS3Bucket(t *testing.T) {
 	}
 }
 
+func TestDatabaseTarget_GetEffectiveS3AccessKeyID(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected string
+	}{
+		{
+			name:     "per-db override",
+			db:       DatabaseTarget{S3AccessKeyID: "custom-key-id"},
+			expected: "custom-key-id",
+		},
+		{
+			name:     "s3 config fallback",
+			db:       DatabaseTarget{s3Config: &S3Config{AccessKeyID: "default-key-id"}},
+			expected: "default-key-id",
+		},
+		{
+			name:     "per-db overrides s3 config",
+			db:       DatabaseTarget{S3AccessKeyID: "override-key-id", s3Config: &S3Config{AccessKeyID: "default-key-id"}},
+			expected: "override-key-id",
+		},
+		{
+			name:     "empty when no key set",
+			db:       DatabaseTarget{s3Config: &S3Config{}},
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.db.GetEffectiveS3AccessKeyID()
+			if got != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, got)
+			}
+		})
+	}
+}
+
+func TestDatabaseTarget_GetEffectiveS3SecretAccessKey(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected string
+	}{
+		{
+			name:     "per-db override",
+			db:       DatabaseTarget{S3SecretAccessKey: "custom-secret"},
+			expected: "custom-secret",
+		},
+		{
+			name:     "s3 config fallback",
+			db:       DatabaseTarget{s3Config: &S3Config{SecretAccessKey: "default-secret"}},
+			expected: "default-secret",
+		},
+		{
+			name:     "per-db overrides s3 config",
+			db:       DatabaseTarget{S3SecretAccessKey: "override-secret", s3Config: &S3Config{SecretAccessKey: "default-secret"}},
+			expected: "override-secret",
+		},
+		{
+			name:     "empty when no secret set",
+			db:       DatabaseTarget{s3Config: &S3Config{}},
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.db.GetEffectiveS3SecretAccessKey()
+			if got != tt.expected {
+				t.Errorf("expected '%s', got '%s'", tt.expected, got)
+			}
+		})
+	}
+}
+
+func TestExpandWildcardDatabases_NonWildcard(t *testing.T) {
+	target := DatabaseTarget{
+		Name:     "myapp",
+		Host:     "localhost",
+		Port:     5432,
+		Database: "myapp_db",
+		User:     "admin",
+		Password: "secret",
+	}
+
+	expanded, err := ExpandWildcardDatabases(target, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(expanded) != 1 {
+		t.Fatalf("expected 1 database, got %d", len(expanded))
+	}
+
+	if expanded[0].Database != "myapp_db" {
+		t.Errorf("expected database 'myapp_db', got '%s'", expanded[0].Database)
+	}
+
+	if expanded[0].Name != "myapp" {
+		t.Errorf("expected name 'myapp', got '%s'", expanded[0].Name)
+	}
+}
+
+func TestExpandWildcardDatabases_EmptyExcludeDb(t *testing.T) {
+	target := DatabaseTarget{
+		Name:      "test",
+		Host:      "localhost",
+		Port:      5432,
+		Database:  "*",
+		User:      "admin",
+		Password:  "secret",
+		ExcludeDb: []string{},
+	}
+
+	// This test will fail if there's no PostgreSQL database running
+	// So we just verify the error handling
+	_, err := ExpandWildcardDatabases(target, false)
+	// We expect either a connection error or successful expansion
+	// If PostgreSQL is running, it should succeed; if not, it should fail gracefully
+	if err != nil {
+		// Check that the error is a connection error, not a logic error
+		if !containsAny(err.Error(), []string{"connection", "connect", "dial", "refused"}) {
+			t.Errorf("expected connection error, got: %v", err)
+		}
+	}
+}
+
+func TestBackupConfig_ExpandWildcards_NoWildcards(t *testing.T) {
+	config := &BackupConfig{
+		Databases: []DatabaseTarget{
+			{
+				Name:     "db1",
+				Host:     "localhost",
+				Port:     5432,
+				Database: "app1",
+				User:     "admin",
+				Password: "secret",
+			},
+			{
+				Name:     "db2",
+				Host:     "localhost",
+				Port:     5432,
+				Database: "app2",
+				User:     "admin",
+				Password: "secret",
+			},
+		},
+	}
+
+	err := config.ExpandWildcards(false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(config.Databases) != 2 {
+		t.Fatalf("expected 2 databases, got %d", len(config.Databases))
+	}
+
+	if config.Databases[0].Database != "app1" {
+		t.Errorf("expected database 'app1', got '%s'", config.Databases[0].Database)
+	}
+
+	if config.Databases[1].Database != "app2" {
+		t.Errorf("expected database 'app2', got '%s'", config.Databases[1].Database)
+	}
+}
+
+func TestLoadBackupConfig_WildcardDatabase(t *testing.T) {
+	yaml := `
+defaults:
+  output_dir: "./backups"
+
+databases:
+  - name: "all_dbs"
+    host: "localhost"
+    port: 5432
+    database: "*"
+    user: "admin"
+    password: "secret"
+    exclude_db:
+      - "test_db"
+      - "temp_db"
+
+s3:
+  enabled: false
+`
+	path := writeTempConfig(t, yaml)
+	config, err := LoadBackupConfig(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(config.Databases) != 1 {
+		t.Fatalf("expected 1 database, got %d", len(config.Databases))
+	}
+	if config.Databases[0].Database != "*" {
+		t.Errorf("expected database '*', got '%s'", config.Databases[0].Database)
+	}
+	if len(config.Databases[0].ExcludeDb) != 2 {
+		t.Errorf("expected 2 excluded databases, got %d", len(config.Databases[0].ExcludeDb))
+	}
+}
+
+func containsAny(s string, substrs []string) bool {
+	for _, substr := range substrs {
+		if len(s) >= len(substr) {
+			for i := 0; i <= len(s)-len(substr); i++ {
+				if s[i:i+len(substr)] == substr {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func writeTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()

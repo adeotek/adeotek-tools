@@ -57,7 +57,21 @@ backup:
     #   local_port: 0                     # Auto-assign local port
 
   databases:
-    # Example 1: Database behind SSH bastion (inherits ssh_tunnel from defaults)
+    # Example 1: Backup all databases on a server (wildcard)
+    # - name: "all_production_dbs"
+    #   host: "prod-db.example.com"
+    #   port: 5432
+    #   database: "*"                         # Wildcard: backup all databases
+    #   user: "backup_user"
+    #   password: "secret"
+    #   exclude_db:                           # Databases to exclude from wildcard expansion
+    #     - "test_db"
+    #     - "temp_db"
+    #   compress: true
+    #   upload_to_s3: true
+    #   s3_prefix: "production/"
+
+    # Example 2: Database behind SSH bastion (inherits ssh_tunnel from defaults)
     # - name: "myapp_prod"
     #   host: "db.internal.example.com"   # Internal database host (not directly accessible)
     #   port: 5432
@@ -75,7 +89,7 @@ backup:
     #   exclude_tables: ["sessions", "cache"]
     #   backup_method: "go"               # per-db override (default: from defaults)
 
-    # Example 2: Database with per-db SSH tunnel, S3 bucket, and prefix overrides
+    # Example 3: Database with per-db SSH tunnel, S3 bucket, and prefix overrides
     # - name: "myapp_staging"
     #   host: "staging-db.internal.example.com"
     #   port: 5432
@@ -92,7 +106,7 @@ backup:
     #     auth_method: "password"
     #     password: "sshpass"
 
-    # Example 3: Database with SSH key authentication
+    # Example 4: Database with SSH key authentication
     # - name: "myapp_dev"
     #   host: "dev-db.internal.example.com"
     #   port: 5432
@@ -107,7 +121,7 @@ backup:
     #     key_file: "~/.ssh/dev_key"
     #     local_port: 5433                # Explicit local port (optional)
 
-    # Example 4: Database using connection_string (supports multiple formats)
+    # Example 5: Database using connection_string (supports multiple formats)
     # - name: "myapp_prod"
     #   # Option 1: lib/pq format
     #   connection_string: "host=prod-db.example.com port=5432 dbname=myapp user=produser password=prodpass sslmode=disable"
@@ -117,6 +131,19 @@ backup:
     #
     #   # Option 3: PostgreSQL URL
     #   # connection_string: "postgresql://produser:prodpass@prod-db.example.com:5432/myapp"
+
+    # Example 6: Database with custom S3 credentials (different from global)
+    # - name: "tenant_db"
+    #   host: "tenant-db.example.com"
+    #   port: 5432
+    #   database: "tenant_production"
+    #   user: "backup_user"
+    #   password: "secret"
+    #   upload_to_s3: true
+    #   s3_bucket: "tenant-specific-bucket"           # Override global S3 bucket
+    #   s3_prefix: "tenant-backups/"                  # Override global S3 prefix
+    #   s3_access_key_id: "TENANT_ACCESS_KEY"         # Override global S3 access key
+    #   s3_secret_access_key: "tenant_secret_key"     # Override global S3 secret key
 
   # s3:
   #   enabled: false

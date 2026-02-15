@@ -1,10 +1,13 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
+	_ "github.com/lib/pq"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,12 +46,15 @@ type DatabaseTarget struct {
 	DeleteLocalAfterUpload  *bool            `yaml:"delete_local_after_upload"`
 	Schemas                 []string         `yaml:"schemas"`
 	ExcludeTables           []string         `yaml:"exclude_tables"`
+	ExcludeDb               []string         `yaml:"exclude_db"`
 	NoOwner                 *bool            `yaml:"no_owner"`
 	Clean                   *bool            `yaml:"clean"`
 	BackupMethod            *string          `yaml:"backup_method"`
 	SSHTunnel               *SSHTunnelConfig `yaml:"ssh_tunnel"`
 	S3Prefix                string           `yaml:"s3_prefix"`
 	S3Bucket                string           `yaml:"s3_bucket"`
+	S3AccessKeyID           string           `yaml:"s3_access_key_id"`
+	S3SecretAccessKey       string           `yaml:"s3_secret_access_key"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -103,8 +109,9 @@ func (c *BackupConfig) validate() error {
 		if db.ConnectionString == "" && db.Host == "" {
 			return fmt.Errorf("database '%s': either connection_string or host must be provided", db.Name)
 		}
+		// Allow "*" as wildcard, otherwise database name is required
 		if db.ConnectionString == "" && db.Database == "" {
-			return fmt.Errorf("database '%s': database name is required when not using connection_string", db.Name)
+			return fmt.Errorf("database '%s': database name is required (use '*' for all databases)", db.Name)
 		}
 	}
 
@@ -242,6 +249,28 @@ func (dt *DatabaseTarget) GetEffectiveS3Bucket() string {
 	return ""
 }
 
+// GetEffectiveS3AccessKeyID returns the S3 access key ID for this database, falling back to global S3 config
+func (dt *DatabaseTarget) GetEffectiveS3AccessKeyID() string {
+	if dt.S3AccessKeyID != "" {
+		return dt.S3AccessKeyID
+	}
+	if dt.s3Config != nil {
+		return dt.s3Config.AccessKeyID
+	}
+	return ""
+}
+
+// GetEffectiveS3SecretAccessKey returns the S3 secret access key for this database, falling back to global S3 config
+func (dt *DatabaseTarget) GetEffectiveS3SecretAccessKey() string {
+	if dt.S3SecretAccessKey != "" {
+		return dt.S3SecretAccessKey
+	}
+	if dt.s3Config != nil {
+		return dt.s3Config.SecretAccessKey
+	}
+	return ""
+}
+
 // ToConnectionString builds a lib/pq connection string from individual parameters
 func (dt *DatabaseTarget) ToConnectionString() string {
 	if dt.ConnectionString != "" {
@@ -281,4 +310,134 @@ func (dt *DatabaseTarget) ToConnectionString() string {
 	parts = append(parts, fmt.Sprintf("sslmode=%s", sslMode))
 
 	return strings.Join(parts, " ")
+}
+
+// QueryDatabases connects to PostgreSQL and retrieves list of all databases
+// excluding templates and the postgres database
+func QueryDatabases(target *DatabaseTarget, baseExclusions []string) ([]string, error) {
+	// Build connection string to postgres database (for querying system tables)
+	connTarget := *target
+	connTarget.Database = "postgres" // Connect to postgres database to query pg_database
+
+	connStr := connTarget.ToConnectionString()
+
+	// Connect to database
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to postgres database: %w", err)
+	}
+	defer db.Close()
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping postgres database: %w", err)
+	}
+
+	// Build exclusion list
+	exclusions := []string{"postgres"}
+	exclusions = append(exclusions, baseExclusions...)
+	exclusions = append(exclusions, target.ExcludeDb...)
+
+	// Build query with exclusions
+	placeholders := make([]interface{}, len(exclusions))
+	placeholderStrings := make([]string, len(exclusions))
+	for i, excl := range exclusions {
+		placeholders[i] = excl
+		placeholderStrings[i] = fmt.Sprintf("$%d", i+1)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT datname
+		FROM pg_database
+		WHERE datistemplate = false
+		AND datname NOT IN (%s)
+		ORDER BY datname`,
+		strings.Join(placeholderStrings, ", "))
+
+	rows, err := db.Query(query, placeholders...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query databases: %w", err)
+	}
+	defer rows.Close()
+
+	var databases []string
+	for rows.Next() {
+		var dbName string
+		if err := rows.Scan(&dbName); err != nil {
+			return nil, fmt.Errorf("failed to scan database name: %w", err)
+		}
+		databases = append(databases, dbName)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating database rows: %w", err)
+	}
+
+	return databases, nil
+}
+
+// ExpandWildcardDatabases takes a DatabaseTarget with database: "*" and expands it
+// into multiple DatabaseTarget entries, one per discovered database
+func ExpandWildcardDatabases(template DatabaseTarget, verbose bool) ([]DatabaseTarget, error) {
+	if template.Database != "*" {
+		return []DatabaseTarget{template}, nil // Not a wildcard, return as-is
+	}
+
+	if verbose {
+		log.Printf("Expanding wildcard for '%s'...", template.Name)
+	}
+
+	// Query databases using QueryDatabases
+	databases, err := QueryDatabases(&template, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to enumerate databases for wildcard: %w", err)
+	}
+
+	exclusions := append([]string{"postgres"}, template.ExcludeDb...)
+
+	if verbose {
+		log.Printf("  Discovered %d database(s) after exclusions %v", len(databases), exclusions)
+		if len(databases) > 0 {
+			log.Printf("  Will backup: %v", databases)
+		}
+	}
+
+	if len(databases) == 0 {
+		return nil, fmt.Errorf("wildcard expansion found 0 databases after exclusions %v", exclusions)
+	}
+
+	// Create new DatabaseTarget for each discovered database
+	var expanded []DatabaseTarget
+	for _, dbName := range databases {
+		// Clone template target
+		target := template
+		target.Database = dbName
+		target.Name = template.Name + "_" + dbName // Modify name to include database
+		target.ExcludeDb = nil // Clear exclude_db from expanded entries
+		expanded = append(expanded, target)
+	}
+
+	return expanded, nil
+}
+
+// ExpandWildcards processes all DatabaseTarget entries and expands any with database: "*"
+func (c *BackupConfig) ExpandWildcards(verbose bool) error {
+	var expandedDatabases []DatabaseTarget
+
+	for _, dbTarget := range c.Databases {
+		expanded, err := ExpandWildcardDatabases(dbTarget, verbose)
+		if err != nil {
+			return fmt.Errorf("failed to expand wildcard for '%s': %w", dbTarget.Name, err)
+		}
+		expandedDatabases = append(expandedDatabases, expanded...)
+	}
+
+	c.Databases = expandedDatabases
+
+	// Re-link defaults after expansion
+	for i := range c.Databases {
+		c.Databases[i].SetDefaults(&c.Defaults, &c.S3)
+	}
+
+	return nil
 }
