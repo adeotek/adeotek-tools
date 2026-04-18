@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from app.auth import (
@@ -31,9 +33,7 @@ def test_tampered_session_rejected(auth: AuthService):
 
 
 def test_expired_session_rejected(auth: AuthService):
-    token = auth.issue_session_token(max_age_seconds=1)
-    import time
-
+    token = auth.issue_session_token()
     time.sleep(2.1)
     assert auth.verify_session_token(token, max_age_seconds=1) is False
 

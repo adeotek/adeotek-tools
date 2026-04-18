@@ -119,7 +119,7 @@ class ChatDB:
     async def list_messages(self, conv_id: str) -> list[Message]:
         async with self.session() as s:
             result = await s.execute(
-                select(Message).where(Message.conv_id == conv_id).order_by(Message.created_at)
+                select(Message).where(Message.conv_id == conv_id).order_by(Message.created_at, Message.id)
             )
             return list(result.scalars().all())
 

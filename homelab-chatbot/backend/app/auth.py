@@ -30,7 +30,7 @@ class AuthService:
     def check_password(self, plain: str) -> bool:
         return verify_password(plain, self._password_hash)
 
-    def issue_session_token(self, max_age_seconds: int | None = None) -> str:
+    def issue_session_token(self) -> str:
         return self._signer.sign(SESSION_TOKEN_PAYLOAD).decode("utf-8")
 
     def verify_session_token(
