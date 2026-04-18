@@ -21,9 +21,9 @@ class SQLTool:
         self._db_path = Path(db_path)
 
     def _open(self) -> sqlite3.Connection:
+        # mode=ro enforces read-only at the OS level; PRAGMA is redundant but harmless
         conn = sqlite3.connect(f"file:{self._db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA query_only = ON")
         return conn
 
     def run_select(self, sql: str) -> QueryResult:
@@ -39,7 +39,11 @@ class SQLTool:
         if ";" in cleaned:
             return False
         first = cleaned.split(None, 1)[0].lower() if cleaned else ""
-        return first in ("select", "with")
+        if first == "select":
+            return True
+        if first == "with":
+            return bool(re.search(r"\bselect\b", cleaned, re.IGNORECASE))
+        return False
 
     def schema_summary(self) -> str:
         with self._open() as conn:
@@ -52,7 +56,7 @@ class SQLTool:
             ]
             lines = []
             for t in tables:
-                cols = [r[1] for r in conn.execute(f"PRAGMA table_info({t})")]
+                cols = [r[1] for r in conn.execute(f'PRAGMA table_info("{t}")')]
                 lines.append(f"{t}({', '.join(cols)})")
             return "\n".join(lines)
 

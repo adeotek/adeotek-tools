@@ -1,12 +1,10 @@
 """Background scheduler that runs the orchestrator at a fixed interval."""
 
 import logging
-from pathlib import Path
-from typing import Callable
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app.config import AppConfig
+from app.config import RepoConfig
 from app.ingestion.orchestrator import IngestionOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -17,15 +15,16 @@ class SyncScheduler:
 
     def __init__(
         self,
-        config: AppConfig,
-        clone_root: Path,
-        get_token: Callable[[str], str | None],
+        orchestrator: IngestionOrchestrator,
+        interval_seconds: int,
     ) -> None:
-        self.orchestrator = IngestionOrchestrator(config, clone_root, get_token)
-        self._interval = config.sync.interval_seconds
+        self._orchestrator = orchestrator
+        self._interval = interval_seconds
         self._scheduler = AsyncIOScheduler()
+        self._repos: list[RepoConfig] = []
 
-    def start(self) -> None:
+    def start(self, repos: list[RepoConfig]) -> None:
+        self._repos = repos
         self._scheduler.add_job(
             self._safe_run,
             trigger="interval",
@@ -37,15 +36,15 @@ class SyncScheduler:
         )
         self._scheduler.start()
         try:
-            self.orchestrator.run_once()
+            self._orchestrator.run_once(repos)
         except Exception as e:  # noqa: BLE001
             logger.exception("initial ingest failed: %s", e)
 
     def _safe_run(self) -> None:
         try:
-            self.orchestrator.run_once()
+            self._orchestrator.run_once(self._repos)
         except Exception as e:  # noqa: BLE001
             logger.exception("scheduled ingest failed: %s", e)
 
-    def shutdown(self) -> None:
+    def stop(self) -> None:
         self._scheduler.shutdown(wait=False)

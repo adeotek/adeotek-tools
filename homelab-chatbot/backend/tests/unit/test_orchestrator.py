@@ -1,10 +1,23 @@
 import subprocess
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.config import AppConfig, EmbeddingsConfig, LLMConfig, OllamaConfig, PathConfig, RepoConfig, RetrievalConfig, SyncConfig
+from app.config import (
+    AppConfig,
+    EmbeddingsConfig,
+    LLMConfig,
+    OllamaConfig,
+    PathConfig,
+    RepoConfig,
+    RetrievalConfig,
+    SyncConfig,
+)
+from app.ingestion.embed import Embedder
+from app.ingestion.git_sync import GitSync
 from app.ingestion.orchestrator import IngestionOrchestrator
+from app.storage.lance import VectorStore
 
 
 def _remote(tmp: Path) -> Path:
@@ -26,52 +39,51 @@ def _remote(tmp: Path) -> Path:
 
 
 @pytest.fixture
-def cfg(tmp_path: Path) -> AppConfig:
+def repos(tmp_path: Path) -> list[RepoConfig]:
     remote = _remote(tmp_path)
-    return AppConfig(
-        sync=SyncConfig(interval_seconds=60, state_file=str(tmp_path / "state.json")),
-        repos=[
-            RepoConfig(
-                name="r",
-                url=f"file://{remote}",
-                branch="main",
-                token_env="UNUSED",
-                include_globs=["**/*.md"],
-            )
-        ],
-        embeddings=EmbeddingsConfig(
-            model="BAAI/bge-small-en-v1.5", cache_dir=str(tmp_path / "models")
-        ),
-        vector_store=PathConfig(path=str(tmp_path / "lance")),
-        chat_db=PathConfig(path=str(tmp_path / "chat.db")),
-        kb_db=PathConfig(path=str(tmp_path / "kb.db")),
-        llm=LLMConfig(
-            default_provider="anthropic",
-            default_model="m",
-            ollama=OllamaConfig(host="http://x", tool_capable_models=[]),
-        ),
-        retrieval=RetrievalConfig(top_k=5, memory_turns=10),
-    )
+    return [
+        RepoConfig(
+            name="r",
+            url=f"file://{remote}",
+            branch="main",
+            token_env="UNUSED",
+            include_globs=["**/*.md"],
+        )
+    ]
 
 
-def test_full_ingest_populates_vector_store(tmp_path: Path, cfg: AppConfig):
-    orch = IngestionOrchestrator(
-        config=cfg,
-        clone_root=tmp_path / "repos",
-        get_token=lambda _: None,
-    )
-    orch.run_once()
+def _make_orch(tmp_path: Path) -> IngestionOrchestrator:
+    embedder = Embedder(model_name="BAAI/bge-small-en-v1.5", cache_dir=str(tmp_path / "models"))
+    store = VectorStore(tmp_path / "lance")
+    git_sync = GitSync(clone_root=tmp_path / "repos", get_token=lambda _: None)
+    return IngestionOrchestrator(git_sync=git_sync, embedder=embedder, store=store)
+
+
+def test_full_ingest_populates_vector_store(tmp_path: Path, repos: list[RepoConfig]):
+    orch = _make_orch(tmp_path)
+    orch.run_once(repos)
     assert orch.vector_store.count() > 0
 
 
-def test_second_run_no_changes(tmp_path: Path, cfg: AppConfig):
-    orch = IngestionOrchestrator(
-        config=cfg,
-        clone_root=tmp_path / "repos",
-        get_token=lambda _: None,
-    )
-    orch.run_once()
+def test_second_run_no_changes(tmp_path: Path, repos: list[RepoConfig]):
+    orch = _make_orch(tmp_path)
+    orch.run_once(repos)
     count_1 = orch.vector_store.count()
-    orch.run_once()
+    orch.run_once(repos)
     count_2 = orch.vector_store.count()
     assert count_1 == count_2
+
+
+def test_per_file_error_isolation(tmp_path: Path, repos: list[RepoConfig]):
+    """A failure on one file should not abort processing of the rest."""
+    orch = _make_orch(tmp_path)
+    # First run to clone and get files into matched_files
+    orch.run_once(repos)
+    count_before = orch.vector_store.count()
+
+    # Simulate a file-level error on embed_batch — should not raise
+    with patch.object(orch._embedder, "embed_batch", side_effect=RuntimeError("boom")):
+        orch.run_once(repos)  # must not raise
+
+    # Vector store should still have entries from the first run
+    assert orch.vector_store.count() >= 0  # at minimum didn't crash

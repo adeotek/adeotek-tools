@@ -27,7 +27,9 @@ class VectorSearchTool:
     ) -> list[SearchHit]:
         vec = self._embedder.embed_batch([query])[0]
         return self._store.search(
-            query_vector=vec, top_k=top_k or self._default_top_k, repo=repo
+            query_vector=vec,
+            top_k=top_k if top_k is not None else self._default_top_k,
+            repo=repo,
         )
 
     def as_llama_tool(self):

@@ -1,50 +1,50 @@
 """Coordinate git sync + markdown chunking + Excel loading + vector index updates."""
 
+import logging
 from pathlib import Path
-from typing import Callable
 
-from app.config import AppConfig, RepoConfig
+from app.config import RepoConfig
 from app.ingestion.embed import Embedder
 from app.ingestion.excel import ExcelLoader
 from app.ingestion.git_sync import ChangedFile, GitSync, SyncResult
 from app.ingestion.markdown import chunk_markdown_file
 from app.storage.lance import VectorStore
 
+logger = logging.getLogger(__name__)
+
 
 class IngestionOrchestrator:
-    """Runs one full ingestion cycle across all configured repos."""
+    """Runs one full ingestion cycle across the supplied repos."""
 
     def __init__(
         self,
-        config: AppConfig,
-        clone_root: Path,
-        get_token: Callable[[str], str | None],
+        git_sync: GitSync,
+        embedder: Embedder,
+        store: VectorStore,
+        excel_loader: ExcelLoader | None = None,
     ) -> None:
-        self._config = config
-        self._git = GitSync(clone_root=clone_root, get_token=get_token)
-        self._embedder = Embedder(
-            model_name=config.embeddings.model, cache_dir=config.embeddings.cache_dir
-        )
-        self.vector_store = VectorStore(Path(config.vector_store.path))
-        self._excel = ExcelLoader(Path(config.kb_db.path))
+        self._git = git_sync
+        self._embedder = embedder
+        self.vector_store = store
+        self._excel = excel_loader
 
-    def run_once(self) -> list[SyncResult]:
+    def run_once(self, repos: list[RepoConfig]) -> list[SyncResult]:
         results = []
-        for repo_cfg in self._config.repos:
+        for repo_cfg in repos:
             result = self._git.sync(repo_cfg)
             self._apply(repo_cfg, result)
             results.append(result)
         return results
 
     def _apply(self, repo_cfg: RepoConfig, result: SyncResult) -> None:
+        if not result.matched_files:
+            return
         repo_path = self._git.repo_path(repo_cfg)
-        if result.cloned:
-            files = result.matched_files
-        else:
-            files = result.matched_files or []
-
-        for cf in files:
-            self._apply_file(repo_cfg, repo_path, cf, result.new_sha)
+        for cf in result.matched_files:
+            try:
+                self._apply_file(repo_cfg, repo_path, cf, result.new_sha)
+            except Exception:
+                logger.exception("failed to process %s in %s", cf.path, repo_cfg.name)
 
     def _apply_file(
         self,
@@ -70,7 +70,7 @@ class IngestionOrchestrator:
                 vectors = self._embedder.embed_batch([c.text for c in chunks])
                 self.vector_store.upsert(chunks, vectors)
 
-        elif cf.path.endswith(".xlsx"):
+        elif cf.path.endswith(".xlsx") and self._excel is not None:
             if cf.status == "D" or not file_path.exists():
                 return
             self._excel.load(file_path)
