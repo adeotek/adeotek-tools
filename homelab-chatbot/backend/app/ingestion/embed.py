@@ -21,7 +21,10 @@ class Embedder:
             normalize_embeddings=True,
             show_progress_bar=False,
         )
-        return [vec.tolist() for vec in result]
+        vecs = [vec.tolist() for vec in result]
+        if vecs and len(vecs[0]) != EMBED_DIM:
+            raise ValueError(f"model returned {len(vecs[0])}-dim vectors, expected {EMBED_DIM}")
+        return vecs
 
 
 @lru_cache(maxsize=4)
