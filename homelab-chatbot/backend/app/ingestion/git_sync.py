@@ -68,10 +68,22 @@ class GitSync:
     def _head_sha(self, path: Path) -> str:
         return self._git("rev-parse", "HEAD", cwd=path).strip()
 
+    @staticmethod
+    def _glob_match(rel: str, glob: str) -> bool:
+        """Return True if rel matches glob, handling ** patterns."""
+        if fnmatch.fnmatch(rel, glob):
+            return True
+        # For patterns like **/*.md, also match files in the repo root
+        if glob.startswith("**/"):
+            tail = glob[3:]
+            if fnmatch.fnmatch(rel, tail):
+                return True
+        return False
+
     def _match(self, paths: list[ChangedFile], globs: list[str]) -> list[ChangedFile]:
         out = []
         for cf in paths:
-            if any(fnmatch.fnmatch(cf.path, g) for g in globs):
+            if any(self._glob_match(cf.path, g) for g in globs):
                 out.append(cf)
         return out
 
@@ -127,6 +139,6 @@ class GitSync:
             rel = p.relative_to(repo_path).as_posix()
             if ".git/" in rel or rel.startswith(".git/"):
                 continue
-            if any(fnmatch.fnmatch(rel, g) for g in globs):
+            if any(self._glob_match(rel, g) for g in globs):
                 out.append(ChangedFile(path=rel, status="A"))
         return out
