@@ -38,6 +38,6 @@ def _fetch_ollama_models(host: str) -> list[str]:
     try:
         with urllib.request.urlopen(url, timeout=5) as resp:
             data = json.loads(resp.read())
-        return [m["name"] for m in data.get("models", [])]
+        return [m["name"] for m in data.get("models", []) if "name" in m]
     except Exception:
         return []
