@@ -43,7 +43,7 @@ class VectorStore:
                 pa.field("heading_path", pa.string()),
             ]
         )
-        if TABLE_NAME not in self._db.list_tables():
+        if TABLE_NAME not in self._db.list_tables().tables:
             self._db.create_table(TABLE_NAME, schema=self._schema)
 
     def _table(self) -> lancedb.table.Table:
