@@ -10,3 +10,6 @@
 
 # Test config
 test-backup-config.yml
+
+# AI tools
+.playwright-mcp/

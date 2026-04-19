@@ -44,7 +44,8 @@ export default function Home() {
       ]);
       setStreaming(true);
       try {
-        const resp = await fetch("/api/chat", {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
+        const resp = await fetch(`${backendUrl}/api/chat`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },

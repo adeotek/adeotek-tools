@@ -10,6 +10,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     ...init,
   });
+  if (resp.status === 401 && path !== "/api/auth/login") {
+    window.location.href = "/login";
+    throw new ApiError(401, "unauthenticated");
+  }
   if (!resp.ok) {
     throw new ApiError(resp.status, await resp.text());
   }

@@ -23,21 +23,35 @@ Self-hosted RAG chatbot for a home-lab knowledge base. Ingests Markdown from two
 
 ## Local development
 
+**First-time setup:**
 ```bash
-# Backend (terminal 1)
-cd backend && uv sync
-uv run uvicorn app.main:create_app --factory --reload
+# Use the dev-specific config (local paths instead of /data/...)
+cp config/config.dev.example.yaml config/config.dev.yaml
+cp .env.example .env
+# Edit .env: set HLCB_AUTH_PASSWORD_HASH, HLCB_SESSION_SECRET, API keys
 
-# Frontend (terminal 2)
+mkdir -p data  # local data directory (gitignored)
+```
+
+```bash
+# Backend (terminal 1) — run from homelab-chatbot/
+cd backend && uv sync
+HLCB_CONFIG_PATH=../config/config.dev.yaml \
+  uv run --env-file ../.env \
+  uvicorn app.main:create_app --factory --reload --port 8000
+
+# Frontend (terminal 2) — run from homelab-chatbot/
 cd frontend && npm ci
 npm run dev
 ```
 
-The Next.js dev server proxies `/api/*` to `http://127.0.0.1:8000` during development.
+- **Frontend dev:** open `http://localhost:3000` — Next.js proxies `/api/*` to FastAPI on port 8000.
+- **API only / no frontend:** open `http://localhost:8000` — FastAPI serves the last built static frontend (run `make build-frontend` first).
 
 ## Configuration
 
 - `config/config.yaml` — non-secret knobs (providers, repos, retrieval settings). See `config.example.yaml`.
+- `config/config.dev.yaml` — local development config (paths relative to backend/). See `config.dev.example.yaml`.
 - `.env` — API keys, session secret, bcrypt-hashed user passwords. Never commit.
 
 Generate a session secret:

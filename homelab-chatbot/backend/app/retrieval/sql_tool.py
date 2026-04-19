@@ -21,7 +21,9 @@ class SQLTool:
         self._db_path = Path(db_path)
 
     def _open(self) -> sqlite3.Connection:
-        # mode=ro enforces read-only at the OS level; PRAGMA is redundant but harmless
+        if not self._db_path.exists():
+            self._db_path.parent.mkdir(parents=True, exist_ok=True)
+            sqlite3.connect(str(self._db_path)).close()
         conn = sqlite3.connect(f"file:{self._db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         return conn

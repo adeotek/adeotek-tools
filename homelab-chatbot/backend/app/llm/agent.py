@@ -4,7 +4,7 @@ import inspect
 import logging
 from typing import AsyncIterator
 
-from llama_index.core.agent import ReActAgent
+from llama_index.core.agent.workflow import AgentStream, ReActAgent, ToolCallResult
 from llama_index.core.llms import LLM, ChatMessage
 from llama_index.core.tools import FunctionTool
 
@@ -48,22 +48,22 @@ async def run_agent(
         chat_history = [ChatMessage(role="system", content=SYSTEM_PROMPT)]
         for role, content in history:
             chat_history.append(ChatMessage(role=role, content=content))
-
-        agent = ReActAgent.from_tools(
-            tools=tools, llm=llm, verbose=False, chat_history=chat_history
-        )
-        response = await agent.astream_chat(user_message)
-        async for token in response.async_response_gen():
-            yield AgentEvent("text-delta", {"text": token})
-
-        for source in getattr(response, "sources", []) or []:
-            yield AgentEvent(
-                "tool-result",
-                {
-                    "name": getattr(source, "tool_name", "?"),
-                    "summary": str(source.content)[:500] if source.content else "",
-                },
-            )
+        agent = ReActAgent(tools=tools, llm=llm, verbose=False)
+        handler = agent.run(user_msg=user_message, chat_history=chat_history)
+        async for event in handler.stream_events():
+            if isinstance(event, AgentStream) and event.delta:
+                yield AgentEvent("text-delta", {"text": event.delta})
+            elif isinstance(event, ToolCallResult):
+                yield AgentEvent(
+                    "tool-result",
+                    {
+                        "name": event.tool_name,
+                        "summary": str(event.tool_output.content)[:500]
+                        if event.tool_output.content
+                        else "",
+                    },
+                )
+        await handler  # ensure workflow completes
         yield AgentEvent("done", {})
     except Exception as e:  # noqa: BLE001
         logger.exception("agent error")

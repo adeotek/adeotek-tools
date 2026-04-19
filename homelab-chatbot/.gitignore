@@ -18,6 +18,7 @@ out/
 # App data
 /data/
 /config/config.yaml
+/config/config.dev.yaml
 /.env
 *.lance/
 

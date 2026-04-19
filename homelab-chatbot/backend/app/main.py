@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.auth import AuthService
@@ -70,6 +71,16 @@ def create_app(
         await chat_db.close()
 
     app = FastAPI(title="homelab-chatbot", lifespan=_lifespan)
+
+    dev_origin = os.environ.get("HLCB_DEV_ORIGIN", "")
+    if dev_origin:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[dev_origin],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     app.state.config = cfg
     app.state.secrets = secrets
