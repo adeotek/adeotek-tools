@@ -11,7 +11,7 @@ Self-hosted RAG chatbot for a home-lab knowledge base. Ingests Markdown from two
 1. Copy configs and fill in secrets:
    ```bash
    cp config/config.example.yaml config/config.yaml
-   cp config/.env.example config/.env
+   cp .env.example .env
    # edit both
    ```
 2. Build and run:
@@ -38,7 +38,7 @@ The Next.js dev server proxies `/api/*` to `http://127.0.0.1:8000` during develo
 ## Configuration
 
 - `config/config.yaml` — non-secret knobs (providers, repos, retrieval settings). See `config.example.yaml`.
-- `config/.env` — API keys, session secret, bcrypt-hashed user passwords. Never commit.
+- `.env` — API keys, session secret, bcrypt-hashed user passwords. Never commit.
 
 Generate a session secret:
 ```bash

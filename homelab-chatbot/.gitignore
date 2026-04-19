@@ -18,7 +18,7 @@ out/
 # App data
 /data/
 /config/config.yaml
-/config/.env
+/.env
 *.lance/
 
 # Editor

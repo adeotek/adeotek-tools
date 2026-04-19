@@ -1,3 +1,5 @@
+---
+
 services:
   chatbot:
     image: adeotek/homelab-chatbot:${HLCB_TAG:-latest}
@@ -8,7 +10,7 @@ services:
     ports:
       - "${HLCB_BIND_ADDR:-127.0.0.1}:${HLCB_PORT:-8000}:8000"
     env_file:
-      - ./config/.env
+      - ./.env
     volumes:
       - ./config:/config:ro
       - hlcb-data:/data
