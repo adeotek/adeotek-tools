@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { mutate } from "swr";
 
 import { ChatThread } from "@/components/chat/ChatThread";
 import { Composer } from "@/components/chat/Composer";
+import { ConversationSidebar } from "@/components/sidebar/ConversationSidebar";
 import { api, type Conversation, type Message } from "@/lib/api";
 import { parseSseStream, type DisplayMessage } from "@/lib/stream";
 
@@ -21,6 +23,24 @@ export default function Home() {
     }).catch(() => {});
   }, []);
 
+  const onSelect = useCallback(async (c: Conversation) => {
+    setConvId(c.id);
+    const msgs = await api.listMessages(c.id);
+    setMessages(
+      msgs.map((m: Message) => ({
+        id: String(m.id),
+        role: m.role as DisplayMessage["role"],
+        content: m.content,
+        partial: false,
+      })),
+    );
+  }, []);
+
+  const onNew = useCallback(() => {
+    setConvId(null);
+    setMessages([]);
+  }, []);
+
   const send = useCallback(
     async (text: string) => {
       setMessages((prev) => [
@@ -34,12 +54,7 @@ export default function Home() {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conv_id: convId,
-            message: text,
-            provider,
-            model,
-          }),
+          body: JSON.stringify({ conv_id: convId, message: text, provider, model }),
         });
         if (!resp.ok) throw new Error("chat failed");
 
@@ -51,10 +66,7 @@ export default function Home() {
               const copy = [...prev];
               const last = copy[copy.length - 1];
               if (last?.role === "assistant") {
-                copy[copy.length - 1] = {
-                  ...last,
-                  content: last.content + ev.text,
-                };
+                copy[copy.length - 1] = { ...last, content: last.content + ev.text };
               }
               return copy;
             });
@@ -80,6 +92,7 @@ export default function Home() {
             });
           }
         }
+        await mutate("/api/conv");
       } finally {
         setStreaming(false);
       }
@@ -88,15 +101,18 @@ export default function Home() {
   );
 
   return (
-    <main className="flex h-screen flex-col">
-      <header className="flex items-center gap-2 border-b border-neutral-800 p-3 text-sm">
-        <span className="text-neutral-400">Provider:</span>
-        <span>{provider}</span>
-        <span className="text-neutral-400">· Model:</span>
-        <span>{model}</span>
-      </header>
-      <ChatThread messages={messages} />
-      <Composer onSend={send} disabled={streaming} />
-    </main>
+    <div className="flex h-screen">
+      <ConversationSidebar activeId={convId} onSelect={onSelect} onNew={onNew} />
+      <main className="flex flex-1 flex-col">
+        <header className="flex items-center gap-2 border-b border-neutral-800 p-3 text-sm">
+          <span className="text-neutral-400">Provider:</span>
+          <span>{provider}</span>
+          <span className="text-neutral-400">· Model:</span>
+          <span>{model}</span>
+        </header>
+        <ChatThread messages={messages} />
+        <Composer onSend={send} disabled={streaming} />
+      </main>
+    </div>
   );
 }
