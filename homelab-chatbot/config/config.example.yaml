@@ -1,0 +1,48 @@
+# Copy to config.yaml and edit. Never commit config.yaml.
+# Schema matches app.config.AppConfig (Task 4).
+
+sync:
+  interval_seconds: 180
+  state_file: "/data/sync_state.json"
+
+repos:
+  - name: "homelab-docs"
+    url: "https://github.com/example-org/homelab-docs.git"
+    branch: "main"
+    token_env: "HLCB_GIT_TOKEN_HOMELAB_DOCS"
+    include_globs: ["**/*.md"]
+
+  - name: "runbooks"
+    url: "https://github.com/example-org/runbooks.git"
+    branch: "main"
+    token_env: "HLCB_GIT_TOKEN_RUNBOOKS"
+    include_globs: ["**/*.md"]
+
+embeddings:
+  model: "BAAI/bge-small-en-v1.5"
+  cache_dir: "/data/models"
+
+vector_store:
+  path: "/data/lance"
+
+chat_db:
+  path: "/data/chat.db"
+
+kb_db:
+  path: "/data/kb.db"
+
+llm:
+  default_provider: "anthropic"
+  default_model: "claude-sonnet-4-6"
+  ollama:
+    host: "http://host.docker.internal:11434"
+    tool_capable_models:
+      - "llama3.1:8b"
+      - "llama3.1:70b"
+      - "qwen2.5:7b"
+      - "qwen2.5:14b"
+      - "mistral-nemo:12b"
+
+retrieval:
+  top_k: 6
+  memory_turns: 10
