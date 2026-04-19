@@ -1,7 +1,9 @@
 """FastAPI application factory wiring together all dependencies."""
 
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -30,8 +32,6 @@ def create_app(
     with_scheduler: bool = True,
     config: AppConfig | None = None,
 ) -> FastAPI:
-    app = FastAPI(title="homelab-chatbot")
-
     if config is not None:
         cfg = config
     else:
@@ -39,34 +39,15 @@ def create_app(
         cfg = load_config(path) if path.exists() else _minimal_default_config()
 
     secrets = Secrets()
-    app.state.config = cfg
-    app.state.secrets = secrets
-    app.state.secrets_available = {
-        "anthropic": secrets.anthropic_api_key is not None,
-        "google": secrets.google_api_key is not None,
-    }
-
-    app.state.auth = AuthService(
-        password_hash=secrets.auth_password_hash, session_secret=secrets.session_secret
-    )
-
     chat_db = ChatDB(f"sqlite+aiosqlite:///{cfg.chat_db.path}")
-    app.state.chat_db = chat_db
-
     vector_store = VectorStore(Path(cfg.vector_store.path))
     embedder = Embedder(model_name=cfg.embeddings.model, cache_dir=cfg.embeddings.cache_dir)
-    app.state.vector_tool = VectorSearchTool(
-        store=vector_store, embedder=embedder, top_k=cfg.retrieval.top_k
-    )
-    app.state.sql_tool = SQLTool(db_path=Path(cfg.kb_db.path))
-    app.state.sync_state: dict = {"last_sync_at": None}
-
     scheduler: SyncScheduler | None = None
 
-    @app.on_event("startup")
-    async def _startup() -> None:
-        await chat_db.init_schema()
+    @asynccontextmanager
+    async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         nonlocal scheduler
+        await chat_db.init_schema()
         if with_scheduler and cfg.repos:
             git_sync = GitSync(
                 clone_root=Path("/data/repos"),
@@ -83,12 +64,28 @@ def create_app(
                 interval_seconds=cfg.sync.interval_seconds,
             )
             scheduler.start(cfg.repos)
-
-    @app.on_event("shutdown")
-    async def _shutdown() -> None:
+        yield
         if scheduler:
             scheduler.stop()
         await chat_db.close()
+
+    app = FastAPI(title="homelab-chatbot", lifespan=_lifespan)
+
+    app.state.config = cfg
+    app.state.secrets = secrets
+    app.state.secrets_available = {
+        "anthropic": secrets.anthropic_api_key is not None,
+        "google": secrets.google_api_key is not None,
+    }
+    app.state.auth = AuthService(
+        password_hash=secrets.auth_password_hash, session_secret=secrets.session_secret
+    )
+    app.state.chat_db = chat_db
+    app.state.vector_tool = VectorSearchTool(
+        store=vector_store, embedder=embedder, top_k=cfg.retrieval.top_k
+    )
+    app.state.sql_tool = SQLTool(db_path=Path(cfg.kb_db.path))
+    app.state.sync_state: dict = {"last_sync_at": None}
 
     app.include_router(auth_routes.router)
     app.include_router(health_routes.router)
@@ -126,6 +123,6 @@ def _minimal_default_config() -> AppConfig:
 
 try:
     app = create_app()
-except Exception:  # noqa: BLE001 — allow startup without env vars (e.g. import-time in tests)
+except Exception:  # noqa: BLE001 — allow startup without env vars set (e.g. test imports)
     from fastapi import FastAPI as _FastAPI
     app = _FastAPI(title="homelab-chatbot")

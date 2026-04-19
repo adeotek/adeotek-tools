@@ -1,5 +1,6 @@
 """Build a LlamaIndex agent and stream events out as AgentEvents."""
 
+import inspect
 import logging
 from typing import AsyncIterator
 
@@ -44,7 +45,13 @@ async def run_agent(
             yield AgentEvent("done", {})
             return
 
-        agent = ReActAgent.from_tools(tools=tools, llm=llm, verbose=False)
+        chat_history = [ChatMessage(role="system", content=SYSTEM_PROMPT)]
+        for role, content in history:
+            chat_history.append(ChatMessage(role=role, content=content))
+
+        agent = ReActAgent.from_tools(
+            tools=tools, llm=llm, verbose=False, chat_history=chat_history
+        )
         response = await agent.astream_chat(user_message)
         async for token in response.async_response_gen():
             yield AgentEvent("text-delta", {"text": token})
@@ -68,8 +75,7 @@ async def _stream_chat(
 ) -> AsyncIterator[str]:
     messages = build_messages(history, user_message)
     result = llm.astream_chat(messages)
-    # astream_chat may return an awaitable (coroutine) or an async generator directly
-    import inspect
+    # LlamaIndex LLMs return a coroutine from astream_chat; test fakes return async generators directly
     if inspect.isawaitable(result):
         result = await result
     async for chunk in result:
