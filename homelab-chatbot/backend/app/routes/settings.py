@@ -40,13 +40,13 @@ async def get_settings(request: Request) -> SettingsOut:
             id="anthropic",
             available=secrets_available.get("anthropic", False),
             models=anthropic_models,
-            tool_capable=anthropic_models,
+            tool_capable=[m for m in anthropic_models if supports_tools("anthropic", m, cfg)],
         ),
         ProviderInfo(
             id="google",
             available=secrets_available.get("google", False),
             models=google_models,
-            tool_capable=google_models,
+            tool_capable=[m for m in google_models if supports_tools("google", m, cfg)],
         ),
         ProviderInfo(
             id="ollama",

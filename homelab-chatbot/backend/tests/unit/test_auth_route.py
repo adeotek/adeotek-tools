@@ -31,3 +31,4 @@ def test_logout_clears_cookie(client: TestClient):
     client.post("/api/auth/login", json={"password": "letmein"})
     r = client.post("/api/auth/logout")
     assert r.status_code == 200
+    assert "hlcb_session" not in client.cookies
