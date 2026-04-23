@@ -9,10 +9,11 @@ from llama_index.core.llms import LLM, ChatMessage
 from llama_index.core.tools import FunctionTool
 
 from app.llm.sse import AgentEvent
+from app.retrieval.vector_tool import VectorSearchTool
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
+_SYSTEM_PROMPT_WITH_TOOLS = (
     "You are a helpful assistant for a home lab knowledge base. "
     "You have two tools available:\n"
     "- search_homelab_docs: for prose/conceptual questions about the docs\n"
@@ -21,9 +22,17 @@ SYSTEM_PROMPT = (
     "If the tools return no useful information, say so."
 )
 
+_SYSTEM_PROMPT_NO_TOOLS = (
+    "You are a helpful assistant for a home lab knowledge base. "
+    "Answer the user's questions concisely based on your general knowledge."
+)
 
-def build_messages(history: list[tuple[str, str]], user_message: str) -> list[ChatMessage]:
-    messages: list[ChatMessage] = [ChatMessage(role="system", content=SYSTEM_PROMPT)]
+
+def build_messages(
+    history: list[tuple[str, str]], user_message: str, tools_enabled: bool = True
+) -> list[ChatMessage]:
+    prompt = _SYSTEM_PROMPT_WITH_TOOLS if tools_enabled else _SYSTEM_PROMPT_NO_TOOLS
+    messages: list[ChatMessage] = [ChatMessage(role="system", content=prompt)]
     for role, content in history:
         messages.append(ChatMessage(role=role, content=content))
     messages.append(ChatMessage(role="user", content=user_message))
@@ -36,16 +45,17 @@ async def run_agent(
     history: list[tuple[str, str]],
     user_message: str,
     tools_enabled: bool,
+    vector_tool: VectorSearchTool | None = None,
 ) -> AsyncIterator[AgentEvent]:
     """Stream AgentEvents while the agent produces a response."""
     try:
         if not tools_enabled or not tools:
-            async for delta in _stream_chat(llm, history, user_message):
+            async for delta in _stream_chat(llm, history, user_message, tools_enabled=False):
                 yield AgentEvent("text-delta", {"text": delta})
             yield AgentEvent("done", {})
             return
 
-        chat_history = [ChatMessage(role="system", content=SYSTEM_PROMPT)]
+        chat_history = [ChatMessage(role="system", content=_SYSTEM_PROMPT_WITH_TOOLS)]
         for role, content in history:
             chat_history.append(ChatMessage(role=role, content=content))
         agent = ReActAgent(tools=tools, llm=llm, verbose=False)
@@ -54,6 +64,9 @@ async def run_agent(
             if isinstance(event, AgentStream) and event.delta:
                 yield AgentEvent("text-delta", {"text": event.delta})
             elif isinstance(event, ToolCallResult):
+                sources: list[dict] = []
+                if event.tool_name == VectorSearchTool.TOOL_NAME and vector_tool:
+                    sources = vector_tool.pop_sources()
                 yield AgentEvent(
                     "tool-result",
                     {
@@ -61,6 +74,7 @@ async def run_agent(
                         "summary": str(event.tool_output.content)[:500]
                         if event.tool_output.content
                         else "",
+                        "sources": sources,
                     },
                 )
         await handler  # ensure workflow completes
@@ -71,9 +85,9 @@ async def run_agent(
 
 
 async def _stream_chat(
-    llm: LLM, history: list[tuple[str, str]], user_message: str
+    llm: LLM, history: list[tuple[str, str]], user_message: str, tools_enabled: bool = True
 ) -> AsyncIterator[str]:
-    messages = build_messages(history, user_message)
+    messages = build_messages(history, user_message, tools_enabled=tools_enabled)
     result = llm.astream_chat(messages)
     # LlamaIndex LLMs return a coroutine from astream_chat; test fakes return async generators directly
     if inspect.isawaitable(result):

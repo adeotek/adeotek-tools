@@ -23,6 +23,7 @@ from app.routes import chat as chat_routes
 from app.routes import conversations as conv_routes
 from app.routes import health as health_routes
 from app.routes import settings as settings_routes
+from app.routes import stats as stats_routes
 from app.secrets import Secrets
 from app.storage.chat_db import ChatDB
 from app.storage.lance import VectorStore
@@ -51,7 +52,7 @@ def create_app(
         await chat_db.init_schema()
         if with_scheduler and cfg.repos:
             git_sync = GitSync(
-                clone_root=Path("/data/repos"),
+                clone_root=Path(cfg.sync.clone_root),
                 get_token=secrets.github_token,
             )
             orchestrator = IngestionOrchestrator(
@@ -60,6 +61,7 @@ def create_app(
                 store=vector_store,
                 excel_loader=ExcelLoader(Path(cfg.kb_db.path)),
             )
+            app.state.orchestrator = orchestrator
             scheduler = SyncScheduler(
                 orchestrator=orchestrator,
                 interval_seconds=cfg.sync.interval_seconds,
@@ -96,13 +98,15 @@ def create_app(
         store=vector_store, embedder=embedder, top_k=cfg.retrieval.top_k
     )
     app.state.sql_tool = SQLTool(db_path=Path(cfg.kb_db.path))
-    app.state.sync_state: dict = {"last_sync_at": None}
+    app.state.orchestrator = None
+    app.state.sync_state: dict = {"last_sync_at": None, "is_syncing": False}
 
     app.include_router(auth_routes.router)
     app.include_router(health_routes.router)
     app.include_router(conv_routes.router)
     app.include_router(chat_routes.router)
     app.include_router(settings_routes.router)
+    app.include_router(stats_routes.router)
 
     static_dir = Path(__file__).parent.parent / "static"
     if static_dir.exists():

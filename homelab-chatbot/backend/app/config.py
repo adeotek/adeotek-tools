@@ -12,6 +12,7 @@ Provider = Literal["anthropic", "google", "ollama"]
 class SyncConfig(BaseModel):
     interval_seconds: int = Field(ge=30, le=3600)
     state_file: str
+    clone_root: str = "/data/repos"
 
 
 class RepoConfig(BaseModel):

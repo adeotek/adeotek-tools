@@ -81,6 +81,18 @@ class VectorStore:
     def count(self) -> int:
         return self._table().count_rows()
 
+    def stats_by_repo(self) -> dict[str, dict]:
+        """Return {repo: {chunks, files}} for all indexed repos."""
+        tbl = self._table()
+        if tbl.count_rows() == 0:
+            return {}
+        df = tbl.to_pandas()[["repo", "file_path"]]
+        g = df.groupby("repo").agg(chunks=("file_path", "count"), files=("file_path", "nunique"))
+        return {
+            idx: {"chunks": int(row["chunks"]), "files": int(row["files"])}
+            for idx, row in g.iterrows()
+        }
+
     def search(
         self, query_vector: list[float], top_k: int = 5, repo: str | None = None
     ) -> list[SearchHit]:

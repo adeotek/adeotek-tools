@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import useSWR from "swr";
 
 import { NewChatButton } from "./NewChatButton";
@@ -32,6 +33,14 @@ export function ConversationSidebar({
 
   return (
     <aside className="flex w-64 flex-col border-r border-neutral-800 bg-neutral-900 p-2">
+      <nav className="mb-2 border-b border-neutral-800 pb-2">
+        <Link href="/stats" className="flex w-full rounded px-2 py-1.5 text-sm font-semibold text-neutral-300 hover:bg-neutral-800/60 hover:text-white">
+          Statistics
+        </Link>
+        <Link href="/settings" className="flex w-full rounded px-2 py-1.5 text-sm font-semibold text-neutral-300 hover:bg-neutral-800/60 hover:text-white">
+          Settings
+        </Link>
+      </nav>
       <NewChatButton onClick={onNew} />
       <ul className="flex-1 space-y-1 overflow-y-auto">
         {(data ?? []).map((c) => (

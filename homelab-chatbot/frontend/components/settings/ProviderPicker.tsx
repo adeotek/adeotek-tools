@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import useSWR from "swr";
 
 import { api, type Settings } from "@/lib/api";
@@ -16,12 +17,22 @@ export function ProviderPicker({
   onChange: (p: string, m: string) => void;
 }) {
   const { data } = useSWR<Settings>("/api/settings", fetcher);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (data && !initialized.current) {
+      initialized.current = true;
+      onChange(data.default_provider, data.default_model);
+    }
+  }, [data, onChange]);
+
   if (!data) {
     return <span className="text-xs text-neutral-500">loading providers…</span>;
   }
 
   const current = data.providers.find((p) => p.id === provider);
   const models = current?.models ?? [];
+  const toolCapable = current?.tool_capable.includes(model) ?? false;
 
   return (
     <div className="flex items-center gap-2 text-sm">
@@ -54,6 +65,16 @@ export function ProviderPicker({
           </option>
         ))}
       </select>
+      <span
+        title={toolCapable ? "Tool calling enabled" : "Tool calling not supported"}
+        className={`rounded px-1.5 py-0.5 text-xs font-medium ${
+          toolCapable
+            ? "bg-green-900 text-green-300"
+            : "bg-neutral-800 text-neutral-500"
+        }`}
+      >
+        {toolCapable ? "tools on" : "tools off"}
+      </span>
     </div>
   );
 }

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   // Static export for production (served by FastAPI StaticFiles).
   // Omitted in dev so Next.js can proxy /api/* to the backend.
   ...(!isDev && { output: "export" }),
+  devIndicators: { position: "top-right" },
   images: { unoptimized: true },
   trailingSlash: true,
   async rewrites() {

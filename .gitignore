@@ -12,4 +12,7 @@
 test-backup-config.yml
 
 # AI tools
+.claude/
 .playwright-mcp/
+.playwright-cli/
+

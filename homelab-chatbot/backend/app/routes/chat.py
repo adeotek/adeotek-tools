@@ -76,6 +76,7 @@ async def chat(body: ChatRequest, request: Request) -> StreamingResponse:
                 history=history,
                 user_message=body.message,
                 tools_enabled=tools_enabled,
+                vector_tool=vector_tool if tools_enabled else None,
             ):
                 if event.kind == "text-delta":
                     buffer.append(event.data.get("text", ""))

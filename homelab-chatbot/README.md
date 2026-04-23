@@ -45,6 +45,16 @@ cd frontend && npm ci
 npm run dev
 ```
 
+or
+
+```bash
+# Backend (terminal 1) — run from homelab-chatbot/
+cd backend && ./run.sh
+
+# Frontend (terminal 2) — run from homelab-chatbot/
+cd frontend && ./run.sh
+```
+
 - **Frontend dev:** open `http://localhost:3000` — Next.js proxies `/api/*` to FastAPI on port 8000.
 - **API only / no frontend:** open `http://localhost:8000` — FastAPI serves the last built static frontend (run `make build-frontend` first).
 

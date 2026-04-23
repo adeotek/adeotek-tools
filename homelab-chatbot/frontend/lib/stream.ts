@@ -1,10 +1,16 @@
 import type { Message } from "@/lib/api";
 
+export interface Source {
+  repo: string;
+  file_path: string;
+  heading_path: string;
+}
+
 export type StreamEvent =
   | { kind: "conversation"; id: string }
   | { kind: "text-delta"; text: string }
   | { kind: "tool-call"; name: string; args: unknown }
-  | { kind: "tool-result"; name: string; summary: string }
+  | { kind: "tool-result"; name: string; summary: string; sources?: Source[] }
   | { kind: "error"; message: string }
   | { kind: "done" };
 
@@ -50,5 +56,6 @@ export interface DisplayMessage {
   role: Message["role"];
   content: string;
   toolEvents?: Array<{ kind: string; name: string; summary?: string }>;
+  sources?: Source[];
   partial?: boolean;
 }

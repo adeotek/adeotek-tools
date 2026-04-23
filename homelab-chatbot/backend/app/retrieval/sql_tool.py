@@ -47,6 +47,23 @@ class SQLTool:
             return bool(re.search(r"\bselect\b", cleaned, re.IGNORECASE))
         return False
 
+    def table_stats(self) -> list[dict]:
+        """Return [{table, rows}] for every user table in kb.db."""
+        if not self._db_path.exists():
+            return []
+        with self._open() as conn:
+            tables = [
+                r[0]
+                for r in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' "
+                    "AND name NOT LIKE 'sqlite_%' AND name != '_kb_meta'"
+                )
+            ]
+            return [
+                {"table": t, "rows": conn.execute(f'SELECT COUNT(*) FROM "{t}"').fetchone()[0]}
+                for t in tables
+            ]
+
     def schema_summary(self) -> str:
         with self._open() as conn:
             tables = [

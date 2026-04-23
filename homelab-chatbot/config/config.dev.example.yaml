@@ -5,6 +5,7 @@
 sync:
   interval_seconds: 3600
   state_file: "../data/sync_state.json"
+  clone_root: "../data/repos"
 
 repos: []  # add repos once the server starts up cleanly
 

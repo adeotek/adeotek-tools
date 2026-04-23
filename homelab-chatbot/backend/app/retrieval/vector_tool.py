@@ -18,6 +18,12 @@ class VectorSearchTool:
         self._store = store
         self._embedder = embedder
         self._default_top_k = top_k
+        self._pending_sources: list[dict] = []
+
+    def pop_sources(self) -> list[dict]:
+        """Return sources collected since the last call and clear the buffer."""
+        sources, self._pending_sources = self._pending_sources, []
+        return sources
 
     def search(
         self,
@@ -38,6 +44,15 @@ class VectorSearchTool:
 
         def _run(query: str, repo: str | None = None) -> list[dict]:
             """Search the home lab documentation for information."""
+            hits = self.search(query, repo=repo)
+            self._pending_sources.extend(
+                {
+                    "repo": hit.repo,
+                    "file_path": hit.file_path,
+                    "heading_path": hit.heading_path,
+                }
+                for hit in hits
+            )
             return [
                 {
                     "text": hit.text,
@@ -47,7 +62,7 @@ class VectorSearchTool:
                     "line_start": hit.line_start,
                     "line_end": hit.line_end,
                 }
-                for hit in self.search(query, repo=repo)
+                for hit in hits
             ]
 
         return FunctionTool.from_defaults(

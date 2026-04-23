@@ -50,6 +50,8 @@ export const api = {
     request<{ ok: boolean }>(`/api/conv/${id}`, { method: "DELETE" }),
 
   getSettings: () => request<Settings>("/api/settings"),
+  getStats: () => request<Stats>("/api/stats"),
+  triggerSync: () => request<{ ok: boolean }>("/api/stats/sync", { method: "POST" }),
 };
 
 export interface Conversation {
@@ -82,4 +84,28 @@ export interface Settings {
   default_provider: string;
   default_model: string;
   providers: ProviderInfo[];
+}
+
+export interface RepoStats {
+  name: string;
+  url: string;
+  branch: string;
+  include_globs: string[];
+  chunks: number;
+  files: number;
+}
+
+export interface KbTableStats {
+  table: string;
+  rows: number;
+}
+
+export interface Stats {
+  last_sync_at: string | null;
+  is_syncing: boolean;
+  total_chunks: number;
+  repos: RepoStats[];
+  kb_tables: KbTableStats[];
+  conversations: number;
+  messages: number;
 }

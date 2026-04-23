@@ -8,7 +8,7 @@ import { Composer } from "@/components/chat/Composer";
 import { ProviderPicker } from "@/components/settings/ProviderPicker";
 import { ConversationSidebar } from "@/components/sidebar/ConversationSidebar";
 import { api, type Conversation, type Message } from "@/lib/api";
-import { parseSseStream, type DisplayMessage } from "@/lib/stream";
+import { parseSseStream, type DisplayMessage, type Source } from "@/lib/stream";
 
 export default function Home() {
   const [provider, setProvider] = useState("anthropic");
@@ -72,7 +72,15 @@ export default function Home() {
               if (last?.role === "assistant") {
                 const events = [...(last.toolEvents ?? []),
                   { kind: ev.kind, name: ev.name, summary: (ev as {summary?: string}).summary ?? "" }];
-                copy[copy.length - 1] = { ...last, toolEvents: events };
+                const incoming: Source[] = (ev as {sources?: Source[]}).sources ?? [];
+                const existing = last.sources ?? [];
+                const merged = [...existing];
+                for (const s of incoming) {
+                  if (!merged.some(e => e.repo === s.repo && e.file_path === s.file_path)) {
+                    merged.push(s);
+                  }
+                }
+                copy[copy.length - 1] = { ...last, toolEvents: events, sources: merged };
               }
               return copy;
             });

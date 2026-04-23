@@ -139,6 +139,13 @@ class ChatDB:
             await s.execute(delete(Conversation).where(Conversation.id == conv_id))
             await s.commit()
 
+    async def count_stats(self) -> dict:
+        from sqlalchemy import func
+        async with self.session() as s:
+            conversations = await s.scalar(select(func.count()).select_from(Conversation))
+            messages = await s.scalar(select(func.count()).select_from(Message))
+        return {"conversations": conversations or 0, "messages": messages or 0}
+
     async def rename_conversation(self, conv_id: str, title: str) -> None:
         async with self.session() as s:
             conv = await s.get(Conversation, conv_id)
