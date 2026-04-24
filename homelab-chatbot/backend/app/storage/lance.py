@@ -74,6 +74,14 @@ class VectorStore:
         tbl.delete(f"id IN ({id_list})")
         tbl.add(rows)
 
+    def has_file(self, repo: str, file_path: str) -> bool:
+        """Return True if any chunks exist for the given repo + file_path."""
+        tbl = self._table()
+        if tbl.count_rows() == 0:
+            return False
+        df = tbl.to_pandas()[["repo", "file_path"]]
+        return bool(((df["repo"] == repo) & (df["file_path"] == file_path)).any())
+
     def delete_by_file(self, repo: str, file_path: str) -> None:
         tbl = self._table()
         tbl.delete(f"repo = '{repo}' AND file_path = '{file_path}'")

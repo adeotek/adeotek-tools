@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { Upload } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 
 import { api, type Stats } from "@/lib/api";
+import { UploadModal } from "@/components/stats/UploadModal";
+import { UploadLogTable } from "@/components/stats/UploadLogTable";
 
 const fetcher = () => api.getStats();
 
@@ -25,6 +28,7 @@ function Spinner() {
 
 export default function StatsPage() {
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const { data, error, mutate, isValidating } = useSWR<Stats>("/api/stats", fetcher, {
     revalidateOnFocus: false,
@@ -51,7 +55,7 @@ export default function StatsPage() {
             <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-300">
               &larr; Back to chat
             </Link>
-            <h1 className="text-xl font-semibold">Statistics</h1>
+            <h1 className="text-xl font-semibold">Data ingestion</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -60,6 +64,13 @@ export default function StatsPage() {
               className="rounded border border-neutral-700 px-3 py-1 text-sm text-neutral-400 hover:border-neutral-500 hover:text-neutral-200 disabled:opacity-50"
             >
               {isValidating ? "Refreshing…" : "Refresh"}
+            </button>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-1.5 rounded border border-neutral-700 px-3 py-1 text-sm text-neutral-400 hover:border-neutral-500 hover:text-neutral-200"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Upload
             </button>
             <button
               onClick={handleSync}
@@ -105,8 +116,8 @@ export default function StatsPage() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatCard label="Configured repos" value={data.repos.length} />
                 <StatCard label="Total chunks" value={data.total_chunks.toLocaleString()} />
-                <StatCard label="Conversations" value={data.conversations} />
-                <StatCard label="Messages" value={data.messages} />
+                <StatCard label="Uploaded files" value={data.uploaded_files} />
+                <StatCard label="Uploaded chunks" value={data.uploaded_chunks.toLocaleString()} />
               </div>
               <p className="mt-2 text-xs text-neutral-600">
                 Last sync:{" "}
@@ -206,9 +217,26 @@ export default function StatsPage() {
                 </div>
               </section>
             )}
+
+            {/* Uploaded files */}
+            {(data.uploaded_files > 0 || data.upload_log.length > 0) && (
+              <section>
+                <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-neutral-500">
+                  Uploaded Files
+                </h2>
+                <UploadLogTable entries={data.upload_log} />
+              </section>
+            )}
           </div>
         )}
       </div>
+
+      {showUploadModal && (
+        <UploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => mutate()}
+        />
+      )}
     </main>
   );
 }

@@ -52,6 +52,22 @@ export const api = {
   getSettings: () => request<Settings>("/api/settings"),
   getStats: () => request<Stats>("/api/stats"),
   triggerSync: () => request<{ ok: boolean }>("/api/stats/sync", { method: "POST" }),
+
+  uploadFiles: async (files: File[]): Promise<UploadResponse> => {
+    const form = new FormData();
+    files.forEach((f) => form.append("files", f));
+    const resp = await fetch("/api/ingest/upload", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    if (resp.status === 401) {
+      window.location.href = "/login";
+      throw new ApiError(401, "unauthenticated");
+    }
+    if (!resp.ok) throw new ApiError(resp.status, await resp.text());
+    return resp.json() as Promise<UploadResponse>;
+  },
 };
 
 export interface Conversation {
@@ -100,6 +116,30 @@ export interface KbTableStats {
   rows: number;
 }
 
+export interface UploadLogEntry {
+  id: number;
+  filename: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_at: string;
+  status: "ok" | "error";
+  chunks_created: number;
+  replaced: boolean;
+  error_message: string | null;
+}
+
+export interface UploadFileResult {
+  filename: string;
+  status: "ok" | "error";
+  chunks_created: number;
+  replaced: boolean;
+  error_message: string | null;
+}
+
+export interface UploadResponse {
+  results: UploadFileResult[];
+}
+
 export interface Stats {
   last_sync_at: string | null;
   is_syncing: boolean;
@@ -108,4 +148,7 @@ export interface Stats {
   kb_tables: KbTableStats[];
   conversations: number;
   messages: number;
+  uploaded_files: number;
+  uploaded_chunks: number;
+  upload_log: UploadLogEntry[];
 }

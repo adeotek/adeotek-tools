@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import useSWR from "swr";
 
 import { api, type Settings } from "@/lib/api";
@@ -14,7 +15,12 @@ export default function SettingsPage() {
 
   return (
     <main className="p-6">
-      <h1 className="mb-4 text-xl font-semibold">Settings</h1>
+      <div className="mb-4 flex items-center gap-4">
+        <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-300">
+          &larr; Back to chat
+        </Link>
+        <h1 className="text-xl font-semibold">Settings</h1>
+      </div>
       <p className="mb-2 text-sm text-neutral-400">
         Default: <span className="text-neutral-200">{data.default_provider}</span> / {data.default_model}
       </p>

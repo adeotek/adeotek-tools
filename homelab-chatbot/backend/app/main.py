@@ -22,11 +22,13 @@ from app.routes import auth as auth_routes
 from app.routes import chat as chat_routes
 from app.routes import conversations as conv_routes
 from app.routes import health as health_routes
+from app.routes import ingest as ingest_routes
 from app.routes import settings as settings_routes
 from app.routes import stats as stats_routes
 from app.secrets import Secrets
 from app.storage.chat_db import ChatDB
 from app.storage.lance import VectorStore
+from app.storage.upload_log_db import UploadLogDB
 
 
 def create_app(
@@ -46,6 +48,9 @@ def create_app(
     embedder = Embedder(model_name=cfg.embeddings.model, cache_dir=cfg.embeddings.cache_dir)
     scheduler: SyncScheduler | None = None
 
+    excel_loader = ExcelLoader(Path(cfg.kb_db.path))
+    upload_log_db = UploadLogDB(Path(cfg.kb_db.path))
+
     @asynccontextmanager
     async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         nonlocal scheduler
@@ -59,7 +64,7 @@ def create_app(
                 git_sync=git_sync,
                 embedder=embedder,
                 store=vector_store,
-                excel_loader=ExcelLoader(Path(cfg.kb_db.path)),
+                excel_loader=excel_loader,
             )
             app.state.orchestrator = orchestrator
             scheduler = SyncScheduler(
@@ -100,11 +105,14 @@ def create_app(
     app.state.sql_tool = SQLTool(db_path=Path(cfg.kb_db.path))
     app.state.orchestrator = None
     app.state.sync_state: dict = {"last_sync_at": None, "is_syncing": False}
+    app.state.excel_loader = excel_loader
+    app.state.upload_log_db = upload_log_db
 
     app.include_router(auth_routes.router)
     app.include_router(health_routes.router)
     app.include_router(conv_routes.router)
     app.include_router(chat_routes.router)
+    app.include_router(ingest_routes.router)
     app.include_router(settings_routes.router)
     app.include_router(stats_routes.router)
 

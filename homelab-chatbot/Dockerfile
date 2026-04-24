@@ -31,7 +31,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     HLCB_DATA_DIR=/data \
     HLCB_CONFIG_PATH=/config/config.yaml
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates tini \
+    && apt-get install -y --no-install-recommends git ca-certificates tini tesseract-ocr \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 1000 --home-dir /app --shell /usr/sbin/nologin app \
     && mkdir -p /data /config /app/static \

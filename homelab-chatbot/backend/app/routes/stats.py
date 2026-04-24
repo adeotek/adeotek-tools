@@ -12,6 +12,7 @@ from app.ingestion.orchestrator import IngestionOrchestrator
 from app.retrieval.sql_tool import SQLTool
 from app.retrieval.vector_tool import VectorSearchTool
 from app.storage.chat_db import ChatDB
+from app.storage.upload_log_db import UploadLogDB
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,18 @@ class KbTableStats(BaseModel):
     rows: int
 
 
+class UploadLogEntry(BaseModel):
+    id: int
+    filename: str
+    file_size: int
+    mime_type: str
+    uploaded_at: str
+    status: str
+    chunks_created: int
+    replaced: bool
+    error_message: str | None = None
+
+
 class StatsOut(BaseModel):
     last_sync_at: str | None
     is_syncing: bool
@@ -40,6 +53,9 @@ class StatsOut(BaseModel):
     kb_tables: list[KbTableStats]
     conversations: int
     messages: int
+    uploaded_files: int = 0
+    uploaded_chunks: int = 0
+    upload_log: list[UploadLogEntry] = []
 
 
 @router.get("")
@@ -68,6 +84,10 @@ async def get_stats(request: Request) -> StatsOut:
     kb_tables = [KbTableStats(**t) for t in sql_tool.table_stats()]
     chat_counts = await chat_db.count_stats()
 
+    upload_log_db: UploadLogDB = request.app.state.upload_log_db
+    upload_stats = upload_log_db.count_upload_stats()
+    upload_log = [UploadLogEntry(**e) for e in upload_log_db.list_upload_log(50)]
+
     return StatsOut(
         last_sync_at=sync_state.get("last_sync_at"),
         is_syncing=bool(sync_state.get("is_syncing")),
@@ -76,6 +96,9 @@ async def get_stats(request: Request) -> StatsOut:
         kb_tables=kb_tables,
         conversations=chat_counts["conversations"],
         messages=chat_counts["messages"],
+        uploaded_files=upload_stats["uploaded_files"],
+        uploaded_chunks=upload_stats["uploaded_chunks"],
+        upload_log=upload_log,
     )
 
 

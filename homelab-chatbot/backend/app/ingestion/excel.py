@@ -49,7 +49,7 @@ class ExcelLoader:
 
                 for sheet in xlsx.sheet_names:
                     df = xlsx.parse(sheet)
-                    df.columns = [normalize_snake_case(c) for c in df.columns]
+                    df.columns = [normalize_snake_case(str(c)) for c in df.columns]
                     table = normalize_snake_case(sheet)
                     df.to_sql(table, conn, if_exists="replace", index=False)
                     sheet_map[sheet] = table
