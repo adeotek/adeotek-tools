@@ -17,7 +17,7 @@
   "dependencies": {
     "@ai-sdk/react": "^1.0.0",
     "@hookform/resolvers": "^3.9.0",
-    "ai": "^4.0.0",
+    "ai": "^6.0.168",
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
     "next": "^15.5.0",
