@@ -28,7 +28,14 @@ def test_session_roundtrip(auth: AuthService):
 
 def test_tampered_session_rejected(auth: AuthService):
     token = auth.issue_session_token()
-    tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+    # Corrupt the payload (the part before the first dot). The HMAC is computed
+    # over payload+timestamp, so any change here always invalidates the signature,
+    # unlike tampering with the last base64 character of the signature which can
+    # be a no-op due to unused padding bits in the final base64 group.
+    first_dot = token.index(".")
+    last_payload_char = token[first_dot - 1]
+    replacement = "X" if last_payload_char != "X" else "Y"
+    tampered = token[: first_dot - 1] + replacement + token[first_dot:]
     assert auth.verify_session_token(tampered) is False
 
 
