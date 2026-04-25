@@ -109,6 +109,19 @@ export default function Home() {
           }
         }
         await mutate("/api/conv");
+      } catch {
+        setMessages((prev) => {
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last?.role === "assistant" && last.partial) {
+            copy[copy.length - 1] = {
+              ...last,
+              content: last.content || "Request failed. Please try again.",
+              partial: false,
+            };
+          }
+          return copy;
+        });
       } finally {
         setStreaming(false);
       }

@@ -149,7 +149,7 @@ export function UploadModal({
           {!results && staged.length > 0 && (
             <ul className="space-y-1">
               {staged.map((f, i) => (
-                <li key={i} className="flex items-center justify-between rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm">
+                <li key={`${f.name}-${f.size}-${f.lastModified}`} className="flex items-center justify-between rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm">
                   <span className="truncate text-neutral-200">{f.name}</span>
                   <div className="ml-3 flex shrink-0 items-center gap-3">
                     <span className="text-xs text-neutral-500">{formatSize(f.size)}</span>
