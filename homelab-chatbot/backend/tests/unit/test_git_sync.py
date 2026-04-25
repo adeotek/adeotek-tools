@@ -24,6 +24,11 @@ def _init_remote_repo(tmp: Path) -> Path:
         ["git", "-C", str(work), "remote", "add", "origin", str(remote)], check=True
     )
     subprocess.run(["git", "-C", str(work), "push", "-u", "origin", "main"], check=True)
+    # Point the bare repo's HEAD at main so plain `git clone` checks out main
+    # and subsequent pushes from clones track main, not whatever init.defaultBranch was.
+    subprocess.run(
+        ["git", "-C", str(remote), "symbolic-ref", "HEAD", "refs/heads/main"], check=True
+    )
     return remote
 
 
