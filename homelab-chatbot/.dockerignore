@@ -1,0 +1,30 @@
+# VCS & editor
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/htmlcov/
+**/.coverage
+
+# Node
+**/node_modules/
+**/.next/
+**/out/
+
+# Runtime data (never bake into image)
+data/
+config/config.yaml
+config/.env
+
+# Tests & docs
+**/tests/
+**/*.md
+!README.md
