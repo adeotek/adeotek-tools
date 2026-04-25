@@ -12,6 +12,11 @@ TABLE_NAME = "markdown_chunks"
 EMBED_DIM = 384
 
 
+def _q(value: str) -> str:
+    """Escape a string for use inside a LanceDB SQL filter string literal."""
+    return value.replace("'", "''")
+
+
 @dataclass
 class SearchHit:
     id: str
@@ -84,7 +89,7 @@ class VectorStore:
 
     def delete_by_file(self, repo: str, file_path: str) -> None:
         tbl = self._table()
-        tbl.delete(f"repo = '{repo}' AND file_path = '{file_path}'")
+        tbl.delete(f"repo = '{_q(repo)}' AND file_path = '{_q(file_path)}'")
 
     def count(self) -> int:
         return self._table().count_rows()
@@ -107,7 +112,7 @@ class VectorStore:
         tbl = self._table()
         q = tbl.search(query_vector, vector_column_name="vector").limit(top_k)
         if repo:
-            q = q.where(f"repo = '{repo}'", prefilter=True)
+            q = q.where(f"repo = '{_q(repo)}'", prefilter=True)
         results = q.to_list()
         return [
             SearchHit(

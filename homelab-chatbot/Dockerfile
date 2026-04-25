@@ -19,9 +19,9 @@ RUN apt-get update \
 # Install uv (Astral) for deterministic, fast installs.
 COPY --from=ghcr.io/astral-sh/uv:0.4.27 /uv /usr/local/bin/uv
 WORKDIR /app
-COPY backend/pyproject.toml backend/uv.lock* ./
+COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv venv /opt/venv && \
-    VIRTUAL_ENV=/opt/venv uv pip install --python /opt/venv/bin/python -r pyproject.toml
+    VIRTUAL_ENV=/opt/venv uv sync --frozen --no-install-project --python /opt/venv/bin/python
 
 # Stage 3: final runtime
 FROM python:3.13-slim-bookworm
@@ -31,7 +31,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     HLCB_DATA_DIR=/data \
     HLCB_CONFIG_PATH=/config/config.yaml
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates tini tesseract-ocr \
+    && apt-get install -y --no-install-recommends curl git ca-certificates tini tesseract-ocr \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 1000 --home-dir /app --shell /usr/sbin/nologin app \
     && mkdir -p /data /config /app/static \

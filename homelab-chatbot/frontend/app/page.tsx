@@ -93,6 +93,19 @@ export default function Home() {
               }
               return copy;
             });
+          } else if (ev.kind === "error") {
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === "assistant") {
+                copy[copy.length - 1] = {
+                  ...last,
+                  content: last.content || ev.message,
+                  partial: false,
+                };
+              }
+              return copy;
+            });
           }
         }
         await mutate("/api/conv");

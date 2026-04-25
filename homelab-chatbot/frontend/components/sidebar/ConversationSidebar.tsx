@@ -23,8 +23,7 @@ export function ConversationSidebar({
     revalidateOnFocus: true,
   });
 
-  async function handleDelete(id: string, e: React.MouseEvent) {
-    e.stopPropagation();
+  async function handleDelete(id: string) {
     if (!confirm("Delete this conversation?")) return;
     await api.deleteConversation(id);
     await mutate();
@@ -37,23 +36,28 @@ export function ConversationSidebar({
       <ul className="flex-1 space-y-1 overflow-y-auto">
         {(data ?? []).map((c) => (
           <li key={c.id}>
-            <button
-              onClick={() => onSelect(c)}
+            <div
               className={cn(
-                "flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm",
+                "flex w-full items-center justify-between rounded px-2 py-1.5 text-sm",
                 activeId === c.id ? "bg-neutral-800" : "hover:bg-neutral-800/60",
               )}
             >
-              <span className="truncate">{c.title}</span>
-              <span
-                role="button"
-                aria-label={`delete ${c.title}`}
-                onClick={(e) => handleDelete(c.id, e)}
-                className="ml-2 text-neutral-500 hover:text-red-400"
+              <button
+                type="button"
+                onClick={() => onSelect(c)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <span className="block truncate">{c.title}</span>
+              </button>
+              <button
+                type="button"
+                aria-label={`Delete ${c.title}`}
+                onClick={() => handleDelete(c.id)}
+                className="ml-2 shrink-0 text-neutral-500 hover:text-red-400"
               >
                 ×
-              </span>
-            </button>
+              </button>
+            </div>
           </li>
         ))}
         {(data ?? []).length === 0 && (

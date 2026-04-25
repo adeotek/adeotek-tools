@@ -89,7 +89,12 @@ export function UploadModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-800 px-5 py-4">
           <h2 id="upload-modal-title" className="text-base font-semibold">Upload files</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-200">
+          <button
+            type="button"
+            aria-label="Close upload dialog"
+            onClick={onClose}
+            className="text-neutral-500 hover:text-neutral-200"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>

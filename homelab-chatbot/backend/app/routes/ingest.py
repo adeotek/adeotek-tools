@@ -51,7 +51,10 @@ async def upload_files(request: Request, files: list[UploadFile]) -> UploadRespo
     for upload in files:
         filename = Path(upload.filename or "unknown").name
         ext = Path(filename).suffix.lower()
-        content = await upload.read()
+        try:
+            content = await upload.read()
+        finally:
+            await upload.close()
 
         if len(content) > MAX_FILE_BYTES:
             msg = f"File exceeds 20 MB limit ({len(content) / 1_048_576:.1f} MB)."
