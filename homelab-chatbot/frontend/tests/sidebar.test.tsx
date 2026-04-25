@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { SWRConfig } from "swr";
 
 import { ConversationSidebar } from "@/components/sidebar/ConversationSidebar";
@@ -31,12 +31,14 @@ describe("ConversationSidebar", () => {
     expect(await screen.findByText("First")).toBeInTheDocument();
   });
 
-  it("renders New chat button", () => {
-    render(
-      <SWRConfig value={{ provider: () => new Map() }}>
-        <ConversationSidebar activeId={null} onSelect={() => {}} onNew={() => {}} />
-      </SWRConfig>,
-    );
+  it("renders New chat button", async () => {
+    await act(async () => {
+      render(
+        <SWRConfig value={{ provider: () => new Map() }}>
+          <ConversationSidebar activeId={null} onSelect={() => {}} onNew={() => {}} />
+        </SWRConfig>,
+      );
+    });
     expect(screen.getByRole("button", { name: /new chat/i })).toBeInTheDocument();
   });
 });

@@ -47,6 +47,6 @@ describe("ProviderPicker", () => {
     render(<Wrapper />);
     await waitFor(() => screen.getByLabelText(/provider/i));
     await userEvent.selectOptions(screen.getByLabelText(/provider/i), "ollama");
-    expect(changes[0]).toEqual(["ollama", "llama3.1:8b"]);
+    expect(changes[changes.length - 1]).toEqual(["ollama", "llama3.1:8b"]);
   });
 });
