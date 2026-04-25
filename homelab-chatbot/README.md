@@ -102,6 +102,78 @@ Retrieval golden-set lives in `backend/tests/retrieval/` and asserts the expecte
 
 Docker image is multi-stage (Node builder then slim Python runtime) and runs as `uid 1000`. Expose only on a trusted LAN; auth is intentionally minimal (session cookie + bcrypt).
 
+## Publishing a Docker image to GitHub Container Registry
+
+Images are published to `ghcr.io/adeotek/homelab-chatbot`.
+
+### One-time authentication
+
+Create a GitHub **Personal Access Token** (classic or fine-grained) with the
+`write:packages` scope, then log in:
+
+```bash
+echo "<YOUR_GITHUB_PAT>" | docker login ghcr.io -u <github-username> --password-stdin
+```
+
+Credentials are stored in `~/.docker/config.json` and reused on subsequent pushes.
+
+### Build and push
+
+```bash
+# Replace 1.2.3 with the actual version
+make docker-build IMAGE=ghcr.io/adeotek/homelab-chatbot TAG=1.2.3
+docker push ghcr.io/adeotek/homelab-chatbot:1.2.3
+
+# Also move the floating `latest` tag
+docker tag ghcr.io/adeotek/homelab-chatbot:1.2.3 ghcr.io/adeotek/homelab-chatbot:latest
+docker push ghcr.io/adeotek/homelab-chatbot:latest
+```
+
+### Making the package public (first publish only)
+
+After the first push the package is **private** by default. To make it public:
+
+1. Go to **github.com/adeotek** → **Packages** → `homelab-chatbot`.
+2. Open **Package settings** → **Change visibility** → **Public**.
+
+### Pulling on the homelab host
+
+```bash
+docker pull ghcr.io/adeotek/homelab-chatbot:latest
+```
+
+Update `docker-compose.yml` to use the registry image instead of building
+locally:
+
+```yaml
+services:
+  homelab-chatbot:
+    image: ghcr.io/adeotek/homelab-chatbot:latest
+    # build: .   ← remove or comment out when using a pre-built image
+```
+
+## Publishing via GitHub Actions
+
+The workflow `.github/workflows/homelab-chatbot-docker-build-push.yml` automates
+the build and push to GHCR. It is triggered **manually** from the Actions tab
+(`workflow_dispatch`) with an optional `version_tag` input.
+
+### Triggering a release
+
+1. Go to **github.com/adeotek/adeotek-tools** → **Actions** →
+   **Build and Push homelab-chatbot Docker Image**.
+2. Click **Run workflow**, optionally enter a version tag (e.g. `1.2.3`), and
+   confirm.
+
+The workflow builds the image from `homelab-chatbot/Dockerfile`, always pushes
+`ghcr.io/adeotek/homelab-chatbot:latest`, and additionally tags with the
+version if one was provided. It uses GitHub's Actions layer cache
+(`cache-from/cache-to: type=gha`) so repeat runs only rebuild changed stages.
+
+No secrets need to be configured — the workflow authenticates to GHCR using
+the built-in `GITHUB_TOKEN` with `packages: write` permission granted in the
+workflow itself.
+
 ## Spec & plan
 
 - Design: [`docs/superpowers/specs/2026-04-16-homelab-chatbot-design.md`](../docs/superpowers/specs/2026-04-16-homelab-chatbot-design.md)
