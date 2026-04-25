@@ -4,3 +4,15 @@
 # IDEs
 .idea
 .vscode
+
+# Database backups
+.db-backups
+
+# Test config
+test-backup-config.yml
+
+# AI tools
+.claude/
+.playwright-mcp/
+.playwright-cli/
+
