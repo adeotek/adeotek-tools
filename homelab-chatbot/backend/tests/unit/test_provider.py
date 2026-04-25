@@ -1,12 +1,14 @@
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from app.llm.provider import build_llm
 
 
 def test_build_ollama():
     with patch("llama_index.llms.ollama.Ollama") as MockOllama:
         MockOllama.return_value = MagicMock()
-        result = build_llm(provider="ollama", model="llama3.1")
+        build_llm(provider="ollama", model="llama3.1")
         MockOllama.assert_called_once_with(
             model="llama3.1",
             base_url="http://localhost:11434",

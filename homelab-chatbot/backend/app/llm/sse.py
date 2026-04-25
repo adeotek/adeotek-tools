@@ -1,8 +1,8 @@
 """Translate LlamaIndex agent events into Vercel AI SDK `data-stream` SSE frames."""
 
 import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import AsyncIterator
 
 
 @dataclass

@@ -102,7 +102,11 @@ class SQLTool:
             """Answer an inventory question by generating and executing a SELECT."""
             schema = self.schema_summary()
             if not schema:
-                return {"sql": "", "rows": [], "error": "No inventory tables found. Upload an Excel file first."}
+                return {
+                    "sql": "",
+                    "rows": [],
+                    "error": "No inventory tables found. Upload an Excel file first.",
+                }
             prompt = (
                 "You are a SQLite expert. Produce a single SELECT statement "
                 "answering the user's question.\n\n"

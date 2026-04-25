@@ -1,7 +1,15 @@
 from unittest.mock import MagicMock
-import pytest
-from app.llm.routing import supports_tools, get_available_tools
-from app.config import AppConfig, SyncConfig, RepoConfig, EmbeddingsConfig, PathConfig, LLMConfig, OllamaConfig, RetrievalConfig
+
+from app.config import (
+    AppConfig,
+    EmbeddingsConfig,
+    LLMConfig,
+    OllamaConfig,
+    PathConfig,
+    RetrievalConfig,
+    SyncConfig,
+)
+from app.llm.routing import get_available_tools, supports_tools
 
 
 def _make_config(tool_capable_models: list[str]) -> AppConfig:
@@ -15,7 +23,10 @@ def _make_config(tool_capable_models: list[str]) -> AppConfig:
         llm=LLMConfig(
             default_provider="anthropic",
             default_model="claude-sonnet-4-6",
-            ollama=OllamaConfig(host="http://localhost:11434", tool_capable_models=tool_capable_models),
+            ollama=OllamaConfig(
+                host="http://localhost:11434",
+                tool_capable_models=tool_capable_models,
+            ),
         ),
         retrieval=RetrievalConfig(top_k=5, memory_turns=10),
     )

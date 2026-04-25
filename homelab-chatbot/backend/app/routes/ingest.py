@@ -64,7 +64,10 @@ async def upload_files(request: Request, files: list[UploadFile]) -> UploadRespo
                 replaced=False,
                 error_message=msg,
             )
-            results.append(FileResult(filename=filename, status="error", chunks_created=0, replaced=False, error_message=msg))
+            results.append(FileResult(
+                filename=filename, status="error", chunks_created=0,
+                replaced=False, error_message=msg,
+            ))
             continue
 
         if ext not in ACCEPTED_EXTENSIONS:
@@ -78,7 +81,10 @@ async def upload_files(request: Request, files: list[UploadFile]) -> UploadRespo
                 replaced=False,
                 error_message=msg,
             )
-            results.append(FileResult(filename=filename, status="error", chunks_created=0, replaced=False, error_message=msg))
+            results.append(FileResult(
+                filename=filename, status="error", chunks_created=0,
+                replaced=False, error_message=msg,
+            ))
             continue
 
         replaced = store.has_file(UPLOAD_REPO, filename)
@@ -103,7 +109,10 @@ async def upload_files(request: Request, files: list[UploadFile]) -> UploadRespo
                 replaced=replaced,
                 error_message=None,
             )
-            results.append(FileResult(filename=filename, status="ok", chunks_created=chunks_created, replaced=replaced))
+            results.append(FileResult(
+                filename=filename, status="ok",
+                chunks_created=chunks_created, replaced=replaced,
+            ))
         except Exception as exc:
             logger.exception("Failed to ingest uploaded file %r", filename)
             msg = str(exc)
@@ -116,6 +125,9 @@ async def upload_files(request: Request, files: list[UploadFile]) -> UploadRespo
                 replaced=replaced,
                 error_message=msg,
             )
-            results.append(FileResult(filename=filename, status="error", chunks_created=0, replaced=replaced, error_message=msg))
+            results.append(FileResult(
+                filename=filename, status="error", chunks_created=0,
+                replaced=replaced, error_message=msg,
+            ))
 
     return UploadResponse(results=results)

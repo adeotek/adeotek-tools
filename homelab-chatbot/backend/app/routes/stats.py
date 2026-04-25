@@ -1,7 +1,7 @@
 """Statistics endpoint."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -110,7 +110,7 @@ def _do_sync(
     sync_state["is_syncing"] = True
     try:
         orchestrator.run_once(repos)
-        sync_state["last_sync_at"] = datetime.now(timezone.utc).isoformat()
+        sync_state["last_sync_at"] = datetime.now(UTC).isoformat()
     except Exception:
         logger.exception("manual sync failed")
     finally:

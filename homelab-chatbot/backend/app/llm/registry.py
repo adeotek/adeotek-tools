@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import urllib.request
 import json
+import urllib.request
 
 ANTHROPIC_MODELS: list[str] = [
     "claude-opus-4-7",

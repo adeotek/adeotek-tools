@@ -2,9 +2,10 @@
 
 import fnmatch
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 from urllib.parse import urlparse, urlunparse
 
 from app.config import RepoConfig

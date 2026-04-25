@@ -10,11 +10,11 @@ from io import BytesIO
 from pathlib import Path
 
 from app.ingestion.markdown import (
+    MAX_CHUNK_CHARS,
+    OVERLAP_CHARS,
     Chunk,
     _chunk_id,
     _split_long,
-    MAX_CHUNK_CHARS,
-    OVERLAP_CHARS,
     chunk_markdown_file,
 )
 
@@ -58,19 +58,19 @@ def parse_txt(content: bytes, filename: str) -> list[Chunk]:
 
 
 def parse_md(content: bytes, filename: str) -> list[Chunk]:
-    tmp = tempfile.NamedTemporaryFile(suffix=".md", delete=False)
-    try:
+    with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+        tmp_name = tmp.name
         tmp.write(content)
         tmp.flush()
-        tmp.close()
+    try:
         return chunk_markdown_file(
-            Path(tmp.name),
+            Path(tmp_name),
             repo=UPLOAD_REPO,
             file_path=filename,
             commit_sha="",
         )
     finally:
-        Path(tmp.name).unlink(missing_ok=True)
+        Path(tmp_name).unlink(missing_ok=True)
 
 
 def parse_docx(content: bytes, filename: str) -> list[Chunk]:
@@ -116,15 +116,15 @@ def parse_image(content: bytes, filename: str) -> list[Chunk]:
 
 def parse_xlsx(content: bytes, _filename: str, excel_loader) -> tuple[list[Chunk], dict]:
     """Load an Excel file into SQLite via ExcelLoader. Returns ([], sheet_map)."""
-    tmp = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
-    try:
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+        tmp_name = tmp.name
         tmp.write(content)
         tmp.flush()
-        tmp.close()
-        sheet_map = excel_loader.load(Path(tmp.name))
+    try:
+        sheet_map = excel_loader.load(Path(tmp_name))
         return [], sheet_map
     finally:
-        Path(tmp.name).unlink(missing_ok=True)
+        Path(tmp_name).unlink(missing_ok=True)
 
 
 def parse_file(

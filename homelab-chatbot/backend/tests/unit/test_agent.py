@@ -1,4 +1,4 @@
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 

@@ -30,7 +30,7 @@ def test_run_select_returns_rows(kb_db: Path):
 
 def test_run_select_blocks_writes(kb_db: Path):
     tool = SQLTool(db_path=kb_db)
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool.run_select("DELETE FROM devices")
 
 

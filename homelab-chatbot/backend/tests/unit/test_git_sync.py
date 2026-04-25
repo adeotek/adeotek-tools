@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from app.config import RepoConfig
-from app.ingestion.git_sync import GitSync, SyncResult
+from app.ingestion.git_sync import GitSync
 
 
 def _init_remote_repo(tmp: Path) -> Path:
@@ -99,7 +99,10 @@ def test_token_injected_into_https_url(tmp_path: Path):
         branch="main",
         token_env="T",
     )
-    sync = GitSync(clone_root=tmp_path / "repos", get_token=lambda v: "tok123" if v == "T" else None)
+    sync = GitSync(
+        clone_root=tmp_path / "repos",
+        get_token=lambda v: "tok123" if v == "T" else None,
+    )
     assert (
         sync._auth_url(cfg)
         == "https://x-access-token:tok123@github.com/user/repo.git"

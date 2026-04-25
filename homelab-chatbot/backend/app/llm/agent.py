@@ -2,7 +2,7 @@
 
 import inspect
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from llama_index.core.agent.workflow import AgentStream, ReActAgent, ToolCallResult
 from llama_index.core.llms import LLM, ChatMessage
@@ -89,7 +89,8 @@ async def _stream_chat(
 ) -> AsyncIterator[str]:
     messages = build_messages(history, user_message, tools_enabled=tools_enabled)
     result = llm.astream_chat(messages)
-    # LlamaIndex LLMs return a coroutine from astream_chat; test fakes return async generators directly
+    # LlamaIndex LLMs return a coroutine from astream_chat;
+    # test fakes return async generators directly.
     if inspect.isawaitable(result):
         result = await result
     async for chunk in result:

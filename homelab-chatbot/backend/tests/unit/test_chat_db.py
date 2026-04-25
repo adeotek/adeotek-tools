@@ -2,8 +2,6 @@ import pytest
 
 from app.storage.chat_db import (
     ChatDB,
-    Conversation,
-    Message,
 )
 
 
@@ -35,7 +33,7 @@ async def test_append_and_list_messages(db: ChatDB):
 
 async def test_list_conversations_orders_by_updated_desc(db: ChatDB):
     c1 = await db.create_conversation(title="first", provider="anthropic", model="x")
-    c2 = await db.create_conversation(title="second", provider="anthropic", model="x")
+    _c2 = await db.create_conversation(title="second", provider="anthropic", model="x")
     await db.append_message(c1.id, role="user", content="new msg")
     convs = await db.list_conversations()
     assert convs[0].id == c1.id  # c1 updated most recently

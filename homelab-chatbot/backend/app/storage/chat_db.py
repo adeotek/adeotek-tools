@@ -1,7 +1,7 @@
 """Async SQLAlchemy models and CRUD for conversations and messages."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import ForeignKey, Index, String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -9,7 +9,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):
@@ -119,7 +119,9 @@ class ChatDB:
     async def list_messages(self, conv_id: str) -> list[Message]:
         async with self.session() as s:
             result = await s.execute(
-                select(Message).where(Message.conv_id == conv_id).order_by(Message.created_at, Message.id)
+                select(Message)
+                .where(Message.conv_id == conv_id)
+                .order_by(Message.created_at, Message.id)
             )
             return list(result.scalars().all())
 

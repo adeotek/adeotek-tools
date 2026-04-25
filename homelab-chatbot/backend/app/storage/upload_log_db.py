@@ -5,9 +5,8 @@ chatbot can answer questions like "what files were uploaded last week".
 """
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 _CREATE = """
 CREATE TABLE IF NOT EXISTS upload_log (
@@ -25,7 +24,7 @@ CREATE TABLE IF NOT EXISTS upload_log (
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class UploadLogDB:

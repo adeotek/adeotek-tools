@@ -70,6 +70,7 @@ class VectorSearchTool:
             name=self.TOOL_NAME,
             description=(
                 "Search the home lab documentation by semantic similarity. "
-                "Use for prose/conceptual questions. Optional `repo` filter narrows to a specific repo."
+                "Use for prose/conceptual questions. "
+                "Optional `repo` filter narrows to a specific repo."
             ),
         )

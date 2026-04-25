@@ -4,8 +4,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import (
-    AppConfig, EmbeddingsConfig, LLMConfig, OllamaConfig,
-    PathConfig, RetrievalConfig, SyncConfig,
+    AppConfig,
+    EmbeddingsConfig,
+    LLMConfig,
+    OllamaConfig,
+    PathConfig,
+    RetrievalConfig,
+    SyncConfig,
 )
 from app.main import create_app
 

@@ -1,7 +1,9 @@
-from unittest.mock import patch, MagicMock
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from app.llm.registry import list_models, ANTHROPIC_MODELS, GOOGLE_MODELS
+
+from app.llm.registry import ANTHROPIC_MODELS, GOOGLE_MODELS, list_models
 
 
 def test_anthropic_returns_static_list():

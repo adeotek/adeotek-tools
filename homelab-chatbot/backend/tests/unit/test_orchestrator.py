@@ -1,18 +1,11 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from app.config import (
-    AppConfig,
-    EmbeddingsConfig,
-    LLMConfig,
-    OllamaConfig,
-    PathConfig,
     RepoConfig,
-    RetrievalConfig,
-    SyncConfig,
 )
 from app.ingestion.embed import Embedder
 from app.ingestion.git_sync import GitSync
@@ -85,5 +78,5 @@ def test_per_file_error_isolation(tmp_path: Path, repos: list[RepoConfig]):
     with patch.object(orch._embedder, "embed_batch", side_effect=RuntimeError("boom")):
         orch.run_once(repos)  # must not raise
 
-    # Vector store should still have entries from the first run
-    assert orch.vector_store.count() >= 0  # at minimum didn't crash
+    # A failed embed run must not corrupt the entries from the first run
+    assert orch.vector_store.count() == count_before

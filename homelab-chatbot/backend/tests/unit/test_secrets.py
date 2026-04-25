@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 from app.secrets import Secrets
 
@@ -14,7 +15,7 @@ def test_required_secrets_present(monkeypatch):
 def test_missing_required_secret_raises(monkeypatch):
     monkeypatch.delenv("HLCB_AUTH_PASSWORD_HASH", raising=False)
     monkeypatch.delenv("HLCB_SESSION_SECRET", raising=False)
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         Secrets()
 
 

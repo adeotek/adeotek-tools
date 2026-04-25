@@ -1,12 +1,18 @@
 from unittest.mock import patch
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.auth import AuthService, hash_password
 from app.config import (
-    AppConfig, EmbeddingsConfig, LLMConfig, OllamaConfig,
-    PathConfig, RetrievalConfig, SyncConfig,
+    AppConfig,
+    EmbeddingsConfig,
+    LLMConfig,
+    OllamaConfig,
+    PathConfig,
+    RetrievalConfig,
+    SyncConfig,
 )
 from app.routes import auth as auth_routes
 from app.routes import settings as settings_routes

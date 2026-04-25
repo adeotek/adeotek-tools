@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -39,31 +39,30 @@ class ExcelLoader:
         sheet_map: dict[str, str] = {}
         file_hash = self._source_hash(xlsx_path)
 
-        with pd.ExcelFile(xlsx_path) as xlsx:
-            with sqlite3.connect(self._db_path) as conn:
-                conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {META_TABLE} "
-                    "(sheet TEXT PRIMARY KEY, table_name TEXT, columns_json TEXT, "
-                    "source_hash TEXT, last_rebuilt_at TEXT)"
-                )
+        with pd.ExcelFile(xlsx_path) as xlsx, sqlite3.connect(self._db_path) as conn:
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {META_TABLE} "
+                "(sheet TEXT PRIMARY KEY, table_name TEXT, columns_json TEXT, "
+                "source_hash TEXT, last_rebuilt_at TEXT)"
+            )
 
-                for sheet in xlsx.sheet_names:
-                    df = xlsx.parse(sheet)
-                    df.columns = [normalize_snake_case(str(c)) for c in df.columns]
-                    table = normalize_snake_case(sheet)
-                    df.to_sql(table, conn, if_exists="replace", index=False)
-                    sheet_map[sheet] = table
-                    conn.execute(
-                        f"INSERT OR REPLACE INTO {META_TABLE} "
-                        "(sheet, table_name, columns_json, source_hash, last_rebuilt_at) "
-                        "VALUES (?, ?, ?, ?, ?)",
-                        (
-                            sheet,
-                            table,
-                            json.dumps(list(df.columns)),
-                            file_hash,
-                            datetime.now(timezone.utc).isoformat(),
-                        ),
-                    )
-                conn.commit()
+            for sheet in xlsx.sheet_names:
+                df = xlsx.parse(sheet)
+                df.columns = [normalize_snake_case(str(c)) for c in df.columns]
+                table = normalize_snake_case(sheet)
+                df.to_sql(table, conn, if_exists="replace", index=False)
+                sheet_map[sheet] = table
+                conn.execute(
+                    f"INSERT OR REPLACE INTO {META_TABLE} "
+                    "(sheet, table_name, columns_json, source_hash, last_rebuilt_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (
+                        sheet,
+                        table,
+                        json.dumps(list(df.columns)),
+                        file_hash,
+                        datetime.now(UTC).isoformat(),
+                    ),
+                )
+            conn.commit()
         return sheet_map

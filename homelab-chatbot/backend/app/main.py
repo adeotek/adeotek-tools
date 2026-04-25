@@ -1,9 +1,9 @@
 """FastAPI application factory wiring together all dependencies."""
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,7 +52,7 @@ def create_app(
     upload_log_db = UploadLogDB(Path(cfg.kb_db.path))
 
     @asynccontextmanager
-    async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
         nonlocal scheduler
         await chat_db.init_schema()
         if with_scheduler and cfg.repos:
@@ -125,8 +125,12 @@ def create_app(
 
 def _minimal_default_config() -> AppConfig:
     from app.config import (
-        EmbeddingsConfig, LLMConfig, OllamaConfig,
-        PathConfig, RetrievalConfig, SyncConfig,
+        EmbeddingsConfig,
+        LLMConfig,
+        OllamaConfig,
+        PathConfig,
+        RetrievalConfig,
+        SyncConfig,
     )
     return AppConfig(
         sync=SyncConfig(interval_seconds=180, state_file="/data/sync_state.json"),
