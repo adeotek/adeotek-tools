@@ -13,6 +13,7 @@ test-backup-config.yml
 
 # AI tools
 .claude/
+.memory/
 .playwright-mcp/
 .playwright-cli/
-
+docs/superpowers/

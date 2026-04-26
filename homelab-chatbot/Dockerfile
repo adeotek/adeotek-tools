@@ -18,10 +18,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 # Install uv (Astral) for deterministic, fast installs.
 COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /usr/local/bin/uv
+ENV UV_PYTHON_PREFERENCE=only-system
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv venv /opt/venv && \
-    VIRTUAL_ENV=/opt/venv uv sync --frozen --no-install-project --python /opt/venv/bin/python
+RUN UV_PROJECT_ENVIRONMENT=/opt/venv uv sync --frozen --no-install-project
 
 # Stage 3: final runtime
 FROM python:3.13-slim-bookworm
@@ -33,7 +33,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl git ca-certificates tini tesseract-ocr \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin app \
+    && git config --system --add safe.directory '*' \
+    && useradd --uid 10001 --no-create-home --home-dir /app --shell /usr/sbin/nologin app \
     && mkdir -p /data /config /app/static \
     && chown -R app:app /data /config /app
 COPY --from=backend-deps /opt/venv /opt/venv
