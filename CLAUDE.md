@@ -2,63 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository description
+## Repository structure
 
-This repository contains a collection of tools written in Go.
+This is a **monorepo** containing multiple independent, unrelated projects in different languages and tech stacks. Projects do not share code or dependencies.
 
-## Tools
+## Navigation for agents
 
-### `git-repos-backup`
+Each project has its own root directory and its own `CLAUDE.md` file with project-specific build commands, code style, and architecture notes. **Always read the project's own `CLAUDE.md` before working on it.**
 
-A tool to backup Git repositories from GitHub or Gitea to a local directory. It supports both public and private repositories, and can be configured to run periodically using a cron job.
-The `git-repos-backup` tool is written in Go and provides a simple command-line interface to manage backups of Git repositories.
+## Projects
 
-#### `git-repos-backup` Build/Lint/Test Commands
-- Build: `make build`
-- Build all platforms: `make build-all`
-- Install: `make install`
-- Format code: `make fmt`
-- Lint code: `make lint`
-- Run all tests: `make test` or `go test -v ./...`
-- Run single test: `go test -v ./path/to/package -run TestName`
-- Run integration tests: `make integration-test` or `RUN_INTEGRATION_TESTS=1 go test -v ./tests`
+| Project | Path | Stack | Description |
+|---------|------|-------|-------------|
+| `git-repos-backup` | `git-repos-backup/` | Go | Backup GitHub/Gitea repos to local storage |
+| `sql-toolbox` | `sql-toolbox/` | Go | SQL migrations and PostgreSQL/SQLite backup with S3 support |
+| `homelab-chatbot` | `homelab-chatbot/` | Python (FastAPI) + Next.js | Homelab AI chatbot with backend and frontend |
+| `bnr-rates-extractor` | `bnr-rates-extractor/` | .NET 10 (C#) | CLI to extract BNR exchange rates to CSV |
+| `docker-net-tools` | `docker-net-tools/` | Docker | Utility Docker networking tools |
 
-#### `git-repos-backup` Code Style Guidelines
-- Imports: Standard library first, third-party next, grouped with blank lines
-- Formatting: Go standard (go fmt), 2-space indentation
-- Types: Exported types have comments, use structs for configs and models
-- Naming: PascalCase for exported identifiers, camelCase for unexported
-- Error handling: Check immediately, descriptive messages, wrap errors with context
-- Testing: Standard Go testing package, mock dependencies, separate integration tests
-- Documentation: Package and exported function comments follow Go conventions
-- Architecture: Follow Go conventions with cmd/, internal/, pkg/ directories
+## Shared conventions
 
-### `sql-toolbox`
-
-A command-line tool for executing SQL migration scripts and performing database backups for PostgreSQL and SQLite databases.
-The `sql-toolbox` tool is written in Go and provides two subcommands: `migration` for managing SQL database migrations and `backup` for multi-database backup with optional gzip compression and S3 upload.
-
-#### Key Features
-- SSH tunnel support for secure connections through bastion hosts
-- Multiple connection string formats: lib/pq, .NET (semicolon-separated), and PostgreSQL URL
-- **Wildcard database backup**: Use `database: "*"` to automatically back up all databases on a server with exclude list support
-- Per-database S3 overrides (bucket, prefix, credentials) for flexible backup organization
-- Pure Go PostgreSQL dump or external `pg_dump` binary support
-- S3-compatible storage support (AWS S3, MinIO, RustFS)
-
-#### `sql-toolbox` Build/Lint/Test Commands
-- Build: `make build`
-- Build all platforms: `make build-all`
-- Run all tests: `make test` or `go test -v ./...`
-- Run single test: `go test -v ./path/to/package -run TestName`
-- Run integration tests: `bash integration-test.sh`
-
-#### `sql-toolbox` Code Style Guidelines
-- Imports: Standard library first, third-party next, grouped with blank lines
-- Formatting: Go standard (go fmt)
-- Types: Exported types have comments, use structs for configs and models
-- Naming: PascalCase for exported identifiers, camelCase for unexported
-- Error handling: Check immediately, descriptive messages, wrap errors with context
-- Testing: Standard Go testing package, mock dependencies
-- Documentation: Package and exported function comments follow Go conventions
-- Architecture: Follow Go conventions with cmd/, internal/ directories
+- Projects are independent — changes in one do not affect others
+- Each project manages its own dependencies, build system, and tests
+- CI is handled per-project via `.github/workflows/`
