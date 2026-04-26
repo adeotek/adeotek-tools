@@ -2,7 +2,7 @@
 
 services:
   chatbot:
-    image: adeotek/homelab-chatbot:${HLCB_TAG:-latest}
+    image: ghcr.io/adeotek/homelab-chatbot:${HLCB_TAG:-latest}
     build:
       context: .
     container_name: homelab-chatbot

@@ -17,7 +17,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git curl ca-certificates build-essential \
     && rm -rf /var/lib/apt/lists/*
 # Install uv (Astral) for deterministic, fast installs.
-COPY --from=ghcr.io/astral-sh/uv:0.4.27 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /usr/local/bin/uv
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv venv /opt/venv && \
@@ -33,7 +33,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl git ca-certificates tini tesseract-ocr \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 1000 --home-dir /app --shell /usr/sbin/nologin app \
+    && useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin app \
     && mkdir -p /data /config /app/static \
     && chown -R app:app /data /config /app
 COPY --from=backend-deps /opt/venv /opt/venv
