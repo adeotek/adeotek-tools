@@ -30,15 +30,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
 
 # ─── Layer 3: .NET SDK 9 ─────────────────────────────────────────────────────
 ENV DOTNET_ROOT=/usr/local/dotnet
-ENV PATH="${PATH}:${DOTNET_ROOT}:${DOTNET_ROOT}/tools"
+ENV PATH="${PATH}:/usr/local/dotnet:/usr/local/dotnet/tools:/root/.local/bin:/root/.dotnet/tools"
 
 RUN curl -fsSL https://dot.net/v1/dotnet-install.sh \
     | bash -s -- --channel 9.0 --install-dir "$DOTNET_ROOT" --no-path
 
 # ─── Layer 4: Python uv ──────────────────────────────────────────────────────
-ENV PATH="${PATH}:/root/.local/bin"
 
-RUN curl -fsSL https://astral.sh/uv/install.sh | bash
+RUN curl -fsSL https://astral.sh/uv/install.sh | UV_VERSION="0.11.8" bash \
+    && uv --version
 
 # ─── Layer 5: GitHub CLI ─────────────────────────────────────────────────────
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -55,13 +55,14 @@ RUN npm install -g \
     typescript \
     typescript-language-server \
     pyright \
-    @angular/cli
+    @angular/cli \
+    && npm cache clean --force
 
-ENV PATH="${PATH}:/root/.dotnet/tools"
 RUN dotnet tool install --global csharp-ls --version 0.20.0
 
 # ─── Layer 7: Claude Code (native binary) ────────────────────────────────────
-RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL https://claude.ai/install.sh | bash \
+    && claude --version
 
 # ─── Layer 8: Config + entrypoint ────────────────────────────────────────────
 WORKDIR /workspace
