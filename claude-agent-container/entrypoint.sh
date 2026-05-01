@@ -29,6 +29,93 @@ IFS=' ' read -ra PLUGINS <<< "${CLAUDE_PLUGINS:-${DEFAULT_PLUGINS[*]}}"
 mkdir -p "$OUTPUT_DIR"
 mkdir -p /root/.claude-agent-state
 
+# Safe defaults so the trap function has valid variables even on early exit
+CLAUDE_EXIT=0
+STATUS="failure"
+FINAL_EXIT=1
+START_TIME=0
+ELAPSED_FORMATTED="0m 0s"
+
+# ─── Phase 6 function (registered via trap, always runs on EXIT) ─────────────
+_run_phase6() {
+  echo "[claude-agent] Phase 6: Committing work, pushing branch, writing report..."
+
+  if [ "$CLAUDE_EXIT" -eq 0 ]; then
+    STATUS="success"
+    FINAL_EXIT=0
+  elif [ "$CLAUDE_EXIT" -eq 124 ]; then
+    STATUS="timeout"
+    FINAL_EXIT=2
+  else
+    STATUS="failure"
+    FINAL_EXIT=1
+  fi
+
+  # Commit any changes (best-effort)
+  git add -A
+  if ! git diff --staged --quiet; then
+    git commit -m "chore: claude-agent task [status: $STATUS]"
+  fi
+
+  # Push branch (best-effort)
+  git push || echo "[claude-agent] WARNING: Failed to push branch."
+
+  # Collect git stats for report
+  COMMITS=""
+  DIFF_STAT=""
+  if git log "origin/${BASE_BRANCH}..HEAD" --oneline 2>/dev/null | grep -q .; then
+    COMMITS="$(git log "origin/${BASE_BRANCH}..HEAD" --oneline)"
+    DIFF_STAT="$(git diff "origin/${BASE_BRANCH}..HEAD" --stat 2>/dev/null || true)"
+  fi
+
+  # Open PR (best-effort)
+  PR_URL="none"
+  if [ -n "$COMMITS" ]; then
+    TASK_SHORT="$(echo "$TASK" | head -c 72 | tr '\n' ' ')"
+    PR_FLAGS=""
+    if [ "$STATUS" != "success" ]; then
+      TASK_SHORT="[Draft] ${TASK_SHORT}"
+      PR_FLAGS="--draft"
+    fi
+    PR_URL="$(gh pr create \
+      --title "$TASK_SHORT" \
+      --body "Automated task by Claude Agent.
+
+**Status:** $STATUS
+**Branch:** \`$BRANCH_NAME\`
+**Elapsed:** $ELAPSED_FORMATTED" \
+      $PR_FLAGS 2>/dev/null)" \
+      || PR_URL="none"
+  fi
+
+  # Write report
+  TASK_SUMMARY="$(echo "$TASK" | head -c 200)"
+  cat > "${OUTPUT_DIR}/report.md" <<REPORT
+# Claude Agent Report
+
+- **Status:** ${STATUS}
+- **Task:** ${TASK_SUMMARY}
+- **Repo:** ${REPO_URL}
+- **Branch:** ${BRANCH_NAME}
+- **PR:** ${PR_URL}
+- **Elapsed:** ${ELAPSED_FORMATTED}
+
+## Changes
+
+${DIFF_STAT:-_No changes committed._}
+
+### Commits
+
+${COMMITS:-_None._}
+REPORT
+
+  echo "[claude-agent] Report written to ${OUTPUT_DIR}/report.md"
+  echo "[claude-agent] Done. Status: ${STATUS} | Exit: ${FINAL_EXIT}"
+  exit "$FINAL_EXIT"
+}
+
+trap _run_phase6 EXIT
+
 # ─── Phase 1: Credentials ────────────────────────────────────────────────────
 echo "[claude-agent] Phase 1: Resolving credentials..."
 
@@ -114,7 +201,8 @@ fi
 
 git clone "$REPO_URL" /workspace/repo
 cd /workspace/repo
-git checkout "$BASE_BRANCH" 2>/dev/null || true
+git checkout "$BASE_BRANCH" \
+  || { echo "[claude-agent] ERROR: BASE_BRANCH '${BASE_BRANCH}' not found in repo." >&2; exit 1; }
 git checkout -b "$BRANCH_NAME"
 echo "[claude-agent] Repository cloned. Working branch: $BRANCH_NAME"
 
@@ -146,78 +234,4 @@ ELAPSED=$(( END_TIME - START_TIME ))
 ELAPSED_FORMATTED="$(( ELAPSED / 60 ))m $(( ELAPSED % 60 ))s"
 
 # ─── Phase 6: Report + push ──────────────────────────────────────────────────
-echo "[claude-agent] Phase 6: Committing work, pushing branch, writing report..."
-
-if [ "$CLAUDE_EXIT" -eq 0 ]; then
-  STATUS="success"
-  FINAL_EXIT=0
-elif [ "$CLAUDE_EXIT" -eq 124 ]; then
-  STATUS="timeout"
-  FINAL_EXIT=2
-else
-  STATUS="failure"
-  FINAL_EXIT=1
-fi
-
-# Commit any changes (best-effort)
-git add -A
-if ! git diff --staged --quiet; then
-  git commit -m "chore: claude-agent task [status: $STATUS]"
-fi
-
-# Push branch (best-effort)
-git push || echo "[claude-agent] WARNING: Failed to push branch."
-
-# Collect git stats for report
-COMMITS=""
-DIFF_STAT=""
-if git log "origin/${BASE_BRANCH}..HEAD" --oneline 2>/dev/null | grep -q .; then
-  COMMITS="$(git log "origin/${BASE_BRANCH}..HEAD" --oneline)"
-  DIFF_STAT="$(git diff "origin/${BASE_BRANCH}..HEAD" --stat 2>/dev/null || true)"
-fi
-
-# Open PR (best-effort)
-PR_URL="none"
-if [ -n "$COMMITS" ]; then
-  TASK_SHORT="$(echo "$TASK" | head -c 72 | tr '\n' ' ')"
-  PR_FLAGS=""
-  if [ "$STATUS" != "success" ]; then
-    TASK_SHORT="[Draft] ${TASK_SHORT}"
-    PR_FLAGS="--draft"
-  fi
-  PR_URL="$(gh pr create \
-    --title "$TASK_SHORT" \
-    --body "Automated task by Claude Agent.
-
-**Status:** $STATUS
-**Branch:** \`$BRANCH_NAME\`
-**Elapsed:** $ELAPSED_FORMATTED" \
-    $PR_FLAGS 2>/dev/null)" \
-    || PR_URL="none"
-fi
-
-# Write report
-TASK_SUMMARY="$(echo "$TASK" | head -c 200)"
-cat > "${OUTPUT_DIR}/report.md" <<REPORT
-# Claude Agent Report
-
-- **Status:** ${STATUS}
-- **Task:** ${TASK_SUMMARY}
-- **Repo:** ${REPO_URL}
-- **Branch:** ${BRANCH_NAME}
-- **PR:** ${PR_URL}
-- **Elapsed:** ${ELAPSED_FORMATTED}
-
-## Changes
-
-${DIFF_STAT:-_No changes committed._}
-
-### Commits
-
-${COMMITS:-_None._}
-REPORT
-
-echo "[claude-agent] Report written to ${OUTPUT_DIR}/report.md"
-echo "[claude-agent] Done. Status: ${STATUS} | Exit: ${FINAL_EXIT}"
-
-exit "$FINAL_EXIT"
+# Handled by _run_phase6() via trap EXIT — always runs even on unexpected error.
