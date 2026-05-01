@@ -85,7 +85,7 @@ _run_phase6() {
 **Status:** $STATUS
 **Branch:** \`$BRANCH_NAME\`
 **Elapsed:** $ELAPSED_FORMATTED" \
-      "${PR_FLAGS[@]}" 2>/dev/null)" \
+      ${PR_FLAGS[@]+"${PR_FLAGS[@]}"} 2>/dev/null)" \
       || PR_URL="none"
   fi
 
