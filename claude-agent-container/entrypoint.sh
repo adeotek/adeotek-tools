@@ -38,6 +38,7 @@ ELAPSED_FORMATTED="0m 0s"
 
 # ─── Phase 6 function (registered via trap, always runs on EXIT) ─────────────
 _run_phase6() {
+  trap - EXIT
   echo "[claude-agent] Phase 6: Committing work, pushing branch, writing report..."
 
   if [ "$CLAUDE_EXIT" -eq 0 ]; then
@@ -72,10 +73,10 @@ _run_phase6() {
   PR_URL="none"
   if [ -n "$COMMITS" ]; then
     TASK_SHORT="$(echo "$TASK" | head -c 72 | tr '\n' ' ')"
-    PR_FLAGS=""
+    PR_FLAGS=()
     if [ "$STATUS" != "success" ]; then
       TASK_SHORT="[Draft] ${TASK_SHORT}"
-      PR_FLAGS="--draft"
+      PR_FLAGS=("--draft")
     fi
     PR_URL="$(gh pr create \
       --title "$TASK_SHORT" \
@@ -84,13 +85,13 @@ _run_phase6() {
 **Status:** $STATUS
 **Branch:** \`$BRANCH_NAME\`
 **Elapsed:** $ELAPSED_FORMATTED" \
-      $PR_FLAGS 2>/dev/null)" \
+      "${PR_FLAGS[@]}" 2>/dev/null)" \
       || PR_URL="none"
   fi
 
   # Write report
   TASK_SUMMARY="$(echo "$TASK" | head -c 200)"
-  cat > "${OUTPUT_DIR}/report.md" <<REPORT
+  cat > "${OUTPUT_DIR}/report.md" <<__CLAUDE_AGENT_REPORT_END__
 # Claude Agent Report
 
 - **Status:** ${STATUS}
@@ -107,7 +108,7 @@ ${DIFF_STAT:-_No changes committed._}
 ### Commits
 
 ${COMMITS:-_None._}
-REPORT
+__CLAUDE_AGENT_REPORT_END__
 
   echo "[claude-agent] Report written to ${OUTPUT_DIR}/report.md"
   echo "[claude-agent] Done. Status: ${STATUS} | Exit: ${FINAL_EXIT}"
