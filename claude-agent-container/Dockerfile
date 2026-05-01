@@ -62,7 +62,8 @@ RUN dotnet tool install --global csharp-ls --version 0.20.0
 
 # ─── Layer 7: Claude Code (native binary) ────────────────────────────────────
 RUN curl -fsSL https://claude.ai/install.sh | bash \
-    && claude --version
+    && claude --version \
+    && rm -f /root/.claude.json
 
 # ─── Layer 8: Config + entrypoint ────────────────────────────────────────────
 WORKDIR /workspace

@@ -35,6 +35,7 @@ STATUS="failure"
 FINAL_EXIT=1
 START_TIME=0
 ELAPSED_FORMATTED="0m 0s"
+TASK=""
 
 # ─── Phase 6 function (registered via trap, always runs on EXIT) ─────────────
 _run_phase6() {
@@ -115,7 +116,9 @@ __CLAUDE_AGENT_REPORT_END__
   exit "$FINAL_EXIT"
 }
 
-trap _run_phase6 EXIT
+# ─── Guard Rails (Phase 1–4): all checks before any network calls ─────────────
+# These run BEFORE registering the Phase 6 trap so that validation failures
+# exit cleanly (exit 1) without triggering the commit/push/report logic.
 
 # ─── Phase 1: Credentials ────────────────────────────────────────────────────
 echo "[claude-agent] Phase 1: Resolving credentials..."
@@ -144,9 +147,6 @@ else
   exit 1
 fi
 
-echo "$GITHUB_TOKEN_VALUE" | gh auth login --with-token
-echo "[claude-agent] GitHub authentication successful."
-
 # ─── Phase 2: Git identity ───────────────────────────────────────────────────
 echo "[claude-agent] Phase 2: Configuring git identity..."
 
@@ -163,26 +163,9 @@ git config --global user.name "$GIT_AUTHOR_NAME"
 git config --global user.email "$GIT_AUTHOR_EMAIL"
 git config --global push.autoSetupRemote true
 
-# ─── Phase 3: Plugin installation (first run only) ───────────────────────────
-MARKER_FILE="/root/.claude-agent-state/.plugins-installed"
+# ─── Phase 3: Task resolution ────────────────────────────────────────────────
+echo "[claude-agent] Phase 3: Resolving task..."
 
-if [ ! -f "$MARKER_FILE" ]; then
-  echo "[claude-agent] Phase 3: Installing Claude Code plugins..."
-  for plugin in "${PLUGINS[@]}"; do
-    echo "[claude-agent] Installing plugin: $plugin"
-    claude plugins install "$plugin" \
-      || echo "[claude-agent] WARNING: Failed to install $plugin, continuing..."
-  done
-  touch "$MARKER_FILE"
-  echo "[claude-agent] Plugins installed successfully."
-else
-  echo "[claude-agent] Phase 3: Plugins already installed (marker found), skipping."
-fi
-
-# ─── Phase 4: Task + repo setup ──────────────────────────────────────────────
-echo "[claude-agent] Phase 4: Resolving task and setting up repository..."
-
-TASK=""
 if [ -f /task/task.md ]; then
   TASK="$(cat /task/task.md)"
   echo "[claude-agent] Task loaded from /task/task.md"
@@ -199,6 +182,40 @@ if [ -z "${REPO_URL:-}" ]; then
   echo "[claude-agent] ERROR: REPO_URL is required." >&2
   exit 1
 fi
+
+# ─── Phase 4: GitHub authentication ─────────────────────────────────────────
+# All guard-rail checks above have passed. Now authenticate with GitHub and
+# register the Phase 6 trap so the cleanup/report logic covers the remaining work.
+echo "[claude-agent] Phase 4: Authenticating with GitHub..."
+
+if ! echo "$GITHUB_TOKEN_VALUE" | gh auth login --with-token 2>&1; then
+  echo "[claude-agent] ERROR: GitHub authentication failed. Check your token." >&2
+  exit 1
+fi
+echo "[claude-agent] GitHub authentication successful."
+
+# Register Phase 6 cleanup trap now that all guard-rail checks have passed and
+# GitHub auth succeeded. The trap will handle commit/push/report on any exit.
+trap _run_phase6 EXIT
+
+# ─── Phase 5: Plugin installation (first run only) ───────────────────────────
+MARKER_FILE="/root/.claude-agent-state/.plugins-installed"
+
+if [ ! -f "$MARKER_FILE" ]; then
+  echo "[claude-agent] Phase 5: Installing Claude Code plugins..."
+  for plugin in "${PLUGINS[@]}"; do
+    echo "[claude-agent] Installing plugin: $plugin"
+    claude plugins install "$plugin" \
+      || echo "[claude-agent] WARNING: Failed to install $plugin, continuing..."
+  done
+  touch "$MARKER_FILE"
+  echo "[claude-agent] Plugins installed successfully."
+else
+  echo "[claude-agent] Phase 5: Plugins already installed (marker found), skipping."
+fi
+
+# ─── Phase 6: Repository setup ───────────────────────────────────────────────
+echo "[claude-agent] Phase 6: Setting up repository..."
 
 git clone "$REPO_URL" /workspace/repo
 cd /workspace/repo
@@ -218,8 +235,8 @@ ${TASK}"
   echo "[claude-agent] Container-level instructions prepended from $AGENT_INSTRUCTIONS_FILE"
 fi
 
-# ─── Phase 5: Run Claude Code ────────────────────────────────────────────────
-echo "[claude-agent] Phase 5: Running Claude Code agent (max-turns=$CLAUDE_MAX_TURNS, timeout=${TASK_TIMEOUT_MINUTES}m)..."
+# ─── Phase 7: Run Claude Code ────────────────────────────────────────────────
+echo "[claude-agent] Phase 7: Running Claude Code agent (max-turns=$CLAUDE_MAX_TURNS, timeout=${TASK_TIMEOUT_MINUTES}m)..."
 START_TIME=$(date +%s)
 
 CLAUDE_EXIT=0
@@ -234,5 +251,5 @@ END_TIME=$(date +%s)
 ELAPSED=$(( END_TIME - START_TIME ))
 ELAPSED_FORMATTED="$(( ELAPSED / 60 ))m $(( ELAPSED % 60 ))s"
 
-# ─── Phase 6: Report + push ──────────────────────────────────────────────────
+# ─── Phase 8: Report + push ──────────────────────────────────────────────────
 # Handled by _run_phase6() via trap EXIT — always runs even on unexpected error.
