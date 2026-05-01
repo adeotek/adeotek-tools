@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v \"^\\.$\")",
+      "Bash(git -C /home/georg/projects/adeotek-tools log --all --format=\"%H %s\")",
+      "Bash(docker build*)",
+      "Bash(docker run*)",
+      "Bash(docker rmi*)",
+      "Bash(docker compose*)",
+      "Bash(make*)",
+      "Bash(bash -n entrypoint.sh)",
+      "Bash(python3 -c*)"
+    ]
+  }
+}
