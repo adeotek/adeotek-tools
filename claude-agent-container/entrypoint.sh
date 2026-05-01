@@ -37,10 +37,10 @@ START_TIME=0
 ELAPSED_FORMATTED="0m 0s"
 TASK=""
 
-# ─── Phase 6 function (registered via trap, always runs on EXIT) ─────────────
-_run_phase6() {
+# ─── Phase 8 function (registered via trap, always runs on EXIT) ─────────────
+_run_phase8() {
   trap - EXIT
-  echo "[claude-agent] Phase 6: Committing work, pushing branch, writing report..."
+  echo "[claude-agent] Phase 8: Committing work, pushing branch, writing report..."
 
   if [ "$CLAUDE_EXIT" -eq 0 ]; then
     STATUS="success"
@@ -117,7 +117,7 @@ __CLAUDE_AGENT_REPORT_END__
 }
 
 # ─── Guard Rails (Phase 1–4): all checks before any network calls ─────────────
-# These run BEFORE registering the Phase 6 trap so that validation failures
+# These run BEFORE registering the Phase 8 trap so that validation failures
 # exit cleanly (exit 1) without triggering the commit/push/report logic.
 
 # ─── Phase 1: Credentials ────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ fi
 
 # ─── Phase 4: GitHub authentication ─────────────────────────────────────────
 # All guard-rail checks above have passed. Now authenticate with GitHub and
-# register the Phase 6 trap so the cleanup/report logic covers the remaining work.
+# register the Phase 8 trap so the cleanup/report logic covers the remaining work.
 echo "[claude-agent] Phase 4: Authenticating with GitHub..."
 
 if ! echo "$GITHUB_TOKEN_VALUE" | gh auth login --with-token 2>&1; then
@@ -194,9 +194,9 @@ if ! echo "$GITHUB_TOKEN_VALUE" | gh auth login --with-token 2>&1; then
 fi
 echo "[claude-agent] GitHub authentication successful."
 
-# Register Phase 6 cleanup trap now that all guard-rail checks have passed and
+# Register Phase 8 cleanup trap now that all guard-rail checks have passed and
 # GitHub auth succeeded. The trap will handle commit/push/report on any exit.
-trap _run_phase6 EXIT
+trap _run_phase8 EXIT
 
 # ─── Phase 5: Plugin installation (first run only) ───────────────────────────
 MARKER_FILE="/root/.claude-agent-state/.plugins-installed"
@@ -252,4 +252,4 @@ ELAPSED=$(( END_TIME - START_TIME ))
 ELAPSED_FORMATTED="$(( ELAPSED / 60 ))m $(( ELAPSED % 60 ))s"
 
 # ─── Phase 8: Report + push ──────────────────────────────────────────────────
-# Handled by _run_phase6() via trap EXIT — always runs even on unexpected error.
+# Handled by _run_phase8() via trap EXIT — always runs even on unexpected error.
