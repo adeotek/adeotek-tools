@@ -1,0 +1,23 @@
+services:
+  claude-agent:
+    build: .
+    image: claude-agent:latest
+    volumes:
+      - ~/.claude.json:/root/.claude.json:ro
+      - ./task.md:/task/task.md:ro
+      - ./output:/output
+      - claude-agent-state:/root/.claude-agent-state
+    environment:
+      - GITHUB_TOKEN
+      - GIT_AUTHOR_NAME
+      - GIT_AUTHOR_EMAIL
+      - REPO_URL
+      - BASE_BRANCH=main
+      - TASK_TIMEOUT_MINUTES=60
+      - CLAUDE_MAX_TURNS=50
+    # command: "your task here"   # alternative to task.md mount
+
+volumes:
+  claude-agent-state:
+    # Persists the plugin installation marker across container runs.
+    # Plugins install once per host rather than on every docker run.
