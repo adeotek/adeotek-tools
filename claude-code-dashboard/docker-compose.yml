@@ -1,0 +1,17 @@
+services:
+  dashboard:
+    image: ghcr.io/adeotek/claude-code-dashboard:latest
+    build:
+      context: .
+    ports:
+      - "8080:80"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_BIN=${CLAUDE_BIN:-claude}
+      - FRONTEND_ORIGIN=http://localhost:8080
+    volumes:
+      # Mount Claude Code credentials and session logs (read-only)
+      - ~/.claude:/root/.claude:ro
+      # Mount projects directory for working directory access
+      - ~/projects:/projects:rw
+    restart: unless-stopped

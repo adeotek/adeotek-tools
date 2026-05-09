@@ -1,0 +1,41 @@
+name: claude-code-dashboard Docker build & push
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag (e.g. 1.0.0) — also tags :latest'
+        required: false
+        default: ''
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tags
+        id: tags
+        run: |
+          BASE="ghcr.io/${{ github.repository_owner }}/claude-code-dashboard"
+          TAGS="${BASE}:latest"
+          if [ -n "${{ inputs.version_tag }}" ]; then
+            TAGS="${TAGS},${BASE}:${{ inputs.version_tag }}"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: claude-code-dashboard
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}

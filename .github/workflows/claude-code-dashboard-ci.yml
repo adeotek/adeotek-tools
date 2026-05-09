@@ -1,0 +1,48 @@
+name: claude-code-dashboard CI
+
+on:
+  push:
+    paths:
+      - 'claude-code-dashboard/**'
+  pull_request:
+    paths:
+      - 'claude-code-dashboard/**'
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            claude-code-dashboard/backend/package-lock.json
+            claude-code-dashboard/frontend/package-lock.json
+
+      - name: Install backend deps
+        working-directory: claude-code-dashboard/backend
+        run: npm ci
+
+      - name: Install frontend deps
+        working-directory: claude-code-dashboard/frontend
+        run: npm ci
+
+      - name: Lint backend
+        working-directory: claude-code-dashboard/backend
+        run: npm run lint
+
+      - name: Lint frontend
+        working-directory: claude-code-dashboard/frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: claude-code-dashboard/frontend
+        run: npm run build
+
+      - name: Build backend
+        working-directory: claude-code-dashboard/backend
+        run: npm run build

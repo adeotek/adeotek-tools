@@ -19,6 +19,7 @@ Each project has its own root directory and its own `CLAUDE.md` file with projec
 | `homelab-chatbot` | `homelab-chatbot/` | Python (FastAPI) + Next.js | Homelab AI chatbot with backend and frontend |
 | `bnr-rates-extractor` | `bnr-rates-extractor/` | .NET 10 (C#) | CLI to extract BNR exchange rates to CSV |
 | `docker-net-tools` | `docker-net-tools/` | Docker | Utility Docker networking tools |
+| `claude-code-dashboard` | `claude-code-dashboard/` | Node.js (Fastify) + Vite + React | Web dashboard and proxy for Claude Code CLI |
 
 ## Shared conventions
 
