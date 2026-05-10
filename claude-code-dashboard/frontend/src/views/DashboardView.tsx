@@ -38,8 +38,8 @@ export default function DashboardView() {
 
   const { send } = useWebSocket(onOutput)
 
-  function handleSessionStart(sessionId: string, workdir: string) {
-    dispatch({ type: 'SESSION_CREATED', sessionId, workdir })
+  function handleSessionStart(sessionId: string, workdir: string, name: string | null) {
+    dispatch({ type: 'SESSION_CREATED', sessionId, workdir, ...(name ? { name } : {}) })
     if (account?.model) dispatch({ type: 'MODEL_SET', model: account.model })
     setShowModal(false)
     refresh()

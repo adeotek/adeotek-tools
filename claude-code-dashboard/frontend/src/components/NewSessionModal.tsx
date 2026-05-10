@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { FolderOpen } from 'lucide-react'
 
 interface NewSessionModalProps {
-  onStart: (sessionId: string, workdir: string) => void
+  onStart: (sessionId: string, workdir: string, name: string | null) => void
 }
 
 export default function NewSessionModal({ onStart }: NewSessionModalProps) {
+  const [name, setName] = useState('')
   const [workdir, setWorkdir] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -17,14 +18,17 @@ export default function NewSessionModal({ onStart }: NewSessionModalProps) {
     setError(null)
 
     try {
+      const body: { workdir: string; name?: string } = { workdir: workdir.trim() }
+      if (name.trim()) body.name = name.trim()
+
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workdir: workdir.trim() }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error(await res.text())
       const { sessionId } = (await res.json()) as { sessionId: string }
-      onStart(sessionId, workdir.trim())
+      onStart(sessionId, workdir.trim(), name.trim() || null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create session')
       setLoading(false)
@@ -42,14 +46,29 @@ export default function NewSessionModal({ onStart }: NewSessionModalProps) {
           Enter the working directory where Claude Code will run.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            value={workdir}
-            onChange={(e) => setWorkdir(e.target.value)}
-            placeholder="/home/user/projects/my-app"
-            autoFocus
-            className="w-full bg-bg-panel border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder-text-dim focus:outline-none focus:border-accent"
-          />
+          <div className="space-y-1">
+            <label className="text-text-dim text-xs">
+              Name <span className="text-text-muted">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. API refactor"
+              className="w-full bg-bg-panel border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder-text-dim focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-text-dim text-xs">Working directory</label>
+            <input
+              type="text"
+              value={workdir}
+              onChange={(e) => setWorkdir(e.target.value)}
+              placeholder="/home/user/projects/my-app"
+              autoFocus
+              className="w-full bg-bg-panel border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder-text-dim focus:outline-none focus:border-accent"
+            />
+          </div>
           {error && <p className="text-status-red text-xs">{error}</p>}
           <button
             type="submit"
