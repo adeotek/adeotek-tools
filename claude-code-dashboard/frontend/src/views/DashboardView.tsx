@@ -82,8 +82,20 @@ export default function DashboardView() {
   }
 
   function handleResume(session: Session) {
-    dispatch({ type: 'RESUME_SESSION', id: session.id, workdir: session.workdir })
+    dispatch({ type: 'RESUME_SESSION', id: session.id, workdir: session.workdir, ...(session.name ? { name: session.name } : {}) })
     if (account?.model) dispatch({ type: 'MODEL_SET', model: account.model })
+  }
+
+  async function handleRenameSession(name: string) {
+    if (!state.sessionId) return
+    const res = await fetch(`/api/sessions/${state.sessionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name || null }),
+    })
+    if (!res.ok) throw new Error(await res.text())
+    dispatch({ type: 'SESSION_RENAMED', name: name || null })
+    refresh()
   }
 
   function handleDelete(sessionId: string) {
@@ -128,6 +140,8 @@ export default function DashboardView() {
             onNewSession={handleNewSession}
             onStopSession={handleStopSession}
             onSessionsList={handleSessionsList}
+            onRename={handleRenameSession}
+            sessionName={state.name}
             totalTokens={(usage?.totals.inputTokens ?? 0) + (usage?.totals.outputTokens ?? 0)}
             sessionStartedAt={activeSession?.started_at ?? null}
           />
