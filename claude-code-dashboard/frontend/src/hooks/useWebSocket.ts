@@ -22,7 +22,7 @@ export function useWebSocket(onOutput: (data: string) => void) {
 
       ws.onopen = () => {
         attemptsRef.current = 0
-        dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'running' })
+        dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'idle' })
       }
 
       ws.onmessage = (event) => {

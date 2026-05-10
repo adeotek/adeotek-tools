@@ -26,6 +26,7 @@ class ActiveSession {
   private idleTimer: NodeJS.Timeout | null = null
   private messageBuffer = ''
   private inAssistantBlock = false
+  private isRunning = false
   private sockets = new Set<WebSocket>()
 
   constructor(readonly id: string, workdir: string) {
@@ -48,7 +49,7 @@ class ActiveSession {
 
   attach(ws: WebSocket) {
     this.sockets.add(ws)
-    this.broadcast({ type: 'status', state: 'running' })
+    ws.send(JSON.stringify({ type: 'status', state: this.isRunning ? 'running' : 'idle' }))
     ws.on('close', () => this.sockets.delete(ws))
   }
 
@@ -95,7 +96,9 @@ class ActiveSession {
     // Claude Code wraps assistant turns between recognizable markers
     if (!this.inAssistantBlock && this.messageBuffer.includes('❯❯❯')) {
       this.inAssistantBlock = true
+      this.isRunning = true
       this.messageBuffer = this.messageBuffer.split('❯❯❯').pop() ?? ''
+      this.broadcast({ type: 'status', state: 'running' })
     }
 
     if (this.inAssistantBlock) {
@@ -110,6 +113,8 @@ class ActiveSession {
         }
         this.messageBuffer = this.messageBuffer.slice(endIdx + 1)
         this.inAssistantBlock = false
+        this.isRunning = false
+        this.broadcast({ type: 'status', state: 'idle' })
       }
     }
 
