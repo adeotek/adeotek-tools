@@ -67,6 +67,12 @@ function parseEvent(line: string): StreamEvent | null {
   }
 }
 
+// Pipes don't go through a TTY line discipline, so bare \n doesn't reset the
+// cursor column. xterm.js needs \r\n to display text correctly.
+function toCRLF(s: string): string {
+  return s.replace(/\r?\n/g, '\r\n')
+}
+
 // ─── ActiveSession ────────────────────────────────────────────────────────────
 
 class ActiveSession {
@@ -180,19 +186,19 @@ class ActiveSession {
           if (block.type === 'thinking') {
             if (!thinkingEmitted) {
               thinkingEmitted = true
-              const preview = block.thinking.slice(0, 300)
+              const preview = toCRLF(block.thinking.slice(0, 300))
               this.broadcast({ type: 'output', data: `\x1b[2m💭 ${preview}\x1b[0m\r\n` })
             }
           } else if (block.type === 'tool_use') {
             if (!emittedToolIds.has(block.id)) {
               emittedToolIds.add(block.id)
-              const summary = summarizeToolInput(block.name, block.input ?? {})
+              const summary = toCRLF(summarizeToolInput(block.name, block.input ?? {}))
               this.broadcast({ type: 'output', data: `⚙ ${block.name}: ${summary}\r\n` })
             }
           } else if (block.type === 'text') {
             const fullText = block.text
             const chunk = fullText.slice(lastEmittedLen)
-            if (chunk) this.broadcast({ type: 'output', data: chunk })
+            if (chunk) this.broadcast({ type: 'output', data: toCRLF(chunk) })
             lastEmittedLen = fullText.length
           }
         }
@@ -202,7 +208,7 @@ class ActiveSession {
         for (const block of event.message.content) {
           if (block.type === 'tool_result') {
             const raw = block.content
-            const content = (typeof raw === 'string' ? raw : JSON.stringify(raw)).slice(0, 500)
+            const content = toCRLF((typeof raw === 'string' ? raw : JSON.stringify(raw)).slice(0, 500))
             this.broadcast({ type: 'output', data: `→ ${content}\r\n` })
           }
         }

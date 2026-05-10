@@ -46,7 +46,7 @@ name: string | null   // add this field (null in initial state)
 **`SessionContext.tsx` — actions:**
 - `SESSION_CREATED` gains optional `name?: string`
 - `RESUME_SESSION` gains optional `name?: string`
-- New action: `{ type: 'SESSION_RENAMED'; name: string }`
+- New action: `{ type: 'SESSION_RENAMED'; name: string | null }` (null clears the name)
 
 ---
 
@@ -73,7 +73,7 @@ No other changes to the list. The full workdir path below the title is unchanged
 
 ### SessionHeader
 
-**Name display:** When a session has a name, show it as a small muted label **above** the workdir chip (same area, stacked). When no name is set, nothing extra is shown — the workdir chip stays as is.
+**Name display:** When a session has a name, show it as `text-text-primary` text **before** the workdir chip in the status row (same horizontal flex line). When no name is set, nothing extra is shown — the workdir chip stays as is.
 
 **Rename button:** A small Pencil (`Pencil` icon, 11px) button is added to the **left** of the existing action-button group (before New session / Stop session). It uses the same muted style as those buttons.
 
