@@ -85,11 +85,14 @@ claude
 | stream-json event | Condition | WS frame(s) emitted |
 |---|---|---|
 | `system` / `init` | always | `type:'output'` — session-start banner line |
+| `assistant` | content has `thinking` block | `type:'output'` — `💭 <thinking text>` (dimmed in terminal) |
 | `assistant` | content has `tool_use` block | `type:'output'` — `⚙ <ToolName>: <input summary>` |
 | `user` | content has `tool_result` | `type:'output'` — `→ <result text, truncated to 500 chars>` |
 | `assistant` | partial text (`stop_reason: null`) | `type:'output'` — raw text chunk |
 | `assistant` | final text (`stop_reason: 'end_turn'`) | `type:'output'` — final text chunk + `type:'message'` — full content + DB insert |
 | `result` | always | capture `session_id`; `UPDATE sessions SET claude_session_id` |
+
+An `assistant` message may contain multiple content blocks (e.g. `thinking` + `tool_use`, or `tool_use` + `text`). Each block is processed independently in order.
 
 ### kill()
 
@@ -154,7 +157,7 @@ Both modes surface all tool calls in the terminal log so the user can see what i
 | File | Change |
 |---|---|
 | `backend/src/ws/session.ts` | Full rewrite — `ActiveSession` and `SessionManager` |
-| `backend/src/routes/sessions.ts` | Add `GET/POST /api/settings` or new `settings.ts` route |
+| `backend/src/routes/settings.ts` | New file — `GET/POST /api/settings` endpoints |
 | `backend/src/db/schema.ts` | Add `claude_session_id` column + `settings` table |
 | `backend/package.json` | Remove `node-pty`; no new deps needed (`child_process` is built-in) |
 | `frontend/src/views/DashboardView.tsx` | Remove PTY resize wiring |
