@@ -1,5 +1,7 @@
 import { spawn, ChildProcess } from 'child_process'
 import * as readline from 'readline'
+import * as os from 'os'
+import * as path from 'path'
 import type { WebSocket } from 'ws'
 import type { FastifyInstance } from 'fastify'
 import { db } from '../db/schema'
@@ -127,8 +129,12 @@ class ActiveSession {
     if (this.claudeSessionId) args.push('--resume', this.claudeSessionId)
     if (bypassPermissions) args.push('--dangerously-skip-permissions')
 
+    const resolvedCwd = this.workdir.startsWith('~')
+      ? path.join(os.homedir(), this.workdir.slice(1))
+      : this.workdir
+
     const proc = spawn(claudeBin, args, {
-      cwd: this.workdir,
+      cwd: resolvedCwd,
       env: { ...process.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     })
