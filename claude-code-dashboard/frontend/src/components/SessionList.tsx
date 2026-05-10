@@ -89,7 +89,7 @@ export default function SessionList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-text-primary text-sm font-medium truncate">
-                    {lastSegment(session.workdir)}
+                    {session.name ?? lastSegment(session.workdir)}
                   </span>
                   {session.is_active ? (
                     <span className="flex-shrink-0 px-1.5 py-0.5 text-xs bg-status-green/10 text-status-green border border-status-green/20 rounded">
