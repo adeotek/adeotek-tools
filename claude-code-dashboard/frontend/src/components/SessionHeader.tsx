@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, List, Square } from 'lucide-react'
+import { Plus, List, Square, Pencil } from 'lucide-react'
 import { useSession } from '../context/SessionContext'
 
 interface SessionHeaderProps {
@@ -8,21 +8,19 @@ interface SessionHeaderProps {
   onSessionsList: () => void
   totalTokens: number
   sessionStartedAt: number | null
+  sessionName?: string | null
+  onRename?: (name: string) => Promise<void>
 }
 
 function formatModelName(model: string): string {
-  // Strip "claude-" prefix and any date suffix like "-20251001"
   const s = model.replace(/^claude-/, '').replace(/-\d{8}$/, '')
-  // New naming: "sonnet-4-6", "opus-4-7", "haiku-4-5"
   const m = s.match(/^(opus|sonnet|haiku)-(\d+)-(\d+)/)
   if (m) return `${m[1].charAt(0).toUpperCase() + m[1].slice(1)} ${m[2]}.${m[3]}`
-  // Old naming: "3-5-sonnet", "3-opus"
   const m2 = s.match(/^(\d+)-(?:(\d+)-)?(\w+)$/)
   if (m2) {
     const family = m2[3].charAt(0).toUpperCase() + m2[3].slice(1)
     return m2[2] ? `${family} ${m2[1]}.${m2[2]}` : `${family} ${m2[1]}`
   }
-  // Bare short name: "sonnet", "opus", "haiku"
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
@@ -67,11 +65,16 @@ export default function SessionHeader({
   onSessionsList,
   totalTokens,
   sessionStartedAt,
+  sessionName,
+  onRename,
 }: SessionHeaderProps) {
   const { state } = useSession()
   const [, setTick] = useState(0)
+  const [renaming, setRenaming] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [renameError, setRenameError] = useState<string | null>(null)
+  const [renameSaving, setRenameSaving] = useState(false)
 
-  // Tick only while Claude is actively running — idle time doesn't count
   useEffect(() => {
     if (state.wsState !== 'running') return
     const timer = setInterval(() => setTick((t) => t + 1), 1000)
@@ -82,26 +85,86 @@ export default function SessionHeader({
     state.workingTimeMs +
     (state.runningStartedAt != null ? Date.now() - state.runningStartedAt : 0)
 
+  function startRename() {
+    setNameInput(sessionName ?? '')
+    setRenameError(null)
+    setRenaming(true)
+  }
+
+  function cancelRename() {
+    setRenaming(false)
+    setRenameError(null)
+  }
+
+  async function saveRename() {
+    if (!onRename) return
+    setRenameSaving(true)
+    setRenameError(null)
+    try {
+      await onRename(nameInput.trim())
+      setRenaming(false)
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : 'Failed to rename')
+    } finally {
+      setRenameSaving(false)
+    }
+  }
+
+  function onRenameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') { e.preventDefault(); saveRename() }
+    if (e.key === 'Escape') cancelRename()
+  }
+
   return (
     <div className="px-3 py-2 border-b border-border-subtle bg-bg-surface flex items-center gap-3 flex-shrink-0 flex-wrap">
-      {/* Status + workdir */}
-      <div className="flex items-center gap-2 min-w-0">
-        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-          state.wsState === 'running' ? 'bg-status-green' :
-          state.wsState === 'idle'    ? 'bg-status-green/40' :
-          state.wsState === 'error'   ? 'bg-status-red' : 'bg-text-dim'
-        }`} />
-        {state.workdir && (
-          <span className="text-text-secondary text-xs bg-bg-elevated border border-border-subtle px-2 py-0.5 rounded truncate max-w-xs">
-            {state.workdir}
-          </span>
-        )}
-        {state.model && (
-          <span className="text-accent text-xs font-medium hidden sm:block">{formatModelName(state.model)}</span>
-        )}
-      </div>
+      {renaming ? (
+        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+          <input
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onKeyDown={onRenameKeyDown}
+            autoFocus
+            placeholder="Session name (optional)"
+            className="bg-bg-panel border border-accent rounded px-2 py-0.5 text-xs text-text-primary placeholder-text-dim focus:outline-none w-44"
+          />
+          <button
+            onClick={saveRename}
+            disabled={renameSaving}
+            className="text-xs text-accent hover:text-accent-hover disabled:opacity-40 transition-colors"
+          >
+            {renameSaving ? '…' : 'Save'}
+          </button>
+          <button
+            onClick={cancelRename}
+            className="text-xs text-text-dim hover:text-text-secondary transition-colors"
+          >
+            ✕
+          </button>
+          {renameError && <span className="text-status-red text-xs">{renameError}</span>}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            state.wsState === 'running' ? 'bg-status-green' :
+            state.wsState === 'idle'    ? 'bg-status-green/40' :
+            state.wsState === 'error'   ? 'bg-status-red' : 'bg-text-dim'
+          }`} />
+          {sessionName && (
+            <span className="text-text-primary text-xs font-medium truncate max-w-[160px]">
+              {sessionName}
+            </span>
+          )}
+          {state.workdir && (
+            <span className="text-text-secondary text-xs bg-bg-elevated border border-border-subtle px-2 py-0.5 rounded truncate max-w-xs">
+              {state.workdir}
+            </span>
+          )}
+          {state.model && (
+            <span className="text-accent text-xs font-medium hidden sm:block">{formatModelName(state.model)}</span>
+          )}
+        </div>
+      )}
 
-      {/* Session stat chips */}
       <div className="flex items-center gap-3 text-xs border-l border-border-subtle pl-3">
         {sessionStartedAt != null && (
           <StatChip label="created" value={formatCreatedAt(sessionStartedAt)} />
@@ -112,8 +175,16 @@ export default function SessionHeader({
         <StatChip label="tokens" value={formatTokens(totalTokens)} />
       </div>
 
-      {/* Action buttons */}
       <div className="flex items-center gap-2 ml-auto">
+        {onRename && !renaming && (
+          <button
+            onClick={startRename}
+            className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
+          >
+            <Pencil size={11} />
+            Rename
+          </button>
+        )}
         <button
           onClick={onNewSession}
           className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
