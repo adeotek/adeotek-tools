@@ -51,6 +51,19 @@ function initDb(): Database.Database {
     )
   `).run()
 
+  // Migrate: add claude_session_id to sessions if missing
+  const sessionCols = db.pragma('table_info(sessions)') as Array<{ name: string }>
+  if (!sessionCols.find((c) => c.name === 'claude_session_id')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN claude_session_id TEXT').run()
+  }
+
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `).run()
+
   return db
 }
 
