@@ -66,6 +66,20 @@ export default function DashboardView() {
     dispatch({ type: 'SESSION_CLEARED' })
   }
 
+  function handleStopSession() {
+    if (state.sessionId) {
+      fetch(`/api/sessions/${state.sessionId}/stop`, { method: 'POST' }).catch(() => {})
+    }
+    dispatch({ type: 'SESSION_CLEARED' })
+    refresh()
+  }
+
+  function handleStopListSession(sessionId: string) {
+    fetch(`/api/sessions/${sessionId}/stop`, { method: 'POST' })
+      .catch(() => {})
+      .finally(() => refresh())
+  }
+
   function handleSend(text: string) {
     dispatch({
       type: 'MESSAGE_ADDED',
@@ -120,6 +134,7 @@ export default function DashboardView() {
         <div className="flex flex-col flex-1 overflow-hidden">
           <SessionHeader
             onNewSession={handleNewSession}
+            onStopSession={handleStopSession}
             onSessionsList={handleSessionsList}
             totalTokens={(usage?.totals.inputTokens ?? 0) + (usage?.totals.outputTokens ?? 0)}
             sessionStartedAt={activeSession?.started_at ?? null}
@@ -137,6 +152,7 @@ export default function DashboardView() {
         <SessionList
           sessions={displaySessions}
           onResume={handleResume}
+          onStop={handleStopListSession}
           onDelete={handleDelete}
           onNewSession={() => setShowModal(true)}
         />

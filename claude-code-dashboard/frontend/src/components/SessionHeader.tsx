@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Plus, List } from 'lucide-react'
+import { Plus, List, Square } from 'lucide-react'
 import { useSession } from '../context/SessionContext'
 
 interface SessionHeaderProps {
   onNewSession: () => void
+  onStopSession: () => void
   onSessionsList: () => void
   totalTokens: number
   sessionStartedAt: number | null
@@ -62,6 +63,7 @@ function StatChip({ label, value, valueClass = 'text-text-secondary' }: StatChip
 
 export default function SessionHeader({
   onNewSession,
+  onStopSession,
   onSessionsList,
   totalTokens,
   sessionStartedAt,
@@ -113,18 +115,25 @@ export default function SessionHeader({
       {/* Action buttons */}
       <div className="flex items-center gap-2 ml-auto">
         <button
-          onClick={onSessionsList}
-          className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
-        >
-          <List size={11} />
-          Sessions list
-        </button>
-        <button
           onClick={onNewSession}
           className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
         >
           <Plus size={11} />
           New session
+        </button>
+        <button
+          onClick={onStopSession}
+          className="flex items-center gap-1.5 text-text-muted hover:text-status-red text-xs bg-bg-elevated border border-border-subtle hover:border-status-red px-2 py-1 rounded transition-colors"
+        >
+          <Square size={11} />
+          Stop session
+        </button>
+        <button
+          onClick={onSessionsList}
+          className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
+        >
+          <List size={11} />
+          Sessions list
         </button>
       </div>
     </div>

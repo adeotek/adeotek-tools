@@ -1,9 +1,10 @@
-import { Plus, Play, Trash2 } from 'lucide-react'
+import { Plus, Play, Square, Trash2 } from 'lucide-react'
 import type { Session } from '../hooks/useDashboard'
 
 interface SessionListProps {
   sessions: Session[]
   onResume: (session: Session) => void
+  onStop: (sessionId: string) => void
   onDelete: (sessionId: string) => void
   onNewSession: () => void
 }
@@ -37,6 +38,7 @@ async function deleteSession(sessionId: string): Promise<void> {
 export default function SessionList({
   sessions,
   onResume,
+  onStop,
   onDelete,
   onNewSession,
 }: SessionListProps) {
@@ -116,6 +118,14 @@ export default function SessionList({
                   className="flex items-center justify-center px-2.5 py-1.5 text-xs border border-accent text-accent hover:bg-accent hover:text-black rounded transition-colors"
                 >
                   <Play size={11} />
+                </button>
+                <button
+                  onClick={() => onStop(session.id)}
+                  disabled={!session.is_active}
+                  title="Stop session"
+                  className="flex items-center justify-center px-2.5 py-1.5 text-xs border rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed border-status-red text-status-red enabled:hover:bg-status-red enabled:hover:text-black"
+                >
+                  <Square size={11} />
                 </button>
                 <button
                   onClick={() => handleDelete(session.id)}
