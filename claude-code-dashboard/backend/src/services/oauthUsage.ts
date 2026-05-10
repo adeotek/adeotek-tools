@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { db } from '../db/schema'
 
 export interface OAuthUsageData {
   fiveHourPct: number
@@ -17,11 +18,44 @@ export interface OAuthUsageData {
   isEnterprise: boolean
 }
 
-const CACHE_TTL_MS = 60_000           // 60 s — same as statusline
+const CACHE_TTL_MS = 120_000          // 2 min
 const ERROR_TTL_MS = 60 * 60_000     // 1 h back-off on auth/permission errors
 
 let cache: { data: OAuthUsageData | null; expiresAt: number } | null = null
 let lastGoodData: OAuthUsageData | null = null
+
+const OAUTH_CACHE_KEY = 'usage'
+
+function loadFromDisk(): { data: OAuthUsageData; cachedAt: number } | null {
+  try {
+    const row = db.prepare('SELECT data, cached_at FROM oauth_cache WHERE key = ?').get(OAUTH_CACHE_KEY) as
+      | { data: string; cached_at: number }
+      | undefined
+    if (!row) return null
+    return { data: JSON.parse(row.data) as OAuthUsageData, cachedAt: row.cached_at }
+  } catch {
+    return null
+  }
+}
+
+function saveToDisk(data: OAuthUsageData, cachedAt: number): void {
+  try {
+    db.prepare('INSERT OR REPLACE INTO oauth_cache (key, data, cached_at) VALUES (?, ?, ?)').run(
+      OAUTH_CACHE_KEY, JSON.stringify(data), cachedAt,
+    )
+  } catch {
+    // non-fatal — disk write failure doesn't break the service
+  }
+}
+
+// Warm in-memory cache from disk on startup to survive restarts
+const _disk = loadFromDisk()
+if (_disk) {
+  lastGoodData = _disk.data
+  if (Date.now() < _disk.cachedAt + CACHE_TTL_MS) {
+    cache = { data: _disk.data, expiresAt: _disk.cachedAt + CACHE_TTL_MS }
+  }
+}
 
 function readCredentials(): { token: string; subscriptionType: string | null } | null {
   try {
@@ -91,8 +125,10 @@ export async function fetchOAuthUsage(): Promise<OAuthUsageData | null> {
       isEnterprise: creds.subscriptionType === 'enterprise',
     }
 
+    const now = Date.now()
     lastGoodData = data
-    cache = { data, expiresAt: Date.now() + CACHE_TTL_MS }
+    saveToDisk(data, now)
+    cache = { data, expiresAt: now + CACHE_TTL_MS }
     return data
   } catch (err) {
     console.warn('[oauthUsage] fetch failed:', (err as Error).message)

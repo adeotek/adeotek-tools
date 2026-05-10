@@ -43,6 +43,14 @@ function initDb(): Database.Database {
     )
   `).run()
 
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS oauth_cache (
+      key TEXT PRIMARY KEY,
+      data TEXT NOT NULL,
+      cached_at INTEGER NOT NULL
+    )
+  `).run()
+
   return db
 }
 
