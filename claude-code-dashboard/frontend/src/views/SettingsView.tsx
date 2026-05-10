@@ -1,16 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Save } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
-const KEY = 'dashboard_anthropic_api_key'
+const API_KEY = 'dashboard_anthropic_api_key'
 
 export default function SettingsView() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(KEY) ?? '')
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY) ?? '')
+  const [bypassPermissions, setBypassPermissions] = useState(true)
   const [saved, setSaved] = useState(false)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
-  function handleSave() {
-    if (apiKey) localStorage.setItem(KEY, apiKey)
-    else localStorage.removeItem(KEY)
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json() as Promise<Record<string, string>>)
+      .then((data) => {
+        setBypassPermissions(data.bypass_permissions !== 'false')
+        setSettingsLoaded(true)
+      })
+      .catch(() => setSettingsLoaded(true))
+  }, [])
+
+  async function handleSave() {
+    if (apiKey) localStorage.setItem(API_KEY, apiKey)
+    else localStorage.removeItem(API_KEY)
+
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bypass_permissions: String(bypassPermissions) }),
+    }).catch(() => {})
+
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -27,6 +46,7 @@ export default function SettingsView() {
 
       <h2 className="text-text-secondary text-xs uppercase tracking-widest">Settings</h2>
 
+      {/* API key */}
       <div className="space-y-2">
         <label className="text-text-secondary text-xs uppercase tracking-widest block">
           Anthropic API Key
@@ -41,6 +61,28 @@ export default function SettingsView() {
           placeholder="sk-ant-…"
           className="w-full bg-bg-panel border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder-text-dim focus:outline-none focus:border-accent"
         />
+      </div>
+
+      {/* Bypass permissions toggle */}
+      <div className="space-y-2">
+        <label className="text-text-secondary text-xs uppercase tracking-widest block">
+          Tool Permissions
+        </label>
+        <p className="text-text-muted text-xs">
+          When enabled, Claude Code runs with <code className="text-text-secondary">--dangerously-skip-permissions</code> — the same trust level as running <code className="text-text-secondary">claude</code> directly in your terminal. When disabled, writes outside the workspace are sandboxed.
+        </p>
+        <button
+          onClick={() => setBypassPermissions((v) => !v)}
+          disabled={!settingsLoaded}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded border transition-colors disabled:opacity-40 ${
+            bypassPermissions
+              ? 'border-status-green text-status-green bg-status-green/10'
+              : 'border-border-subtle text-text-muted bg-bg-elevated'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full ${bypassPermissions ? 'bg-status-green' : 'bg-text-dim'}`} />
+          {bypassPermissions ? 'Bypass permissions: on' : 'Bypass permissions: off'}
+        </button>
       </div>
 
       <button
