@@ -16,8 +16,16 @@ import { sessionWsRoutes } from './ws/session'
 const fastify = Fastify({ logger: true })
 
 async function start() {
+  const devOrigin = process.env.FRONTEND_ORIGIN
   await fastify.register(cors, {
-    origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true)                       // same-origin / curl / no-CORS
+      try {
+        if (new URL(origin).port === '9999') return cb(null, true)
+      } catch { /* ignore malformed */ }
+      if (devOrigin && origin === devOrigin) return cb(null, true)
+      cb(new Error('Not allowed by CORS'), false)
+    },
   })
   await fastify.register(websocket)
 
