@@ -136,6 +136,8 @@ class ActiveSession {
     // from --include-partial-messages are cumulative, not incremental)
     let lastMsgId = ''
     let lastEmittedLen = 0
+    let thinkingEmitted = false
+    const emittedToolIds = new Set<string>()
 
     rl.on('line', (line) => {
       const event = parseEvent(line)
@@ -152,17 +154,22 @@ class ActiveSession {
         if (msgId !== lastMsgId) {
           lastMsgId = msgId
           lastEmittedLen = 0
+          thinkingEmitted = false
+          emittedToolIds.clear()
         }
         for (const block of event.message.content) {
           if (block.type === 'thinking') {
-            // Only emit thinking on first occurrence to avoid repetition
-            if (lastEmittedLen === 0) {
+            if (!thinkingEmitted) {
+              thinkingEmitted = true
               const preview = block.thinking.slice(0, 300)
               this.broadcast({ type: 'output', data: `\x1b[2m💭 ${preview}\x1b[0m\r\n` })
             }
           } else if (block.type === 'tool_use') {
-            const summary = summarizeToolInput(block.name, block.input ?? {})
-            this.broadcast({ type: 'output', data: `⚙ ${block.name}: ${summary}\r\n` })
+            if (!emittedToolIds.has(block.id)) {
+              emittedToolIds.add(block.id)
+              const summary = summarizeToolInput(block.name, block.input ?? {})
+              this.broadcast({ type: 'output', data: `⚙ ${block.name}: ${summary}\r\n` })
+            }
           } else if (block.type === 'text') {
             const fullText = block.text
             const chunk = fullText.slice(lastEmittedLen)
@@ -191,8 +198,8 @@ class ActiveSession {
           )
         }
         const finalText = event.result ?? ''
+        this.broadcast({ type: 'message', role: 'assistant', content: finalText })
         if (finalText) {
-          this.broadcast({ type: 'message', role: 'assistant', content: finalText })
           db.prepare(
             'INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)',
           ).run(this.id, 'assistant', finalText, Date.now())
@@ -215,6 +222,7 @@ class ActiveSession {
   }
 
   kill() {
+    db.prepare('UPDATE sessions SET ended_at = ? WHERE id = ?').run(Date.now(), this.id)
     if (this.currentProc) {
       this.currentProc.kill('SIGTERM')
       this.currentProc = null
