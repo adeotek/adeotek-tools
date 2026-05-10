@@ -57,6 +57,10 @@ function initDb(): Database.Database {
     db.prepare('ALTER TABLE sessions ADD COLUMN claude_session_id TEXT').run()
   }
 
+  if (!sessionCols.find((c) => c.name === 'name')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN name TEXT').run()
+  }
+
   db.prepare(`
     CREATE TABLE IF NOT EXISTS settings (
       key   TEXT PRIMARY KEY,
