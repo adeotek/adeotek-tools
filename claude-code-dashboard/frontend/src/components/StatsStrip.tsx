@@ -68,88 +68,90 @@ export default function StatsStrip({ account, usage, activeSessions, loading }: 
   const isInitialLoad = loading && account === null
 
   return (
-    <div className="flex flex-wrap gap-2 items-center px-4 py-2 border-b border-border-subtle bg-bg-surface flex-shrink-0">
-      {isInitialLoad && (
-        <>
-          <SkeletonChip />
-          <SkeletonChip />
-          <SkeletonChip />
-          <SkeletonChip />
-        </>
-      )}
-      {account?.version && (
-        <Chip
-          label="ver"
-          value={account.version.startsWith('v') ? account.version : `v${account.version}`}
-        />
-      )}
+    <div className="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-bg-surface flex-shrink-0">
+      <div className="flex flex-wrap gap-2 items-center flex-1 min-w-0">
+        {isInitialLoad && (
+          <>
+            <SkeletonChip />
+            <SkeletonChip />
+            <SkeletonChip />
+            <SkeletonChip />
+          </>
+        )}
+        {account?.version && (
+          <Chip
+            label="ver"
+            value={account.version.startsWith('v') ? account.version : `v${account.version}`}
+          />
+        )}
 
-      {rl?.subscriptionType && (
-        <Chip label="plan" value={formatSubscription(rl.subscriptionType)} valueClass="text-accent font-medium" />
-      )}
+        {rl?.subscriptionType && (
+          <Chip label="plan" value={formatSubscription(rl.subscriptionType)} valueClass="text-accent font-medium" />
+        )}
 
-      {rl != null && (
-        <Chip
-          label="5h"
-          value={`${rl.fiveHourPct}%`}
-          valueClass={pctColor(rl.fiveHourPct)}
-          reset={formatTimeUntil(rl.fiveHourResetsAt)}
-        />
-      )}
+        {rl != null && (
+          <Chip
+            label="5h"
+            value={`${rl.fiveHourPct}%`}
+            valueClass={pctColor(rl.fiveHourPct)}
+            reset={formatTimeUntil(rl.fiveHourResetsAt)}
+          />
+        )}
 
-      {rl != null && (
-        <Chip
-          label="wk"
-          value={`${rl.sevenDayPct}%`}
-          valueClass={pctColor(rl.sevenDayPct)}
-          reset={formatTimeUntil(rl.sevenDayResetsAt)}
-        />
-      )}
+        {rl != null && (
+          <Chip
+            label="wk"
+            value={`${rl.sevenDayPct}%`}
+            valueClass={pctColor(rl.sevenDayPct)}
+            reset={formatTimeUntil(rl.sevenDayResetsAt)}
+          />
+        )}
 
-      {rl?.monthlyPct != null && (
-        <Chip label="mo" value={`${rl.monthlyPct}%`} valueClass={pctColor(rl.monthlyPct)} />
-      )}
+        {rl?.monthlyPct != null && (
+          <Chip label="mo" value={`${rl.monthlyPct}%`} valueClass={pctColor(rl.monthlyPct)} />
+        )}
 
-      {/* ext: non-enterprise extra credits (mutually exclusive with ent) */}
-      {rl?.extraEnabled && !rl.isEnterprise && (
-        <Chip
-          label="ext"
-          value={`$${(rl.extraUsedCents / 100).toFixed(2)}/${rl.extraLimitCents == null ? '∞' : `$${(rl.extraLimitCents / 100).toFixed(2)}`}`}
-          valueClass={
-            rl.extraLimitCents != null && rl.extraLimitCents > 0
-              ? pctColor(Math.round((rl.extraUsedCents / rl.extraLimitCents) * 100))
-              : 'text-text-primary'
-          }
-        />
-      )}
+        {/* ext: non-enterprise extra credits (mutually exclusive with ent) */}
+        {rl?.extraEnabled && !rl.isEnterprise && (
+          <Chip
+            label="ext"
+            value={`$${(rl.extraUsedCents / 100).toFixed(2)}/${rl.extraLimitCents == null ? '∞' : `$${(rl.extraLimitCents / 100).toFixed(2)}`}`}
+            valueClass={
+              rl.extraLimitCents != null && rl.extraLimitCents > 0
+                ? pctColor(Math.round((rl.extraUsedCents / rl.extraLimitCents) * 100))
+                : 'text-text-primary'
+            }
+          />
+        )}
 
-      {/* ent: enterprise usage (mutually exclusive with ext) */}
-      {rl?.extraEnabled && rl.isEnterprise && (
-        <Chip
-          label="ent"
-          value={`$${(rl.extraUsedCents / 100).toFixed(2)}/${rl.extraLimitCents == null ? '∞' : `$${(rl.extraLimitCents / 100).toFixed(2)}`}`}
-          valueClass={
-            rl.extraLimitCents != null && rl.extraLimitCents > 0
-              ? pctColor(Math.round((rl.extraUsedCents / rl.extraLimitCents) * 100))
-              : 'text-text-primary'
-          }
-        />
-      )}
+        {/* ent: enterprise usage (mutually exclusive with ext) */}
+        {rl?.extraEnabled && rl.isEnterprise && (
+          <Chip
+            label="ent"
+            value={`$${(rl.extraUsedCents / 100).toFixed(2)}/${rl.extraLimitCents == null ? '∞' : `$${(rl.extraLimitCents / 100).toFixed(2)}`}`}
+            valueClass={
+              rl.extraLimitCents != null && rl.extraLimitCents > 0
+                ? pctColor(Math.round((rl.extraUsedCents / rl.extraLimitCents) * 100))
+                : 'text-text-primary'
+            }
+          />
+        )}
 
-      {!isInitialLoad && (
-        <Chip label="sessions" value={String(activeSessions)} />
-      )}
+        {!isInitialLoad && (
+          <Chip label="sessions" value={String(activeSessions)} />
+        )}
 
-      {/* Background refresh spinner — only when data is already shown */}
-      {loading && !isInitialLoad && (
-        <Loader2 size={12} className="text-text-dim animate-spin ml-1" />
-      )}
+        {/* Background refresh spinner — only when data is already shown */}
+        {loading && !isInitialLoad && (
+          <Loader2 size={12} className="text-text-dim animate-spin ml-1" />
+        )}
+      </div>
 
       <NavLink
         to="/settings"
         title="Settings"
         className={({ isActive }) =>
-          'ml-auto flex items-center justify-center w-7 h-7 rounded transition-colors flex-shrink-0 ' +
+          'flex-shrink-0 flex items-center justify-center w-7 h-7 rounded transition-colors ' +
           (isActive ? 'text-accent' : 'text-text-dim hover:text-text-muted hover:bg-bg-elevated')
         }
       >
