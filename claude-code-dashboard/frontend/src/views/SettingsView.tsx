@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Save } from 'lucide-react'
+import { ArrowLeft, Save } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 
 const KEY = 'dashboard_anthropic_api_key'
 
@@ -16,6 +17,14 @@ export default function SettingsView() {
 
   return (
     <div className="p-6 space-y-6 max-w-md">
+      <NavLink
+        to="/"
+        className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover transition-colors"
+      >
+        <ArrowLeft size={13} strokeWidth={1.5} />
+        Back to Dashboard
+      </NavLink>
+
       <h2 className="text-text-secondary text-xs uppercase tracking-widest">Settings</h2>
 
       <div className="space-y-2">
