@@ -68,6 +68,8 @@ export function useWebSocket(onOutput: (data: string) => void) {
           setTimeout(connect, delay)
         } else {
           dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'disconnected' })
+          // Keep a slow background retry so the connection self-heals when the server comes back
+          setTimeout(() => { if (!closed) { attemptsRef.current = 0; connect() } }, 30_000)
         }
       }
     }

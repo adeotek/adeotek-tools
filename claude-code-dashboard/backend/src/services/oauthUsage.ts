@@ -21,6 +21,7 @@ const CACHE_TTL_MS = 60_000           // 60 s — same as statusline
 const ERROR_TTL_MS = 60 * 60_000     // 1 h back-off on auth/permission errors
 
 let cache: { data: OAuthUsageData | null; expiresAt: number } | null = null
+let lastGoodData: OAuthUsageData | null = null
 
 function readCredentials(): { token: string; subscriptionType: string | null } | null {
   try {
@@ -58,9 +59,15 @@ export async function fetchOAuthUsage(): Promise<OAuthUsageData | null> {
     })
 
     if (!res.ok) {
-      const ttl = res.status === 401 || res.status === 403 ? ERROR_TTL_MS : CACHE_TTL_MS
-      cache = { data: null, expiresAt: Date.now() + ttl }
-      return null
+      if (res.status === 401 || res.status === 403) {
+        // Credentials invalid — evict cache entirely
+        cache = { data: null, expiresAt: Date.now() + ERROR_TTL_MS }
+        lastGoodData = null
+        return null
+      }
+      // Transient error (429, 5xx, etc.) — serve stale data if available, retry after TTL
+      cache = { data: lastGoodData, expiresAt: Date.now() + CACHE_TTL_MS }
+      return lastGoodData
     }
 
     const json = await res.json() as Record<string, unknown>
@@ -84,11 +91,13 @@ export async function fetchOAuthUsage(): Promise<OAuthUsageData | null> {
       isEnterprise: creds.subscriptionType === 'enterprise',
     }
 
+    lastGoodData = data
     cache = { data, expiresAt: Date.now() + CACHE_TTL_MS }
     return data
   } catch (err) {
     console.warn('[oauthUsage] fetch failed:', (err as Error).message)
-    cache = { data: null, expiresAt: Date.now() + CACHE_TTL_MS }
-    return null
+    // Network error — serve stale data if available, retry after TTL
+    cache = { data: lastGoodData, expiresAt: Date.now() + CACHE_TTL_MS }
+    return lastGoodData
   }
 }
