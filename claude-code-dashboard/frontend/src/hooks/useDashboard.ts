@@ -5,6 +5,7 @@ import type { UsageData } from './useUsage'
 export interface Session {
   id: string
   workdir: string
+  name: string | null
   model: string | null
   started_at: number
   ended_at: number | null

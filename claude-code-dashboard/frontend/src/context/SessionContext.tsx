@@ -10,6 +10,7 @@ export interface Message {
 export interface SessionState {
   sessionId: string | null
   workdir: string | null
+  name: string | null
   model: string | null
   wsState: 'disconnected' | 'connecting' | 'running' | 'idle' | 'error'
   messages: Message[]
@@ -18,17 +19,19 @@ export interface SessionState {
 }
 
 type Action =
-  | { type: 'SESSION_CREATED'; sessionId: string; workdir: string }
+  | { type: 'SESSION_CREATED'; sessionId: string; workdir: string; name?: string }
   | { type: 'SESSION_CLEARED' }
-  | { type: 'RESUME_SESSION'; id: string; workdir: string }
+  | { type: 'RESUME_SESSION'; id: string; workdir: string; name?: string }
   | { type: 'WS_STATE'; state: SessionState['wsState']; timestamp: number }
   | { type: 'MESSAGE_ADDED'; message: Message }
   | { type: 'HISTORY_LOADED'; messages: Message[] }
   | { type: 'MODEL_SET'; model: string }
+  | { type: 'SESSION_RENAMED'; name: string | null }
 
 const initial: SessionState = {
   sessionId: null,
   workdir: null,
+  name: null,
   model: null,
   wsState: 'disconnected',
   messages: [],
@@ -39,11 +42,11 @@ const initial: SessionState = {
 function reducer(state: SessionState, action: Action): SessionState {
   switch (action.type) {
     case 'SESSION_CREATED':
-      return { ...state, sessionId: action.sessionId, workdir: action.workdir, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
+      return { ...state, sessionId: action.sessionId, workdir: action.workdir, name: action.name ?? null, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
     case 'SESSION_CLEARED':
       return { ...initial }
     case 'RESUME_SESSION':
-      return { ...state, sessionId: action.id, workdir: action.workdir, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
+      return { ...state, sessionId: action.id, workdir: action.workdir, name: action.name ?? null, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
     case 'WS_STATE': {
       const prev = state.wsState
       const next = action.state
@@ -62,6 +65,8 @@ function reducer(state: SessionState, action: Action): SessionState {
       return { ...state, messages: [...action.messages, ...state.messages] }
     case 'MODEL_SET':
       return { ...state, model: action.model }
+    case 'SESSION_RENAMED':
+      return { ...state, name: action.name }
     default:
       return state
   }
