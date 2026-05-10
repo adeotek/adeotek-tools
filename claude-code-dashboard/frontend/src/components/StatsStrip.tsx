@@ -69,6 +69,7 @@ export default function StatsStrip({ account, usage, activeSessions, loading }: 
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-bg-surface flex-shrink-0">
+      <span className="text-accent font-semibold text-xs tracking-wide flex-shrink-0 mr-1">Claude Code</span>
       <div className="flex flex-wrap gap-2 items-center flex-1 min-w-0">
         {isInitialLoad && (
           <>
