@@ -4,8 +4,10 @@ Web dashboard for Claude Code — displays account info, usage graphs, and acts 
 
 ## Stack
 
-- **Backend**: Fastify + TypeScript (Node.js), `@fastify/websocket`, `node-pty` for PTY process management, `better-sqlite3` for session/usage caching
+- **Backend**: Fastify + TypeScript (Node.js), `@fastify/websocket`, `@fastify/static`, `node-pty` for PTY process management, `better-sqlite3` for session/usage caching
 - **Frontend**: Vite + React + TypeScript, Tailwind CSS (dark theme), `@xterm/xterm` (terminal drawer), `recharts` (usage chart)
+
+In production (Docker or after `make build`), the backend serves the built frontend via `@fastify/static` — single port, no nginx. In development, Vite runs separately with its own dev server (HMR) and proxies API/WS to the backend.
 
 ## Prerequisites
 
@@ -13,8 +15,6 @@ Web dashboard for Claude Code — displays account info, usage graphs, and acts 
 - `claude` CLI installed and authenticated on the host
 
 ## Development
-
-> **Note:** This host requires `NODE_EXTRA_CA_CERTS` due to a custom CA bundle. `make install` handles this automatically.
 
 ```bash
 # Install deps in both packages
@@ -24,7 +24,7 @@ make install
 make dev
 ```
 
-Vite proxies `/api` and `/ws` to the backend during development, so the frontend always talks to `localhost:5173`.
+Vite proxies `/api` and `/ws` to the backend, and binds to `0.0.0.0` — reachable from LAN at `http://<host-ip>:5173`.
 
 ## Environment
 
@@ -37,7 +37,7 @@ cp .env.example backend/.env
 | `ANTHROPIC_API_KEY` | — | Optional; enables billing data in Usage view |
 | `CLAUDE_BIN` | `claude` | Path to the `claude` binary |
 | `PORT` | `3001` | Backend listen port |
-| `FRONTEND_ORIGIN` | `http://localhost:5173` | CORS allowed origin |
+| `FRONTEND_ORIGIN` | `http://localhost:5173` | CORS allowed origin (dev only) |
 
 ## Commands
 
@@ -69,9 +69,11 @@ backend/src/
     schema.ts            # better-sqlite3 init + table migrations
 
 frontend/src/
-  App.tsx                # HashRouter + layout shell
+  App.tsx                # HashRouter + layout shell (no sidebar — full width)
   components/
-    Sidebar.tsx          # Icon nav (Account / Usage / Chat / Settings)
+    StatsStrip.tsx       # Compact stat chips row + settings icon (top of dashboard)
+    SessionList.tsx      # Session rows with resume/delete, active/ended badges
+    SessionHeader.tsx    # Active workdir + model + New Session button
     InfoCard.tsx         # Account info card
     StatCard.tsx         # Usage stat card
     UsageChart.tsx       # recharts AreaChart
@@ -80,17 +82,15 @@ frontend/src/
     UserMessage.tsx      # User chat bubble
     TerminalDrawer.tsx   # xterm.js — CSS-toggled, never unmounted
     NewSessionModal.tsx  # Directory picker shown on session start
-    SessionHeader.tsx    # Active workdir + model + New Session button
     ChatInput.tsx        # Textarea input (Enter=send, Shift+Enter=newline)
   views/
-    AccountView.tsx
-    UsageView.tsx
-    ChatView.tsx
-    SettingsView.tsx
+    DashboardView.tsx    # Main view: StatsStrip → collapsible UsageChart → session area
+    SettingsView.tsx     # API key config + Back to Dashboard link
   hooks/
     useWebSocket.ts      # WS connection with exponential-backoff reconnect
     useAccount.ts        # Fetches GET /api/account
     useUsage.ts          # Fetches GET /api/usage
+    useDashboard.ts      # Parallel fetch account+usage+sessions, 60s auto-refresh
   context/
     SessionContext.tsx   # Active session state + dispatch
 ```
@@ -100,7 +100,7 @@ frontend/src/
 ```bash
 docker build -t claude-code-dashboard .
 docker-compose up
-# Dashboard at http://localhost:80
+# Dashboard at http://localhost:8080
 ```
 
 `docker-compose.yml` mounts `~/.claude` (read-only) and `~/projects` (read-write) from the host.
