@@ -20,16 +20,16 @@ export async function sessionRoutes(fastify: FastifyInstance) {
     return reply.send(rows)
   })
 
-  fastify.post<{ Body: { workdir: string } }>('/api/sessions', async (req, reply) => {
-    const { workdir } = req.body
+  fastify.post<{ Body: { workdir: string; name?: string } }>('/api/sessions', async (req, reply) => {
+    const { workdir, name } = req.body
     if (!workdir || typeof workdir !== 'string') {
       return reply.status(400).send({ error: 'workdir is required' })
     }
 
     const id = uuidv4()
     db.prepare(
-      'INSERT INTO sessions (id, workdir, started_at) VALUES (?, ?, ?)',
-    ).run(id, workdir, Date.now())
+      'INSERT INTO sessions (id, workdir, name, started_at) VALUES (?, ?, ?, ?)',
+    ).run(id, workdir, name?.trim() || null, Date.now())
 
     return reply.status(201).send({ sessionId: id })
   })
@@ -38,6 +38,22 @@ export async function sessionRoutes(fastify: FastifyInstance) {
     const { id } = req.params
     sessionManager.kill(id)
     db.prepare('UPDATE sessions SET ended_at = ? WHERE id = ?').run(Date.now(), id)
+    return reply.send({ ok: true })
+  })
+
+  fastify.patch<{ Params: { id: string }; Body: { name: string } }>('/api/sessions/:id', async (req, reply) => {
+    const { id } = req.params
+    const { name } = req.body
+
+    const session = db.prepare('SELECT id FROM sessions WHERE id = ?').get(id)
+    if (!session) {
+      return reply.status(404).send({ error: 'Session not found' })
+    }
+
+    db.prepare('UPDATE sessions SET name = ? WHERE id = ?').run(
+      typeof name === 'string' ? name.trim() || null : null,
+      id,
+    )
     return reply.send({ ok: true })
   })
 
