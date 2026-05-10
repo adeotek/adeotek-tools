@@ -52,7 +52,7 @@ async function start() {
     })
   }
 
-  const PORT = Number(process.env.PORT ?? 3001)
+  const PORT = Number(process.env.PORT ?? 9998)
   const HOST = process.env.HOST ?? '0.0.0.0'
 
   try {

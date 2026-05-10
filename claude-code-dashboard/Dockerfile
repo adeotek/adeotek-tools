@@ -26,6 +26,6 @@ COPY --from=backend-build /app/backend/dist ./dist
 # Place frontend dist where server.ts expects it relative to dist/
 COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
-EXPOSE 3001
+EXPOSE 9998
 
 CMD ["node", "/app/backend/dist/server.js"]

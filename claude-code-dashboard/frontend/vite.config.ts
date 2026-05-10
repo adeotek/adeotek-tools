@@ -1,5 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { hostname as getHostname, networkInterfaces } from 'os'
+
+const hostname = getHostname()
+const localIps = (Object.values(networkInterfaces()).flat() as { internal: boolean; address: string }[])
+  .filter(iface => iface && !iface.internal)
+  .map(iface => iface.address)
 
 export default defineConfig({
   plugins: [react()],
@@ -18,10 +24,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 9999,
+    allowedHosts: ['localhost', hostname, `${hostname}.lan`, ...localIps],
     proxy: {
-      '/api': 'http://localhost:3001',
+      '/api': 'http://localhost:9998',
       '/ws': {
-        target: 'ws://localhost:3001',
+        target: 'ws://localhost:9998',
         ws: true,
       },
     },
