@@ -86,7 +86,7 @@ export default function SessionHeader({
       <div className="flex items-center gap-2 min-w-0">
         <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
           state.wsState === 'running' ? 'bg-status-green' :
-          state.wsState === 'idle'    ? 'bg-text-muted' :
+          state.wsState === 'idle'    ? 'bg-status-green/40' :
           state.wsState === 'error'   ? 'bg-status-red' : 'bg-text-dim'
         }`} />
         {state.workdir && (

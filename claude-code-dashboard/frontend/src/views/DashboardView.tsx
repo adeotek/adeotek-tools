@@ -69,7 +69,7 @@ export default function DashboardView() {
   function handleSend(text: string) {
     dispatch({
       type: 'MESSAGE_ADDED',
-      message: { id: crypto.randomUUID(), role: 'user', content: text, createdAt: Date.now() },
+      message: { id: Date.now().toString(36) + Math.random().toString(36).slice(2), role: 'user', content: text, createdAt: Date.now() },
     })
     // Use type:'chat' for structured chat messages (terminal raw input uses type:'input')
     send({ type: 'chat', data: text + '\n' })

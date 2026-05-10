@@ -40,13 +40,13 @@ export function useWebSocket(onOutput: (data: string) => void) {
           } else if (msg.type === 'message' && msg.role === 'assistant' && msg.content) {
             dispatch({
               type: 'MESSAGE_ADDED',
-              message: { id: crypto.randomUUID(), role: 'assistant', content: msg.content, createdAt: Date.now() },
+              message: { id: Date.now().toString(36) + Math.random().toString(36).slice(2), role: 'assistant', content: msg.content, createdAt: Date.now() },
             })
           } else if (msg.type === 'status' && msg.state) {
             dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: msg.state as 'running' | 'idle' | 'error' })
           } else if (msg.type === 'history' && Array.isArray(msg.messages)) {
             const history = msg.messages.map((m) => ({
-              id: crypto.randomUUID(),
+              id: Date.now().toString(36) + Math.random().toString(36).slice(2),
               role: m.role as 'user' | 'assistant',
               content: m.content,
               createdAt: m.created_at,
