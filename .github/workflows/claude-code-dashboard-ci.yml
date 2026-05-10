@@ -1,12 +1,15 @@
 name: claude-code-dashboard CI
 
 on:
-  push:
-    paths:
-      - 'claude-code-dashboard/**'
   pull_request:
     paths:
-      - 'claude-code-dashboard/**'
+      - "claude-code-dashboard/**"
+      - ".github/workflows/claude-code-dashboard-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "claude-code-dashboard/**"
+      - ".github/workflows/claude-code-dashboard-ci.yml"
 
 jobs:
   lint-and-build:

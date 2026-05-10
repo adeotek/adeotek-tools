@@ -3,6 +3,7 @@ import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
 import { ChevronUp, ChevronDown } from 'lucide-react'
+import { useResizableHeight } from '../hooks/useResizableHeight'
 
 export interface TerminalDrawerHandle {
   write: (data: string) => void
@@ -16,6 +17,7 @@ const TerminalDrawer = forwardRef<TerminalDrawerHandle, { wsState: string }>(
     const termRef = useRef<Terminal | null>(null)
     const fitRef = useRef<FitAddon | null>(null)
     const onResizeCbRef = useRef<((cols: number, rows: number) => void) | null>(null)
+    const { height: termHeight, onDragStart } = useResizableHeight(200, 80, 600)
 
     useEffect(() => {
       const term = new Terminal({
@@ -45,8 +47,10 @@ const TerminalDrawer = forwardRef<TerminalDrawerHandle, { wsState: string }>(
     }, [])
 
     useEffect(() => {
-      if (open) setTimeout(() => fitRef.current?.fit(), 10)
-    }, [open])
+      if (!open) return
+      const raf = requestAnimationFrame(() => fitRef.current?.fit())
+      return () => cancelAnimationFrame(raf)
+    }, [open, termHeight])
 
     useImperativeHandle(ref, () => ({
       write: (data) => termRef.current?.write(data),
@@ -57,6 +61,12 @@ const TerminalDrawer = forwardRef<TerminalDrawerHandle, { wsState: string }>(
 
     return (
       <div className="border-t border-border-subtle bg-bg-base flex-shrink-0">
+        {/* Resize handle — drag up/down to change terminal height */}
+        <div
+          onMouseDown={onDragStart}
+          className="h-1.5 cursor-ns-resize select-none hover:bg-accent/10 active:bg-accent/20 transition-colors"
+        />
+
         <button
           onClick={() => setOpen((o) => !o)}
           className="w-full px-4 py-1.5 flex items-center gap-2 hover:bg-bg-elevated transition-colors"
@@ -70,7 +80,7 @@ const TerminalDrawer = forwardRef<TerminalDrawerHandle, { wsState: string }>(
         </button>
 
         {/* xterm is always mounted, just hidden — preserves PTY scroll buffer */}
-        <div style={{ display: open ? 'block' : 'none', height: 200 }}>
+        <div style={{ display: open ? 'block' : 'none', height: termHeight }}>
           <div ref={containerRef} className="h-full" />
         </div>
       </div>

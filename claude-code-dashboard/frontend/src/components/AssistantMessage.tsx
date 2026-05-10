@@ -14,13 +14,13 @@ export default function AssistantMessage({ content }: AssistantMessageProps) {
       </div>
       <div className="max-w-[85%] bg-bg-surface border border-border-subtle rounded-lg rounded-bl-sm px-3 py-2">
         <ReactMarkdown
-          className="text-text-primary text-sm leading-relaxed prose-invert"
+          className="text-text-primary text-xs leading-relaxed prose-invert"
           components={{
             code({ className, children, ...props }) {
               const langMatch = (className ?? '').match(/language-(\w+)/)
               const isInline = !langMatch
               return isInline ? (
-                <code className="bg-bg-elevated text-accent px-1 py-0.5 rounded text-xs" {...props}>
+                <code className="bg-bg-elevated text-accent px-1 py-0.5 rounded text-[10px]" {...props}>
                   {children}
                 </code>
               ) : (
@@ -28,7 +28,7 @@ export default function AssistantMessage({ content }: AssistantMessageProps) {
                   style={vscDarkPlus}
                   language={langMatch[1]}
                   PreTag="div"
-                  customStyle={{ margin: '8px 0', borderRadius: 4, fontSize: 11 }}
+                  customStyle={{ margin: '8px 0', borderRadius: 4, fontSize: 10 }}
                 >
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
