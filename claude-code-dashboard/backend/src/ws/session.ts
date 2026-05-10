@@ -92,7 +92,10 @@ class ActiveSession {
   }
 
   sendMessage(text: string) {
-    if (this.isRunning) return
+    if (this.isRunning) {
+      this.broadcast({ type: 'status', state: 'running' })
+      return
+    }
     this.resetIdle()
     this.isRunning = true
     this.broadcast({ type: 'status', state: 'running' })
@@ -125,10 +128,25 @@ class ActiveSession {
     })
     this.currentProc = proc
 
+    if (!proc.stdin || !proc.stdout || !proc.stderr) {
+      this.isRunning = false
+      this.broadcast({ type: 'status', state: 'error' })
+      return
+    }
+
     const inputMsg =
       JSON.stringify({ type: 'user', message: { role: 'user', content: text } }) + '\n'
     proc.stdin!.write(inputMsg)
     proc.stdin!.end()
+
+    proc.on('error', (err) => {
+      this.currentProc = null
+      this.isRunning = false
+      this.broadcast({ type: 'output', data: `\r\nError: ${err.message}\r\n` })
+      this.broadcast({ type: 'status', state: 'error' })
+    })
+
+    proc.stdin!.on('error', () => { /* stdin EPIPE on early process exit */ })
 
     const rl = readline.createInterface({ input: proc.stdout! })
 
@@ -140,6 +158,7 @@ class ActiveSession {
     const emittedToolIds = new Set<string>()
 
     rl.on('line', (line) => {
+      this.resetIdle()
       const event = parseEvent(line)
       if (!event) return
 
@@ -212,7 +231,7 @@ class ActiveSession {
 
     proc.stderr!.on('data', () => { /* suppress hook/debug noise */ })
 
-    proc.on('close', () => {
+    rl.on('close', () => {
       this.currentProc = null
       if (this.isRunning) {
         this.isRunning = false
