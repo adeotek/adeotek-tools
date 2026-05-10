@@ -18,17 +18,14 @@ RUN npm run build
 
 # Stage 3: production image
 FROM node:22-alpine
-RUN apk add --no-cache nginx
 
 WORKDIR /app/backend
 COPY --from=backend-build /app/backend/node_modules ./node_modules
 COPY --from=backend-build /app/backend/dist ./dist
 
-COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/http.d/default.conf
+# Place frontend dist where server.ts expects it relative to dist/
+COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
-EXPOSE 80
+EXPOSE 3001
 
-COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-CMD ["/entrypoint.sh"]
+CMD ["node", "/app/backend/dist/server.js"]

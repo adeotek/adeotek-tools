@@ -1,11 +1,32 @@
 import Anthropic from '@anthropic-ai/sdk'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 import type { DayUsage } from './localLogs'
 
 let client: Anthropic | null = null
 
+function resolveApiKey(): string | null {
+  if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY
+
+  // Fall back to ~/.claude/settings.json env block — where Claude Code users
+  // typically store ANTHROPIC_API_KEY without it being in the shell environment.
+  try {
+    const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')) as Record<string, unknown>
+    const env = settings.env as Record<string, string> | undefined
+    if (env?.ANTHROPIC_API_KEY) return env.ANTHROPIC_API_KEY
+  } catch {
+    // settings.json absent or malformed — no key available
+  }
+
+  return null
+}
+
 function getClient(): Anthropic | null {
-  if (!process.env.ANTHROPIC_API_KEY) return null
-  if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const apiKey = resolveApiKey()
+  if (!apiKey) return null
+  if (!client) client = new Anthropic({ apiKey })
   return client
 }
 

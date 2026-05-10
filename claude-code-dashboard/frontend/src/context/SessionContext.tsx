@@ -13,13 +13,17 @@ export interface SessionState {
   model: string | null
   wsState: 'disconnected' | 'connecting' | 'running' | 'idle' | 'error'
   messages: Message[]
+  workingTimeMs: number       // cumulative ms spent in 'running' state
+  runningStartedAt: number | null  // timestamp when current run period began
 }
 
 type Action =
   | { type: 'SESSION_CREATED'; sessionId: string; workdir: string }
   | { type: 'SESSION_CLEARED' }
-  | { type: 'WS_STATE'; state: SessionState['wsState'] }
+  | { type: 'RESUME_SESSION'; id: string; workdir: string }
+  | { type: 'WS_STATE'; state: SessionState['wsState']; timestamp: number }
   | { type: 'MESSAGE_ADDED'; message: Message }
+  | { type: 'HISTORY_LOADED'; messages: Message[] }
   | { type: 'MODEL_SET'; model: string }
 
 const initial: SessionState = {
@@ -28,18 +32,34 @@ const initial: SessionState = {
   model: null,
   wsState: 'disconnected',
   messages: [],
+  workingTimeMs: 0,
+  runningStartedAt: null,
 }
 
 function reducer(state: SessionState, action: Action): SessionState {
   switch (action.type) {
     case 'SESSION_CREATED':
-      return { ...state, sessionId: action.sessionId, workdir: action.workdir, messages: [], wsState: 'connecting' }
+      return { ...state, sessionId: action.sessionId, workdir: action.workdir, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
     case 'SESSION_CLEARED':
       return { ...initial }
-    case 'WS_STATE':
-      return { ...state, wsState: action.state }
+    case 'RESUME_SESSION':
+      return { ...state, sessionId: action.id, workdir: action.workdir, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
+    case 'WS_STATE': {
+      const prev = state.wsState
+      const next = action.state
+      let { workingTimeMs, runningStartedAt } = state
+      if (next === 'running' && prev !== 'running') {
+        runningStartedAt = action.timestamp
+      } else if (prev === 'running' && next !== 'running' && runningStartedAt != null) {
+        workingTimeMs += action.timestamp - runningStartedAt
+        runningStartedAt = null
+      }
+      return { ...state, wsState: next, workingTimeMs, runningStartedAt }
+    }
     case 'MESSAGE_ADDED':
       return { ...state, messages: [...state.messages, action.message] }
+    case 'HISTORY_LOADED':
+      return { ...state, messages: [...action.messages, ...state.messages] }
     case 'MODEL_SET':
       return { ...state, model: action.model }
     default:

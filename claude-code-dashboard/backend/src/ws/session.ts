@@ -7,7 +7,7 @@ const IDLE_TIMEOUT_MS = 30 * 60 * 1000
 const ANSI_RE = /\x1B\[[0-9;]*[A-Za-z]|\x1B\][^\x07]*\x07|\x1B[()][AB012]/g
 
 interface ClientMessage {
-  type: 'input' | 'resize' | 'interrupt'
+  type: 'input' | 'resize' | 'interrupt' | 'chat'
   data?: string
   cols?: number
   rows?: number
@@ -52,14 +52,29 @@ class ActiveSession {
     ws.on('close', () => this.sockets.delete(ws))
   }
 
-  send(msg: ClientMessage) {
+  send(msg: ClientMessage, sessionId: string) {
     this.resetIdle()
-    if (msg.type === 'input' && msg.data) {
-      this.proc.write(msg.data)
-    } else if (msg.type === 'resize' && msg.cols && msg.rows) {
-      this.proc.resize(msg.cols, msg.rows)
-    } else if (msg.type === 'interrupt') {
-      this.proc.write('\x03') // Ctrl+C
+    switch (msg.type) {
+      case 'input':
+        if (msg.data) this.proc.write(msg.data)
+        break
+      case 'resize':
+        if (msg.cols && msg.rows) this.proc.resize(msg.cols, msg.rows)
+        break
+      case 'interrupt':
+        this.proc.write('\x03') // Ctrl+C
+        break
+      case 'chat': {
+        const text = msg.data as string
+        // Forward to PTY as input (with newline if not already ending with one)
+        const ptyInput = text.endsWith('\n') ? text : text + '\n'
+        this.proc.write(ptyInput)
+        // Persist as user message
+        db.prepare(
+          'INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)',
+        ).run(sessionId, 'user', text.replace(/\n$/, ''), Date.now())
+        break
+      }
     }
   }
 
@@ -147,7 +162,7 @@ export async function sessionWsRoutes(fastify: FastifyInstance) {
       const { id } = req.params
 
       const row = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as
-        | { workdir: string }
+        | { workdir: string; ended_at: number | null }
         | undefined
 
       if (!row) {
@@ -156,13 +171,26 @@ export async function sessionWsRoutes(fastify: FastifyInstance) {
         return
       }
 
+      // Send message history to the connecting client
+      const history = db
+        .prepare('SELECT role, content, created_at FROM messages WHERE session_id = ? ORDER BY created_at ASC')
+        .all(id)
+      if (history.length > 0) {
+        socket.send(JSON.stringify({ type: 'history', messages: history }))
+      }
+
+      // Clear ended_at if resuming a previously stopped session
+      if (row.ended_at !== null) {
+        db.prepare('UPDATE sessions SET ended_at = NULL WHERE id = ?').run(id)
+      }
+
       const session = sessionManager.getOrCreate(id, row.workdir)
       session.attach(socket)
 
       socket.on('message', (raw: Buffer | string) => {
         try {
           const msg = JSON.parse(raw.toString()) as ClientMessage
-          session.send(msg)
+          session.send(msg, id)
         } catch {
           // ignore malformed frames
         }

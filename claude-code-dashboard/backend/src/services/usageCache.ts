@@ -1,6 +1,7 @@
 import { db } from '../db/schema'
 import { parseLocalUsage, type DayUsage } from './localLogs'
 import { fetchApiUsage } from './anthropicApi'
+import { fetchOAuthUsage, type OAuthUsageData } from './oauthUsage'
 
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
@@ -12,6 +13,7 @@ export interface UsageResult {
   days: DayUsage[]
   totals: { inputTokens: number; outputTokens: number; sessions: number; costUsd: number }
   sources: string[]
+  rateLimits: OAuthUsageData | null
 }
 
 export async function getUsage(month: string): Promise<UsageResult> {
@@ -20,6 +22,8 @@ export async function getUsage(month: string): Promise<UsageResult> {
     .all(`${month}%`, Date.now() - CACHE_TTL_MS) as Array<{
     date: string; input_tokens: number; output_tokens: number; cost_usd: number; source: string; cached_at: number
   }>
+
+  const rateLimits = await fetchOAuthUsage()
 
   if (cached.length > 0 && cached.every((r) => isFresh(r.cached_at))) {
     return buildResult(
@@ -31,6 +35,7 @@ export async function getUsage(month: string): Promise<UsageResult> {
       })),
       month,
       [...new Set(cached.map((r) => r.source))],
+      rateLimits,
     )
   }
 
@@ -40,7 +45,7 @@ export async function getUsage(month: string): Promise<UsageResult> {
   ])
 
   const merged = mergeDays(localDays, apiDays)
-  const sources = ['local', ...(apiDays.length > 0 ? ['api'] : [])]
+  const sources: string[] = ['local', ...(apiDays.length > 0 ? ['api'] : [])]
 
   const upsert = db.prepare(`
     INSERT INTO usage_cache (date, input_tokens, output_tokens, cost_usd, source, cached_at)
@@ -67,7 +72,7 @@ export async function getUsage(month: string): Promise<UsageResult> {
   })
   insertMany(merged)
 
-  return buildResult(merged, month, sources)
+  return buildResult(merged, month, sources, rateLimits)
 }
 
 function mergeDays(local: DayUsage[], api: DayUsage[]): DayUsage[] {
@@ -85,7 +90,7 @@ function mergeDays(local: DayUsage[], api: DayUsage[]): DayUsage[] {
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
 
-function buildResult(days: DayUsage[], month: string, sources: string[]): UsageResult {
+function buildResult(days: DayUsage[], month: string, sources: string[], rateLimits: OAuthUsageData | null): UsageResult {
   const sessions = (db
     .prepare(`SELECT COUNT(*) as count FROM sessions WHERE started_at >= ? AND started_at < ?`)
     .get(
@@ -103,5 +108,5 @@ function buildResult(days: DayUsage[], month: string, sources: string[]): UsageR
     { inputTokens: 0, outputTokens: 0, costUsd: 0, sessions },
   )
 
-  return { days, totals, sources }
+  return { days, totals, sources, rateLimits }
 }

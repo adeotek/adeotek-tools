@@ -22,10 +22,10 @@ export default {
           muted: '#92400e',
         },
         text: {
-          primary: '#e2e2e2',
-          secondary: '#888888',
-          muted: '#555555',
-          dim: '#333333',
+          primary: '#f2f2f2',
+          secondary: '#aaaaaa',
+          muted: '#777777',
+          dim: '#555555',
         },
         status: {
           green: '#22c55e',

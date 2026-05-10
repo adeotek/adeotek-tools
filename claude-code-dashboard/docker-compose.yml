@@ -4,11 +4,10 @@ services:
     build:
       context: .
     ports:
-      - "8080:80"
+      - "8080:3001"
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - CLAUDE_BIN=${CLAUDE_BIN:-claude}
-      - FRONTEND_ORIGIN=http://localhost:8080
     volumes:
       # Mount Claude Code credentials and session logs (read-only)
       - ~/.claude:/root/.claude:ro

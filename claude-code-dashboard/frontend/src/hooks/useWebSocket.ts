@@ -11,23 +11,29 @@ export function useWebSocket(onOutput: (data: string) => void) {
 
   useEffect(() => {
     if (!state.sessionId) return
+    let closed = false
 
     function connect() {
       const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
       const host = window.location.host
       const ws = new WebSocket(`${protocol}://${host}/ws/session/${state.sessionId}`)
       wsRef.current = ws
-      dispatch({ type: 'WS_STATE', state: 'connecting' })
+      dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'connecting' })
 
       ws.onopen = () => {
         attemptsRef.current = 0
-        dispatch({ type: 'WS_STATE', state: 'running' })
+        dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'running' })
       }
 
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data as string) as {
-            type: string; data?: string; role?: string; content?: string; state?: string
+            type: string
+            data?: string
+            role?: string
+            content?: string
+            state?: string
+            messages?: Array<{ role: string; content: string; created_at: number }>
           }
           if (msg.type === 'output' && msg.data) {
             onOutput(msg.data)
@@ -37,28 +43,39 @@ export function useWebSocket(onOutput: (data: string) => void) {
               message: { id: crypto.randomUUID(), role: 'assistant', content: msg.content, createdAt: Date.now() },
             })
           } else if (msg.type === 'status' && msg.state) {
-            dispatch({ type: 'WS_STATE', state: msg.state as 'running' | 'idle' | 'error' })
+            dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: msg.state as 'running' | 'idle' | 'error' })
+          } else if (msg.type === 'history' && Array.isArray(msg.messages)) {
+            const history = msg.messages.map((m) => ({
+              id: crypto.randomUUID(),
+              role: m.role as 'user' | 'assistant',
+              content: m.content,
+              createdAt: m.created_at,
+            }))
+            dispatch({ type: 'HISTORY_LOADED', messages: history })
           }
         } catch {
           // ignore malformed frames
         }
       }
 
-      ws.onerror = () => dispatch({ type: 'WS_STATE', state: 'error' })
+      ws.onerror = () => dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'error' })
 
       ws.onclose = () => {
+        if (closed) return
         if (attemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           const delay = BASE_DELAY_MS * 2 ** attemptsRef.current
           attemptsRef.current++
           setTimeout(connect, delay)
         } else {
-          dispatch({ type: 'WS_STATE', state: 'disconnected' })
+          dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: 'disconnected' })
         }
       }
     }
 
     connect()
     return () => {
+      closed = true
+      attemptsRef.current = 0
       wsRef.current?.close()
       wsRef.current = null
     }

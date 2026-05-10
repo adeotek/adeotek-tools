@@ -7,10 +7,26 @@ export interface DayUsage {
   costUsd: number
 }
 
+export interface OAuthUsageData {
+  fiveHourPct: number
+  fiveHourResetsAt: string | null
+  sevenDayPct: number
+  sevenDayResetsAt: string | null
+  monthlyPct: number | null
+  monthlyResetsAt: string | null
+  extraEnabled: boolean
+  extraUsedCents: number
+  extraLimitCents: number | null
+  currency: string
+  subscriptionType: string | null
+  isEnterprise: boolean
+}
+
 export interface UsageData {
   days: DayUsage[]
   totals: { inputTokens: number; outputTokens: number; sessions: number; costUsd: number }
   sources: string[]
+  rateLimits: OAuthUsageData | null
 }
 
 export function useUsage(month?: string) {

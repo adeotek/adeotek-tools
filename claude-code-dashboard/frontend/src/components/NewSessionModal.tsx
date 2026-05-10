@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FolderOpen } from 'lucide-react'
 
 interface NewSessionModalProps {
-  onStart: (workdir: string) => void
+  onStart: (sessionId: string, workdir: string) => void
 }
 
 export default function NewSessionModal({ onStart }: NewSessionModalProps) {
@@ -24,7 +24,7 @@ export default function NewSessionModal({ onStart }: NewSessionModalProps) {
       })
       if (!res.ok) throw new Error(await res.text())
       const { sessionId } = (await res.json()) as { sessionId: string }
-      onStart(sessionId)
+      onStart(sessionId, workdir.trim())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create session')
       setLoading(false)

@@ -40,6 +40,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         onKeyDown={onKeyDown}
         onInput={onInput}
         disabled={disabled}
+        autoFocus
         placeholder="Ask Claude Code anything… (Shift+Enter for new line)"
         rows={1}
         className="flex-1 bg-bg-panel border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder-text-dim focus:outline-none focus:border-accent resize-none leading-relaxed disabled:opacity-40"

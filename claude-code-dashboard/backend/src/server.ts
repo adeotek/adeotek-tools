@@ -1,6 +1,9 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import cors from '@fastify/cors'
+import staticPlugin from '@fastify/static'
+import path from 'path'
+import fs from 'fs'
 import { accountRoutes } from './routes/account'
 import { usageRoutes } from './routes/usage'
 import { sessionRoutes } from './routes/sessions'
@@ -24,6 +27,22 @@ async function start() {
   await fastify.register(sessionWsRoutes)
 
   fastify.get('/health', async () => ({ status: 'ok' }))
+
+  // Serve built frontend when dist exists (production / make build).
+  // In dev, Vite handles the frontend on its own port.
+  // __dirname is backend/src in tsx-watch and backend/dist in compiled mode,
+  // so ../../frontend/dist resolves correctly in both cases.
+  const frontendDist = path.join(__dirname, '../../frontend/dist')
+  if (fs.existsSync(frontendDist)) {
+    await fastify.register(staticPlugin, { root: frontendDist, wildcard: false })
+    fastify.setNotFoundHandler(async (request, reply) => {
+      if (request.url.startsWith('/api/') || request.url.startsWith('/ws/')) {
+        reply.code(404)
+        return { error: 'Not found' }
+      }
+      return reply.sendFile('index.html')
+    })
+  }
 
   const PORT = Number(process.env.PORT ?? 3001)
   const HOST = process.env.HOST ?? '0.0.0.0'
