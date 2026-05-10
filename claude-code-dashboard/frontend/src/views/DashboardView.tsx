@@ -38,14 +38,6 @@ export default function DashboardView() {
 
   const { send } = useWebSocket(onOutput)
 
-  // Wire terminal resize → backend PTY resize
-  const onTerminalMounted = useCallback(() => {
-    terminalRef.current?.sendResize((cols, rows) => {
-      send({ type: 'resize', cols, rows })
-    })
-  }, [send])
-  void onTerminalMounted
-
   function handleSessionStart(sessionId: string, workdir: string) {
     dispatch({ type: 'SESSION_CREATED', sessionId, workdir })
     if (account?.model) dispatch({ type: 'MODEL_SET', model: account.model })
