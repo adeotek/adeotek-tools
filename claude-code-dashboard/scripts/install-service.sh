@@ -36,6 +36,8 @@ done
 if [[ "$SKIP_BUILD" == true && -d "$INSTALL_DIR/backend/dist" && -d "$INSTALL_DIR/frontend/dist" ]]; then
   echo "Skipping build (--skip-build set and dist directories exist)."
 else
+  echo "Installing dependencies..."
+  make -C "$INSTALL_DIR" install
   echo "Building..."
   make -C "$INSTALL_DIR" build
 fi
@@ -58,6 +60,7 @@ read_env_var() {
 
 ANTHROPIC_API_KEY=$(read_env_var "ANTHROPIC_API_KEY" "")
 CLAUDE_BIN=$(read_env_var "CLAUDE_BIN" "claude")
+CLAUDE_BIN="$(command -v "$CLAUDE_BIN" 2>/dev/null || echo "$CLAUDE_BIN")"
 PORT=$(read_env_var "PORT" "9998")
 
 cat > "$ENV_FILE" <<EOF
