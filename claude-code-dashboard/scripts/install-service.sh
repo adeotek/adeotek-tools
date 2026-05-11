@@ -10,6 +10,9 @@ UNIT_FILE="$SYSTEMD_USER_DIR/$SERVICE_NAME.service"
 TEMPLATE="$SCRIPT_DIR/$SERVICE_NAME.service.template"
 DOT_ENV="$INSTALL_DIR/backend/.env"
 
+# --- Template check ---
+[[ -f "$TEMPLATE" ]] || { echo "Error: template not found: $TEMPLATE" >&2; exit 1; }
+
 # --- Preflight ---
 check_command() {
   if ! command -v "$1" &>/dev/null; then
@@ -20,6 +23,7 @@ check_command() {
 check_command node
 check_command npm
 check_command claude
+check_command make
 
 NODE_BIN="$(command -v node)"
 
@@ -41,6 +45,7 @@ mkdir -p "$SYSTEMD_USER_DIR"
 
 # --- Env file ---
 echo "Writing env file: $ENV_FILE"
+install -m 600 /dev/null "$ENV_FILE"
 
 read_env_var() {
   local key="$1" default="$2"
@@ -75,9 +80,9 @@ systemctl --user enable --now "$SERVICE_NAME"
 echo ""
 echo "Enabling linger for $USER..."
 echo "(This allows the service to start at boot, even without an active login session.)"
-loginctl enable-linger "$USER"
+loginctl enable-linger "$USER" || echo "Warning: could not enable linger — you may need: sudo loginctl enable-linger $USER"
 
-PORT_ACTUAL=$(read_env_var "PORT" "9998")
+PORT_ACTUAL=$PORT
 echo ""
 echo "Done! Claude Code Dashboard is running at: http://localhost:${PORT_ACTUAL}"
 echo "Check status : systemctl --user status $SERVICE_NAME"
