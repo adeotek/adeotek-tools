@@ -30,6 +30,11 @@ assert_not_contains() {
   fi
 }
 
+if [[ ! -f "$TEMPLATE" ]]; then
+  echo "Error: template file not found: $TEMPLATE" >&2
+  exit 1
+fi
+
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
@@ -87,7 +92,14 @@ KEY_D=$(       read_env_var "ANTHROPIC_API_KEY" "" "/nonexistent/.env")
 
 assert_contains "Default CLAUDE_BIN" "claude" "$CLAUDE_BIN_D"
 assert_contains "Default PORT"       "9998"   "$PORT_D"
-assert_contains "Default API key is empty" "" "$KEY_D"
+
+if [[ -z "$KEY_D" ]]; then
+  echo "  PASS: Default API key is empty"
+  ((PASS++))
+else
+  echo "  FAIL: Default API key should be empty, got: '$KEY_D'"
+  ((FAIL++))
+fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
