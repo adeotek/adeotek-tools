@@ -26,16 +26,21 @@ interface StreamEvent {
     id?: string
     content?: ContentBlock[]
     stop_reason?: string | null
+    usage?: { input_tokens?: number; output_tokens?: number }
   }
 }
 
 interface ServerMessage {
-  type: 'output' | 'message' | 'status' | 'history'
+  type: 'output' | 'message' | 'status' | 'history' | 'tokens' | 'session_state'
   data?: string
   role?: string
   content?: string
   state?: string
   messages?: Array<{ role: string; content: string; created_at: number }>
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  workingTimeMs?: number
 }
 
 interface ClientMessage {
@@ -81,6 +86,7 @@ class ActiveSession {
   private claudeSessionId: string | null
   private currentProc: ChildProcess | null = null
   private isRunning = false
+  private runStartedAt: number | null = null
   private sockets = new Set<WebSocket>()
   private idleTimer: NodeJS.Timeout | null = null
 
@@ -106,6 +112,7 @@ class ActiveSession {
     }
     this.resetIdle()
     this.isRunning = true
+    this.runStartedAt = Date.now()
     this.broadcast({ type: 'status', state: 'running' })
 
     // Show user prompt in terminal log
@@ -168,6 +175,7 @@ class ActiveSession {
     let lastEmittedLen = 0
     let thinkingEmitted = false
     const emittedToolIds = new Set<string>()
+    let lastUsage: { input_tokens?: number; output_tokens?: number } | null = null
 
     rl.on('line', (line) => {
       this.resetIdle()
@@ -181,6 +189,7 @@ class ActiveSession {
       }
 
       if (event.type === 'assistant' && event.message?.content) {
+        if (event.message.usage) lastUsage = event.message.usage
         const msgId = event.message.id ?? ''
         if (msgId !== lastMsgId) {
           lastMsgId = msgId
@@ -227,6 +236,16 @@ class ActiveSession {
             event.session_id,
             this.id,
           )
+        }
+        const inputTokens = lastUsage?.input_tokens ?? 0
+        const outputTokens = lastUsage?.output_tokens ?? 0
+        const elapsed = this.runStartedAt != null ? Date.now() - this.runStartedAt : 0
+        this.runStartedAt = null
+        db.prepare(
+          'UPDATE sessions SET total_tokens = total_tokens + ?, working_time_ms = working_time_ms + ? WHERE id = ?',
+        ).run(inputTokens + outputTokens, elapsed, this.id)
+        if (inputTokens > 0 || outputTokens > 0) {
+          this.broadcast({ type: 'tokens', inputTokens, outputTokens })
         }
         const finalText = event.result ?? ''
         this.broadcast({ type: 'message', role: 'assistant', content: finalText })
@@ -308,7 +327,7 @@ export async function sessionWsRoutes(fastify: FastifyInstance) {
       const { id } = req.params
 
       const row = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as
-        | { workdir: string; ended_at: number | null; claude_session_id: string | null }
+        | { workdir: string; ended_at: number | null; claude_session_id: string | null; total_tokens: number; working_time_ms: number }
         | undefined
 
       if (!row) {
@@ -326,6 +345,13 @@ export async function sessionWsRoutes(fastify: FastifyInstance) {
       if (history.length > 0) {
         socket.send(JSON.stringify({ type: 'history', messages: history }))
       }
+
+      // Send persisted stats so the frontend can restore duration and token count
+      socket.send(JSON.stringify({
+        type: 'session_state',
+        totalTokens: row.total_tokens ?? 0,
+        workingTimeMs: row.working_time_ms ?? 0,
+      }))
 
       // Clear ended_at so resumed sessions show as active
       if (row.ended_at !== null) {

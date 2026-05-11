@@ -16,6 +16,7 @@ export interface SessionState {
   messages: Message[]
   workingTimeMs: number       // cumulative ms spent in 'running' state
   runningStartedAt: number | null  // timestamp when current run period began
+  totalTokens: number         // cumulative input+output tokens for this session
 }
 
 type Action =
@@ -27,6 +28,8 @@ type Action =
   | { type: 'HISTORY_LOADED'; messages: Message[] }
   | { type: 'MODEL_SET'; model: string }
   | { type: 'SESSION_RENAMED'; name: string | null }
+  | { type: 'TOKENS_ADDED'; inputTokens: number; outputTokens: number }
+  | { type: 'STATS_RESTORED'; totalTokens: number; workingTimeMs: number }
 
 const initial: SessionState = {
   sessionId: null,
@@ -37,6 +40,7 @@ const initial: SessionState = {
   messages: [],
   workingTimeMs: 0,
   runningStartedAt: null,
+  totalTokens: 0,
 }
 
 function reducer(state: SessionState, action: Action): SessionState {
@@ -46,7 +50,7 @@ function reducer(state: SessionState, action: Action): SessionState {
     case 'SESSION_CLEARED':
       return { ...initial }
     case 'RESUME_SESSION':
-      return { ...state, sessionId: action.id, workdir: action.workdir, name: action.name ?? null, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null }
+      return { ...state, sessionId: action.id, workdir: action.workdir, name: action.name ?? null, messages: [], wsState: 'connecting', workingTimeMs: 0, runningStartedAt: null, totalTokens: 0 }
     case 'WS_STATE': {
       const prev = state.wsState
       const next = action.state
@@ -67,6 +71,10 @@ function reducer(state: SessionState, action: Action): SessionState {
       return { ...state, model: action.model }
     case 'SESSION_RENAMED':
       return { ...state, name: action.name }
+    case 'TOKENS_ADDED':
+      return { ...state, totalTokens: state.totalTokens + action.inputTokens + action.outputTokens }
+    case 'STATS_RESTORED':
+      return { ...state, totalTokens: action.totalTokens, workingTimeMs: action.workingTimeMs }
     default:
       return state
   }

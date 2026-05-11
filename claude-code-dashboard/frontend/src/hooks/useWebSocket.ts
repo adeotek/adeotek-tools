@@ -34,6 +34,10 @@ export function useWebSocket(onOutput: (data: string) => void) {
             content?: string
             state?: string
             messages?: Array<{ role: string; content: string; created_at: number }>
+            inputTokens?: number
+            outputTokens?: number
+            totalTokens?: number
+            workingTimeMs?: number
           }
           if (msg.type === 'output' && msg.data) {
             onOutput(msg.data)
@@ -44,6 +48,10 @@ export function useWebSocket(onOutput: (data: string) => void) {
             })
           } else if (msg.type === 'status' && msg.state) {
             dispatch({ type: 'WS_STATE', timestamp: Date.now(), state: msg.state as 'running' | 'idle' | 'error' })
+          } else if (msg.type === 'tokens' && msg.inputTokens != null && msg.outputTokens != null) {
+            dispatch({ type: 'TOKENS_ADDED', inputTokens: msg.inputTokens, outputTokens: msg.outputTokens })
+          } else if (msg.type === 'session_state') {
+            dispatch({ type: 'STATS_RESTORED', totalTokens: msg.totalTokens ?? 0, workingTimeMs: msg.workingTimeMs ?? 0 })
           } else if (msg.type === 'history' && Array.isArray(msg.messages)) {
             const history = msg.messages.map((m) => ({
               id: Date.now().toString(36) + Math.random().toString(36).slice(2),

@@ -61,6 +61,14 @@ function initDb(): Database.Database {
     db.prepare('ALTER TABLE sessions ADD COLUMN name TEXT').run()
   }
 
+  if (!sessionCols.find((c) => c.name === 'total_tokens')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN total_tokens INTEGER NOT NULL DEFAULT 0').run()
+  }
+
+  if (!sessionCols.find((c) => c.name === 'working_time_ms')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN working_time_ms INTEGER NOT NULL DEFAULT 0').run()
+  }
+
   db.prepare(`
     CREATE TABLE IF NOT EXISTS settings (
       key   TEXT PRIMARY KEY,

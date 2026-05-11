@@ -142,7 +142,7 @@ export default function DashboardView() {
             onSessionsList={handleSessionsList}
             onRename={handleRenameSession}
             sessionName={state.name}
-            totalTokens={(usage?.totals.inputTokens ?? 0) + (usage?.totals.outputTokens ?? 0)}
+            totalTokens={state.totalTokens}
             sessionStartedAt={activeSession?.started_at ?? null}
           />
           <MessageList messages={state.messages} />

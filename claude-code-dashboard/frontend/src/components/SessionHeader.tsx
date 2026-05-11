@@ -144,11 +144,14 @@ export default function SessionHeader({
         </div>
       ) : (
         <div className="flex items-center gap-2 min-w-0">
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-            state.wsState === 'running' ? 'bg-status-green' :
-            state.wsState === 'idle'    ? 'bg-status-green/40' :
-            state.wsState === 'error'   ? 'bg-status-red' : 'bg-text-dim'
-          }`} />
+          {state.wsState === 'running' ? (
+            <div className="w-3 h-3 rounded-full border-2 border-status-green border-t-transparent animate-spin flex-shrink-0" />
+          ) : (
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              state.wsState === 'idle'  ? 'bg-status-green' :
+              state.wsState === 'error' ? 'bg-status-red' : 'bg-text-dim'
+            }`} />
+          )}
           {sessionName && (
             <span className="text-text-primary text-xs font-medium truncate max-w-[160px]">
               {sessionName}
