@@ -1,6 +1,47 @@
 import ReactMarkdown from 'react-markdown'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx'
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript'
+import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx'
+import python from 'react-syntax-highlighter/dist/esm/languages/prism/python'
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash'
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml'
+import go from 'react-syntax-highlighter/dist/esm/languages/prism/go'
+import sql from 'react-syntax-highlighter/dist/esm/languages/prism/sql'
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css'
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup'
+import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown'
+import powershell from 'react-syntax-highlighter/dist/esm/languages/prism/powershell'
+import csharp from 'react-syntax-highlighter/dist/esm/languages/prism/csharp'
+
+SyntaxHighlighter.registerLanguage('typescript', typescript)
+SyntaxHighlighter.registerLanguage('tsx', tsx)
+SyntaxHighlighter.registerLanguage('javascript', javascript)
+SyntaxHighlighter.registerLanguage('js', javascript)
+SyntaxHighlighter.registerLanguage('jsx', jsx)
+SyntaxHighlighter.registerLanguage('python', python)
+SyntaxHighlighter.registerLanguage('py', python)
+SyntaxHighlighter.registerLanguage('bash', bash)
+SyntaxHighlighter.registerLanguage('sh', bash)
+SyntaxHighlighter.registerLanguage('shell', bash)
+SyntaxHighlighter.registerLanguage('json', json)
+SyntaxHighlighter.registerLanguage('yaml', yaml)
+SyntaxHighlighter.registerLanguage('yml', yaml)
+SyntaxHighlighter.registerLanguage('go', go)
+SyntaxHighlighter.registerLanguage('sql', sql)
+SyntaxHighlighter.registerLanguage('css', css)
+SyntaxHighlighter.registerLanguage('html', markup)
+SyntaxHighlighter.registerLanguage('xml', markup)
+SyntaxHighlighter.registerLanguage('markdown', markdown)
+SyntaxHighlighter.registerLanguage('md', markdown)
+SyntaxHighlighter.registerLanguage('powershell', powershell)
+SyntaxHighlighter.registerLanguage('ps1', powershell)
+SyntaxHighlighter.registerLanguage('csharp', csharp)
+SyntaxHighlighter.registerLanguage('cs', csharp)
 
 interface AssistantMessageProps {
   content: string
