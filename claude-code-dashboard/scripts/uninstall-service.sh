@@ -25,12 +25,16 @@ fi
 
 # Prompt before removing env file (may have been customised)
 if [[ -f "$ENV_FILE" ]]; then
-  read -rp "Remove env file $ENV_FILE? (y/N) " confirm
-  if [[ "${confirm,,}" == "y" ]]; then
-    rm "$ENV_FILE"
-    echo "Removed: $ENV_FILE"
+  if [[ ! -t 0 ]]; then
+    echo "Non-interactive: keeping $ENV_FILE (remove manually if needed)"
   else
-    echo "Kept: $ENV_FILE"
+    read -rp "Remove env file $ENV_FILE? (y/N) " confirm
+    if [[ "${confirm,,}" == "y" ]]; then
+      rm "$ENV_FILE"
+      echo "Removed: $ENV_FILE"
+    else
+      echo "Kept: $ENV_FILE"
+    fi
   fi
 fi
 
