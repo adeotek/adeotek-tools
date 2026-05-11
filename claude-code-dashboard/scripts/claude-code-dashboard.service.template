@@ -1,0 +1,14 @@
+[Unit]
+Description=Claude Code Dashboard
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__INSTALL_DIR__
+ExecStart=__NODE_BIN__ __INSTALL_DIR__/backend/dist/server.js
+EnvironmentFile=%h/.config/systemd/user/claude-code-dashboard.env
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
