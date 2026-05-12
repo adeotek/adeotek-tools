@@ -1,9 +1,29 @@
 import type { FastifyInstance } from 'fastify'
 import { v4 as uuidv4 } from 'uuid'
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
 import { db } from '../db/schema'
 import { sessionManager } from '../ws/session'
 
 export async function sessionRoutes(fastify: FastifyInstance) {
+  fastify.get<{ Querystring: { path?: string } }>('/api/directories', async (req, reply) => {
+    const rawPath = req.query.path ?? os.homedir()
+    const resolved = rawPath.startsWith('~')
+      ? path.join(os.homedir(), rawPath.slice(1))
+      : rawPath
+    try {
+      const entries = fs.readdirSync(resolved, { withFileTypes: true })
+      const dirs = entries
+        .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+        .map((e) => path.join(resolved, e.name))
+        .sort()
+      return reply.send(dirs)
+    } catch {
+      return reply.send([])
+    }
+  })
+
   fastify.get('/api/sessions', async (_req, reply) => {
     const rows = db
       .prepare(

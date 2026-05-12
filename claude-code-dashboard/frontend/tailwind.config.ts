@@ -22,7 +22,7 @@ export default {
           muted: '#92400e',
         },
         text: {
-          primary: '#f2f2f2',
+          primary: '#c4c4c4',
           secondary: '#aaaaaa',
           muted: '#777777',
           dim: '#555555',

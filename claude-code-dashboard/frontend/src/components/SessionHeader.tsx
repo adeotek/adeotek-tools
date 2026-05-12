@@ -157,6 +157,15 @@ export default function SessionHeader({
               {sessionName}
             </span>
           )}
+          {onRename && !renaming && (
+            <button
+              onClick={startRename}
+              className="text-text-dim hover:text-accent transition-colors flex-shrink-0"
+              title="Rename session"
+            >
+              <Pencil size={11} />
+            </button>
+          )}
           {state.workdir && (
             <span className="text-text-secondary text-xs bg-bg-elevated border border-border-subtle px-2 py-0.5 rounded truncate max-w-xs">
               {state.workdir}
@@ -179,18 +188,9 @@ export default function SessionHeader({
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
-        {onRename && !renaming && (
-          <button
-            onClick={startRename}
-            className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
-          >
-            <Pencil size={11} />
-            Rename
-          </button>
-        )}
         <button
           onClick={onNewSession}
-          className="flex items-center gap-1.5 text-text-muted hover:text-text-secondary text-xs bg-bg-elevated border border-border-subtle hover:border-border px-2 py-1 rounded transition-colors"
+          className="flex items-center gap-1.5 text-text-muted hover:text-accent text-xs bg-bg-elevated border border-border-subtle hover:border-accent px-2 py-1 rounded transition-colors"
         >
           <Plus size={11} />
           New session
