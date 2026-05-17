@@ -32,6 +32,12 @@ func Run() {
 	verbose := flag.Bool("verbose", false, "Show verbose output")
 	showVersion := flag.Bool("version", false, "Print version and exit")
 	showHelp := flag.Bool("help", false, "Print usage and exit")
+	skipIssues := flag.Bool("skip-issues", false, "Skip migrating issues")
+	skipLabels := flag.Bool("skip-labels", false, "Skip migrating labels")
+	skipMilestones := flag.Bool("skip-milestones", false, "Skip migrating milestones")
+	skipPullRequests := flag.Bool("skip-pull-requests", false, "Skip migrating pull requests")
+	skipReleases := flag.Bool("skip-releases", false, "Skip migrating releases")
+	skipWiki := flag.Bool("skip-wiki", false, "Skip migrating wiki")
 
 	flag.Parse()
 
@@ -46,18 +52,24 @@ func Run() {
 	}
 
 	cfg := &config.Config{
-		GiteaURL:     *giteaURL,
-		GiteaToken:   config.ResolveToken(*giteaToken, "GITEA_TOKEN"),
-		ForgejoURL:   *forgejoURL,
-		ForgejoToken: config.ResolveToken(*forgejoToken, "FORGEJO_TOKEN"),
-		Orgs:         config.SplitList(*orgs),
-		Users:        config.SplitList(*users),
-		Filter:       *filter,
-		Exclude:      config.SplitList(*exclude),
-		OrgMappings:  mappings,
-		OnConflict:   *onConflict,
-		DryRun:       *dryRun,
-		Verbose:      *verbose,
+		GiteaURL:            *giteaURL,
+		GiteaToken:          config.ResolveToken(*giteaToken, "GITEA_TOKEN"),
+		ForgejoURL:          *forgejoURL,
+		ForgejoToken:        config.ResolveToken(*forgejoToken, "FORGEJO_TOKEN"),
+		Orgs:                config.SplitList(*orgs),
+		Users:               config.SplitList(*users),
+		Filter:              *filter,
+		Exclude:             config.SplitList(*exclude),
+		OrgMappings:         mappings,
+		OnConflict:          *onConflict,
+		DryRun:              *dryRun,
+		Verbose:             *verbose,
+		MigrateIssues:       !*skipIssues,
+		MigrateLabels:       !*skipLabels,
+		MigrateMilestones:   !*skipMilestones,
+		MigratePullRequests: !*skipPullRequests,
+		MigrateReleases:     !*skipReleases,
+		MigrateWiki:         !*skipWiki,
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -104,13 +116,31 @@ func Run() {
 	}
 }
 
+// printFlagDefaults prints all registered flags with -- prefix.
+// Replaces flag.PrintDefaults() which always renders single-dash output.
+func printFlagDefaults() {
+	flag.VisitAll(func(f *flag.Flag) {
+		isBool := f.DefValue == "true" || f.DefValue == "false"
+		if isBool {
+			fmt.Printf("  --%s\n", f.Name)
+		} else {
+			fmt.Printf("  --%s string\n", f.Name)
+		}
+		if f.DefValue != "" && !isBool {
+			fmt.Printf("\t%s (default %q)\n", f.Usage, f.DefValue)
+		} else {
+			fmt.Printf("\t%s\n", f.Usage)
+		}
+	})
+}
+
 // PrintUsage prints CLI usage.
 func PrintUsage() {
 	fmt.Println("git-migration - Migrate repositories from Gitea to Forgejo")
 	fmt.Println("\nUsage:")
 	fmt.Println("  git-migration [flags]")
 	fmt.Println("\nFlags:")
-	flag.PrintDefaults()
+	printFlagDefaults()
 	fmt.Println("\nEnvironment Variables:")
 	fmt.Println("  GITEA_TOKEN    Gitea API token (overridden by --gitea-token)")
 	fmt.Println("  FORGEJO_TOKEN  Forgejo API token (overridden by --forgejo-token)")

@@ -49,6 +49,14 @@ type Config struct {
 	OnConflict   string
 	DryRun       bool
 	Verbose      bool
+
+	// Metadata migration toggles — all default to true.
+	MigrateIssues       bool
+	MigrateLabels       bool
+	MigrateMilestones   bool
+	MigratePullRequests bool
+	MigrateReleases     bool
+	MigrateWiki         bool
 }
 
 // ResolveToken returns flagVal if non-empty, otherwise the env var named by envKey.

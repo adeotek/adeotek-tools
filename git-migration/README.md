@@ -35,26 +35,53 @@ Or pass them directly:
 git-migration --gitea-token abc123 --forgejo-token xyz789 ...
 ```
 
+## Generating API Keys
+
+### Gitea
+
+1. Log in to your Gitea instance and go to **User Settings** (top-right avatar → Settings).
+2. Navigate to **Applications** in the left sidebar.
+3. Under **Manage Access Tokens**, enter a token name (e.g. `git-migration`) and click **Generate Token**.
+4. Copy the token immediately — it is only shown once.
+
+Required permissions: the token needs **read** access to repositories, organizations, issues, and releases for all sources you want to migrate.
+
+### Forgejo
+
+Forgejo uses the same token UI as Gitea (it is a fork):
+
+1. Log in to your Forgejo instance and go to **User Settings** → **Applications**.
+2. Under **Manage Access Tokens**, enter a token name and click **Generate Token**.
+3. Copy the token immediately.
+
+Required permissions: the token needs **read/write** access to repositories and organizations so that Forgejo can create repos, orgs, and trigger the server-side migration.
+
 ## Usage
 
 ```
 git-migration [flags]
 
 Flags:
-  -exclude string       Comma-separated repo names or full names to exclude
-  -filter string        Glob pattern to filter repo names (e.g. infra-*)
-  -forgejo-token string Forgejo API token (or set FORGEJO_TOKEN)
-  -forgejo-url string   Forgejo server URL (required)
-  -gitea-token string   Gitea API token (or set GITEA_TOKEN)
-  -gitea-url string     Gitea server URL (required)
-  -help                 Print usage and exit
-  -map-org value        Map source org to destination org (format: src:dst, repeatable)
-  -on-conflict string   Behaviour when repo already exists: skip|fail|remigrate (default: skip)
-  -orgs string          Comma-separated Gitea orgs to migrate
-  -users string         Comma-separated Gitea users to migrate
-  -verbose              Show verbose output
-  -version              Print version and exit
-  -dry-run              Print migration plan without making changes
+  --dry-run               Print migration plan without making changes
+  --exclude string        Comma-separated repo names or full names to exclude
+  --filter string         Glob pattern to filter repo names (e.g. infra-*)
+  --forgejo-token string  Forgejo API token (or set FORGEJO_TOKEN)
+  --forgejo-url string    Forgejo server URL (required)
+  --gitea-token string    Gitea API token (or set GITEA_TOKEN)
+  --gitea-url string      Gitea server URL (required)
+  --help                  Print usage and exit
+  --map-org string        Map source org to destination org (format: src:dst, repeatable)
+  --on-conflict string    Behaviour when repo already exists: skip|fail|remigrate (default: "skip")
+  --orgs string           Comma-separated Gitea orgs to migrate
+  --skip-issues           Skip migrating issues
+  --skip-labels           Skip migrating labels
+  --skip-milestones       Skip migrating milestones
+  --skip-pull-requests    Skip migrating pull requests
+  --skip-releases         Skip migrating releases
+  --skip-wiki             Skip migrating wiki
+  --users string          Comma-separated Gitea users to migrate
+  --verbose               Show verbose output
+  --version               Print version and exit
 ```
 
 ## Examples

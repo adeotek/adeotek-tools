@@ -86,21 +86,22 @@ func (m *Migrator) Run() (Result, error) {
 			AuthToken:    m.cfg.GiteaToken,
 			CloneAddr:    fmt.Sprintf("%s/%s/%s", giteaBase, repo.Owner.Login, repo.Name),
 			Description:  repo.Description,
-			Issues:       true,
-			Labels:       true,
-			Milestones:   true,
+			Issues:       m.cfg.MigrateIssues,
+			Labels:       m.cfg.MigrateLabels,
+			Milestones:   m.cfg.MigrateMilestones,
 			Mirror:       false,
 			Private:      repo.Private,
-			PullRequests: true,
-			Releases:     true,
+			PullRequests: m.cfg.MigratePullRequests,
+			Releases:     m.cfg.MigrateReleases,
 			RepoName:     repo.Name,
 			RepoOwner:    destOwner,
-			Wiki:         true,
+			Wiki:         m.cfg.MigrateWiki,
 			Service:      "gitea",
 		}
 
-		if err := m.forgejo.MigrateRepo(req); err != nil {
-			fmt.Printf("[ERROR] %s/%s -> %s/%s: %v\n", repo.Owner.Login, repo.Name, destOwner, repo.Name, err)
+		label := fmt.Sprintf("%s/%s -> %s/%s", repo.Owner.Login, repo.Name, destOwner, repo.Name)
+		if err := m.migrateWithFallback(label, req); err != nil {
+			fmt.Printf("[ERROR] %s: %v\n", label, err)
 			result.Failed++
 			continue
 		}
@@ -132,6 +133,64 @@ func (m *Migrator) filter(repos []gitea.Repo) []gitea.Repo {
 		out = append(out, r)
 	}
 	return out
+}
+
+// migrateWithFallback attempts migration and retries with individual features
+// disabled whenever Forgejo reports that a feature is not available on the source.
+// This handles repos where issue tracking, wiki, etc. are disabled in Gitea —
+// Forgejo returns 500 "listing X: not found" instead of treating it as empty.
+func (m *Migrator) migrateWithFallback(label string, req forgejo.MigrateRequest) error {
+	for {
+		err := m.forgejo.MigrateRepo(req)
+		if err == nil {
+			return nil
+		}
+		feature := disabledFeature(err.Error())
+		if feature == "" {
+			return err
+		}
+		fmt.Printf("[WARN]  %s: %s not available on source, skipping\n", label, feature)
+		applyFeatureSkip(&req, feature)
+	}
+}
+
+// disabledFeature inspects a Forgejo error message and returns the feature name
+// that triggered a "not found" on the source, or "" if the error is something else.
+func disabledFeature(errMsg string) string {
+	if !strings.Contains(errMsg, "not found") {
+		return ""
+	}
+	for _, f := range []struct{ pattern, name string }{
+		{"listing issues", "issues"},
+		{"listing labels", "labels"},
+		{"listing milestone", "milestones"},
+		{"listing pull", "pull requests"},
+		{"listing release", "releases"},
+		{"listing wiki", "wiki"},
+	} {
+		if strings.Contains(errMsg, f.pattern) {
+			return f.name
+		}
+	}
+	return ""
+}
+
+// applyFeatureSkip disables the named feature in req.
+func applyFeatureSkip(req *forgejo.MigrateRequest, feature string) {
+	switch feature {
+	case "issues":
+		req.Issues = false
+	case "labels":
+		req.Labels = false
+	case "milestones":
+		req.Milestones = false
+	case "pull requests":
+		req.PullRequests = false
+	case "releases":
+		req.Releases = false
+	case "wiki":
+		req.Wiki = false
+	}
 }
 
 func (m *Migrator) destOwner(sourceOwner string) string {
