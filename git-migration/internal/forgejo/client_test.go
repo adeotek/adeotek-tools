@@ -131,6 +131,27 @@ func TestMigrateRepo_success(t *testing.T) {
 	}
 }
 
+func TestDeleteRepo_success(t *testing.T) {
+	var deleted bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete && r.URL.Path == "/api/v1/repos/owner/repo" {
+			deleted = true
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+	}))
+	defer server.Close()
+
+	c := NewClient(server.URL, "tok")
+	if err := c.DeleteRepo("owner", "repo"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !deleted {
+		t.Error("expected DELETE to be called")
+	}
+}
+
 func TestMigrateRepo_setsAuthHeader(t *testing.T) {
 	var gotAuth string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

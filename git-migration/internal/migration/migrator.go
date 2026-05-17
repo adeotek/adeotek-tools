@@ -73,6 +73,11 @@ func (m *Migrator) Run() (Result, error) {
 			case "fail":
 				return result, fmt.Errorf("repo %s/%s already exists in Forgejo (use --on-conflict=remigrate to overwrite)", destOwner, repo.Name)
 			case "remigrate":
+				if err := m.forgejo.DeleteRepo(destOwner, repo.Name); err != nil {
+					fmt.Printf("[ERROR] %s/%s: delete for remigrate: %v\n", repo.Owner.Login, repo.Name, err)
+					result.Failed++
+					continue
+				}
 				fmt.Printf("[REMIG] %s/%s -> %s/%s\n", repo.Owner.Login, repo.Name, destOwner, repo.Name)
 			}
 		}

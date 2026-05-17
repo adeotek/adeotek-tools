@@ -97,6 +97,26 @@ func (c *Client) EnsureOrg(name string) error {
 	return nil
 }
 
+// DeleteRepo deletes a repo from Forgejo. Used before re-migrating.
+func (c *Client) DeleteRepo(owner, name string) error {
+	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/api/v1/repos/%s/%s", c.baseURL, owner, name), nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "token "+c.token)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("delete repo %s/%s returned status %d: %s", owner, name, resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+	return nil
+}
+
 // MigrateRepo triggers a server-side migration in Forgejo.
 // Forgejo processes the migration asynchronously; a 201 response means it was accepted.
 func (c *Client) MigrateRepo(req MigrateRequest) error {

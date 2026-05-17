@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path"
 	"sort"
 	"strings"
 )
@@ -91,6 +92,11 @@ func (c *Config) Validate() error {
 	case "skip", "fail", "remigrate":
 	default:
 		return fmt.Errorf("--on-conflict must be skip, fail, or remigrate (got %q)", c.OnConflict)
+	}
+	if c.Filter != "" {
+		if _, err := path.Match(c.Filter, ""); err != nil {
+			return fmt.Errorf("--filter %q is not a valid glob pattern: %w", c.Filter, err)
+		}
 	}
 	return nil
 }

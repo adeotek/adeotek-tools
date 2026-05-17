@@ -64,6 +64,8 @@ func Run() {
 		log.Fatalf("configuration error: %v", err)
 	}
 
+	// verbose prints configuration details before the migration run begins.
+	// Migration output ([OK], [SKIP], etc.) is always shown.
 	if cfg.Verbose {
 		fmt.Printf("Gitea:      %s\n", cfg.GiteaURL)
 		fmt.Printf("Forgejo:    %s\n", cfg.ForgejoURL)
@@ -94,10 +96,11 @@ func Run() {
 		log.Fatalf("migration failed: %v", err)
 	}
 
-	fmt.Printf("\nDone: %d migrated, %d skipped, %d failed\n", result.Migrated, result.Skipped, result.Failed)
-
-	if result.Failed > 0 {
-		os.Exit(1)
+	if !cfg.DryRun {
+		fmt.Printf("\nDone: %d migrated, %d skipped, %d failed\n", result.Migrated, result.Skipped, result.Failed)
+		if result.Failed > 0 {
+			os.Exit(1)
+		}
 	}
 }
 

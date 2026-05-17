@@ -94,3 +94,15 @@ func TestValidate_invalid_on_conflict(t *testing.T) {
 		t.Error("expected error for invalid on-conflict value")
 	}
 }
+
+func TestValidate_invalid_filter(t *testing.T) {
+	cfg := &Config{
+		GiteaURL: "http://gitea.lan", GiteaToken: "tok",
+		ForgejoURL: "http://forgejo.lan", ForgejoToken: "tok",
+		OnConflict: "skip",
+		Filter:     "[bad",
+	}
+	if err := cfg.Validate(); err == nil {
+		t.Error("expected error for invalid glob pattern")
+	}
+}
