@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -10,11 +11,17 @@ import (
 // Implements flag.Value so it can be used as a repeatable --map-org flag.
 type OrgMappings map[string]string
 
+// NewOrgMappings returns an initialized OrgMappings ready for use with flag.Var.
+func NewOrgMappings() OrgMappings {
+	return make(OrgMappings)
+}
+
 func (m OrgMappings) String() string {
 	parts := make([]string, 0, len(m))
 	for k, v := range m {
 		parts = append(parts, k+":"+v)
 	}
+	sort.Strings(parts)
 	return strings.Join(parts, ",")
 }
 
