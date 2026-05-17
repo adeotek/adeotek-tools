@@ -14,6 +14,7 @@ Each project has its own root directory and its own `CLAUDE.md` file with projec
 
 | Project | Path | Stack | Description |
 |---------|------|-------|-------------|
+| `git-migration` | `git-migration/` | Go | Migrate repos from Gitea to Forgejo with full metadata |
 | `git-repos-backup` | `git-repos-backup/` | Go | Backup GitHub/Gitea repos to local storage |
 | `sql-toolbox` | `sql-toolbox/` | Go | SQL migrations and PostgreSQL/SQLite backup with S3 support |
 | `homelab-chatbot` | `homelab-chatbot/` | Python (FastAPI) + Next.js | Homelab AI chatbot with backend and frontend |
