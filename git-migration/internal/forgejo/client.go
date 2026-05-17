@@ -69,6 +69,9 @@ func (c *Client) EnsureOrg(name string) error {
 	if status == http.StatusOK {
 		return nil
 	}
+	if status != http.StatusNotFound {
+		return fmt.Errorf("checking org %q returned status %d", name, status)
+	}
 
 	_, status, err = c.doGet("/api/v1/users/" + name)
 	if err != nil {
@@ -77,8 +80,11 @@ func (c *Client) EnsureOrg(name string) error {
 	if status == http.StatusOK {
 		return nil
 	}
+	if status != http.StatusNotFound {
+		return fmt.Errorf("checking user %q returned status %d", name, status)
+	}
 
-	_, status, err = c.doPost("/api/v1/orgs", map[string]string{
+	body, status, err := c.doPost("/api/v1/orgs", map[string]string{
 		"username":   name,
 		"visibility": "public",
 	})
@@ -86,7 +92,7 @@ func (c *Client) EnsureOrg(name string) error {
 		return err
 	}
 	if status != http.StatusCreated {
-		return fmt.Errorf("creating org %q returned status %d", name, status)
+		return fmt.Errorf("creating org %q returned status %d: %s", name, status, strings.TrimSpace(string(body)))
 	}
 	return nil
 }
@@ -94,12 +100,12 @@ func (c *Client) EnsureOrg(name string) error {
 // MigrateRepo triggers a server-side migration in Forgejo.
 // Forgejo processes the migration asynchronously; a 201 response means it was accepted.
 func (c *Client) MigrateRepo(req MigrateRequest) error {
-	_, status, err := c.doPost("/api/v1/repos/migrate", req)
+	body, status, err := c.doPost("/api/v1/repos/migrate", req)
 	if err != nil {
 		return err
 	}
 	if status != http.StatusCreated {
-		return fmt.Errorf("migrate returned status %d", status)
+		return fmt.Errorf("migrate returned status %d: %s", status, strings.TrimSpace(string(body)))
 	}
 	return nil
 }
