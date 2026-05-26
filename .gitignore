@@ -17,3 +17,18 @@ test-backup-config.yml
 .playwright-mcp/
 .playwright-cli/
 docs/superpowers/
+
+# # Ignore the graphify output directory
+# **/graphify-out/*
+# # But allow tracking the high-level text summary report
+# !**/graphify-out/GRAPH_REPORT.md
+
+# graphify cache
+**/graphify-out/cache/
+# mtime-based, breaks after git clone
+**/graphify-out/manifest.json
+# local only
+**/graphify-out/cost.json
+**/graphify-out/.graphify_labels.json
+**/graphify-out/.graphify_python
+**/graphify-out/.graphify_root
