@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>git-repos-backup — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>git-repos-backup — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 76 nodes, 113 edges, 8 communities. Commit: 5a8fc38</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#extract-pipeline">Extraction Pipeline</a>
+    <a href="#cli-skills">CLI &amp; Skill Installers</a>
+    <a href="#docker-cron-worker">Docker Cron Worker</a>
+    <a href="#provider-type-enum">Provider Type Enum</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>72 nodes</small>")
+    class EXTRACT_PIPELINE_5F350230 module;
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>1 nodes</small>")
+    class CLI_SKILLS_9964CBB8 module;
+    DOCKER_CRON_WORKER_47DF9498("Docker Cron Worker<br/><small>2 nodes</small>")
+    class DOCKER_CRON_WORKER_47DF9498 module;
+    PROVIDER_TYPE_ENUM_DADA2D3C("Provider Type Enum<br/><small>1 nodes</small>")
+    class PROVIDER_TYPE_ENUM_DADA2D3C module;
+    EXTRACT_PIPELINE_5F350230 -.-> CLI_SKILLS_9964CBB8
+    CLI_SKILLS_9964CBB8 -.-> DOCKER_CRON_WORKER_47DF9498
+    DOCKER_CRON_WORKER_47DF9498 -.-> PROVIDER_TYPE_ENUM_DADA2D3C
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Extraction Pipeline</td><td>72</td><td><code>0, 1, 2, 3, 4</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>1</td><td><code>7</code></td></tr><tr><td>Docker Cron Worker</td><td>2</td><td><code>5</code></td></tr><tr><td>Provider Type Enum</td><td>1</td><td><code>6</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">Extraction Pipeline -&gt; CLI &amp; Skill Installers -&gt; Docker Cron Worker -&gt; Provider Type Enum</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>76 nodes · 113 edges · 8 communities (5 shown, 3 thin omitted)</li>
+      <li>Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.87)</li>
+      <li>Token cost: 0 input · 0 output</li>
+      <li>1. `Run()` - 19 edges</li>
+      <li>2. `FetchRepository()` - 10 edges</li>
+      <li>3. `FilterRepositories()` - 8 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Extraction Pipeline ====== -->
+<h2 id="extract-pipeline">2. Extraction Pipeline</h2>
+<p>Extraction Pipeline groups implementation around git, internal, testgo, repository, mostly in internal/git/git_cli.go, internal/git/git_cli_test.go, internal/app/app_test.go. This section covers 72 nodes and 112 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Extraction Pipeline (72 nodes, 112 edges)
+    subgraph extract_pipeline_internal_git_git_cli_go_f1089ae8["internal/git/git_cli.go"]
+        git_git_cli_fetchrepository_f2faa93d("FetchRepository()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_getgitcommand_f4ad5e98("GetGitCommand()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_getrepopath_84e10d27("GetRepoPath()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_getrepourl_982daf3d("GetRepoUrl()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_repoexists_ed2f6117("RepoExists()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_rungitinit_3d6560d2("RunGitInit()<br/><small>internal/git/git_cli.go</small>")
+        git_git_cli_rungitfetch_4150e6f5("RunGitFetch()<br/><small>internal/git/git_cli.go</small>")
+    end
+    subgraph extract_pipeline_internal_app_app_go_e41a10d6["internal/app/app.go"]
+        app_app_run_609169db("Run()<br/><small>internal/app/app.go</small>")
+        app_app_printusage_0d057799("PrintUsage()<br/><small>internal/app/app.go</small>")
+        app_app_splitcommaseparatedlist_0ea1090d("splitCommaSeparatedList()<br/><small>internal/app/app.go</small>")
+    end
+    subgraph extract_pipeline_internal_config_config_go_6ad94ddb["internal/config/config.go"]
+        config_providertype_12a10730("ProviderType<br/><small>internal/config/config.go</small>")
+        config_config_load_c4c9a04d("Load()<br/><small>internal/config/config.go</small>")
+        config_config_createfromargs_2cb8263b("CreateFromArgs()<br/><small>internal/config/config.go</small>")
+    end
+    cmd_main_main_dc5c11ce("cmd/git-repos-backup/main.go - CLI entr...<br/><small>cmd/git-repos-backup/main.go</small>")
+    git_repos_backup_main_adcdb67e("main.go - Root convenience wrapper entr...<br/><small>git-repos-backup/main.go</small>")
+    repository_repository_getrepositories_aa2961f9("GetRepositories()<br/><small>internal/repository/repository.go</small>")
+    filter_filter_filterrepositories_491e6439("FilterRepositories()<br/><small>pkg/filter/filter.go</small>")
+    tests_integration_test_testintegration_d643cb53("TestIntegration()<br/><small>tests/integration_test.go</small>")
+    app_app_run_609169db -->|calls| app_app_printusage_0d057799
+    app_app_run_609169db -->|calls| app_app_splitcommaseparatedlist_0ea1090d
+    app_app_run_609169db -->|calls| config_config_load_c4c9a04d
+    app_app_run_609169db -->|calls| config_config_createfromargs_2cb8263b
+    app_app_run_609169db -->|calls| repository_repository_getrepositories_aa2961f9
+    app_app_run_609169db -->|calls| filter_filter_filterrepositories_491e6439
+    app_app_run_609169db -->|calls| git_git_cli_fetchrepository_f2faa93d
+    app_app_run_609169db -->|calls| git_repos_backup_main_adcdb67e
+    app_app_run_609169db -->|calls| cmd_main_main_dc5c11ce
+    config_providertype_12a10730 -->|calls| config_config_createfromargs_2cb8263b
+    git_git_cli_fetchrepository_f2faa93d -->|calls| git_git_cli_getrepopath_84e10d27
+    git_git_cli_fetchrepository_f2faa93d -->|calls| git_git_cli_getrepourl_982daf3d
+    git_git_cli_fetchrepository_f2faa93d -->|calls| git_git_cli_repoexists_ed2f6117
+    git_git_cli_fetchrepository_f2faa93d -->|calls| git_git_cli_rungitinit_3d6560d2
+    git_git_cli_fetchrepository_f2faa93d -->|calls| git_git_cli_rungitfetch_4150e6f5
+    git_git_cli_rungitfetch_4150e6f5 -->|calls| git_git_cli_getgitcommand_f4ad5e98
+    %% Omitted for readability: 54 nodes, 0 edges
+    class git_git_cli_fetchrepository_f2faa93d function;
+    class git_git_cli_getgitcommand_f4ad5e98 entry;
+    class git_git_cli_getrepopath_84e10d27 function;
+    class git_git_cli_getrepourl_982daf3d function;
+    class git_git_cli_repoexists_ed2f6117 function;
+    class git_git_cli_rungitinit_3d6560d2 function;
+    class git_git_cli_rungitfetch_4150e6f5 function;
+    class app_app_run_609169db function;
+    class app_app_printusage_0d057799 function;
+    class app_app_splitcommaseparatedlist_0ea1090d function;
+    class config_providertype_12a10730 klass;
+    class config_config_load_c4c9a04d function;
+    class config_config_createfromargs_2cb8263b function;
+    class cmd_main_main_dc5c11ce entry;
+    class git_repos_backup_main_adcdb67e function;
+    class repository_repository_getrepositories_aa2961f9 function;
+    class filter_filter_filterrepositories_491e6439 function;
+    class tests_integration_test_testintegration_d643cb53 test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>main.go</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>main.go node in main.go.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>main()</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>main() node in main.go.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>main.go</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>main.go node in cmd/git-repos-backup/main.go.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>main()</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>main() node in cmd/git-repos-backup/main.go.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>app.go node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small><br><code>main()</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><code>cmd/git-repos-backup/main.go - CLI entr...</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small><br><code>CreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br>+8 more</td>
+  <td>Run() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>splitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>splitCommaSeparatedList() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>PrintUsage()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>PrintUsage() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>TestPrintUsage()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>TestVersionDisplay()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>TestHelpDisplay()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>TestConfigLoad()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>TestSplitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>TestArgsConfig()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>backup_worker.sh - Docker entrypoint loop script</code><br><small style="color:var(--muted)">git-repos-backup/backup_worker.sh</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>backup_worker.sh - Docker entrypoint loop script node in git-repos-backup/backup_worker.sh.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>main.go - Root convenience wrapper entry point</code><br><small style="color:var(--muted)">git-repos-backup/main.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>main.go - Root convenience wrapper entry point node in git-repos-backup/main.go.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>cmd/git-repos-backup/main.go - CLI entry point</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>Dual Configuration Mode (YAML file vs CLI args)</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Dual Configuration Mode (YAML file vs CLI args).</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>git_cli.go</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>RepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br>+2 more</td>
+  <td>FetchRepository() node in internal/git/git_cli.go.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>RunGitFetch()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>RunGitInit()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><code>git.ExecCommand - Swappable exec.Comman...</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>RunGitFetch()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><code>git.ExecCommand - Swappable exec.Comman...</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestGetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>GetRepoUrl() node in internal/git/git_cli.go.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><code>TestGetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td>GetRepoPath() node in internal/git/git_cli.go.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>RepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
+  <td><code>TestRepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td>RepoExists() node in internal/git/git_cli.go.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>git_cli_test.go</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>fakeExecCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>fakeExecCommand() node in internal/git/git_cli_test.go.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>TestHelperProcess()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>internal/git/git_cli.go</code></td><td>8 nodes</td></tr>
+<tr><td><code>internal/git/git_cli_test.go</code></td><td>8 nodes</td></tr>
+<tr><td><code>internal/app/app_test.go</code></td><td>7 nodes</td></tr>
+<tr><td><code>internal/config/config.go</code></td><td>6 nodes</td></tr>
+<tr><td><code>internal/repository/repository_test.go</code></td><td>6 nodes</td></tr>
+<tr><td><code>internal/repository/repository.go</code></td><td>5 nodes</td></tr>
+<tr><td><code>internal/app/app.go</code></td><td>4 nodes</td></tr>
+<tr><td><code>tests/integration_test.go</code></td><td>4 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x46, calls x23, references x19, explains x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. CLI & Skill Installers ====== -->
+<h2 id="cli-skills">3. CLI &amp; Skill Installers</h2>
+<p>CLI &amp; Skill Installers groups implementation around claudemd, git, repos, backup, mostly in git-repos-backup/CLAUDE.md. This section covers 1 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: CLI &amp; Skill Installers (1 nodes, 0 edges)
+    git_repos_backup_claude_md_994c1612("CLAUDE.md - git-repos-backup agent inst...<br/><small>git-repos-backup/CLAUDE.md</small>")
+    class git_repos_backup_claude_md_994c1612 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>CLAUDE.md - git-repos-backup agent instructions</code><br><small style="color:var(--muted)">git-repos-backup/CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing CLAUDE.md - git-repos-backup agent instructions.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>git-repos-backup/CLAUDE.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: No high-confidence call edges detected. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. Docker Cron Worker ====== -->
+<h2 id="docker-cron-worker">4. Docker Cron Worker</h2>
+<p>Docker Cron Worker groups implementation around backup, workersh, script, mostly in backup_worker.sh. This section covers 2 nodes and 1 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Docker Cron Worker (2 nodes, 1 edges)
+    backup_worker_sh_9d6f002c("backup_worker.sh")
+    home_georg_projects_adeotek_tools_git_repos_back_52db72fe("backup_worker.sh script<br/><small>backup_worker.sh</small>")
+    backup_worker_sh_9d6f002c -->|contains| home_georg_projects_adeotek_tools_git_repos_back_52db72fe
+    class backup_worker_sh_9d6f002c function;
+    class home_georg_projects_adeotek_tools_git_repos_back_52db72fe function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>backup_worker.sh</code><br><small style="color:var(--muted)">backup_worker.sh</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>backup_worker.sh node in backup_worker.sh.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>backup_worker.sh script</code><br><small style="color:var(--muted)">backup_worker.sh</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>backup_worker.sh script node in backup_worker.sh.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>backup_worker.sh</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Provider Type Enum ====== -->
+<h2 id="provider-type-enum">5. Provider Type Enum</h2>
+<p>Provider Type Enum groups implementation around git, configprovidertype, enum, string, mostly in internal/config/config.go. This section covers 1 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Provider Type Enum (1 nodes, 0 edges)
+    config_config_providertype_a84f3323("config.ProviderType - Enum string type...<br/><small>internal/config/config.go</small>")
+    class config_config_providertype_a84f3323 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>config.ProviderType - Enum string type for git provider kind</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>internal/config/config.go</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: No high-confidence call edges detected. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="hyperedges">Group Relationships (Hyperedges)</h2>
+<div class="grid">
+
+  <div class="card">
+    <h4>Core Backup Pipeline: Config -&gt; Fetch Repos -&gt; Filter -&gt; Git Fetch</h4>
+    <p><code>participate_in</code> — 4 participants</p>
+    <ul>
+      <li><code>app_app_run</code></li>
+      <li><code>repository_repository_getrepositories</code></li>
+      <li><code>filter_filter_filterrepositories</code></li>
+      <li><code>git_git_cli_fetchrepository</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Swappable ExecCommand pattern used across git and repository packages for test mocking</h4>
+    <p><code>implement</code> — 3 participants</p>
+    <ul>
+      <li><code>git_git_cli_execcommand</code></li>
+      <li><code>repository_repository_execcommand</code></li>
+      <li><code>concept_swappable_execcommand</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Dual configuration modes: YAML file load vs CLI args construction</h4>
+    <p><code>implement</code> — 3 participants</p>
+    <ul>
+      <li><code>config_config_load</code></li>
+      <li><code>config_config_createfromargs</code></li>
+      <li><code>concept_dual_config_mode</code></li>
+    </ul>
+  </div>
+</div>
+<hr>
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>76</td></tr>
+      <tr><td>Edges</td><td>113</td></tr>
+      <tr><td>Hyperedges</td><td>3</td></tr>
+      <tr><td>Communities</td><td>8</td></tr>
+      <tr><td>Documented Sections</td><td>4</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>92</td></tr>
+      <tr><td>INFERRED</td><td>21</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>git-repos-backup — Architecture Documentation</p>
+  <p>Generated: 2026-05-25 22:27 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2015 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "backup_pipeline_flow",
+        "label": "Core Backup Pipeline: Config -> Fetch Repos -> Filter -> Git Fetch",
+        "nodes": [
+          "app_app_run",
+          "repository_repository_getrepositories",
+          "filter_filter_filterrepositories",
+          "git_git_cli_fetchrepository"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "git-repos-backup/internal/app/app.go"
+      },
+      {
+        "id": "swappable_exec_testability",
+        "label": "Swappable ExecCommand pattern used across git and repository packages for test mocking",
+        "nodes": [
+          "git_git_cli_execcommand",
+          "repository_repository_execcommand",
+          "concept_swappable_execcommand"
+        ],
+        "relation": "implement",
+        "confidence": "INFERRED",
+        "confidence_score": 0.95,
+        "source_file": "git-repos-backup/internal/git/git_cli.go"
+      },
+      {
+        "id": "dual_config_entry_points",
+        "label": "Dual configuration modes: YAML file load vs CLI args construction",
+        "nodes": [
+          "config_config_load",
+          "config_config_createfromargs",
+          "concept_dual_config_mode"
+        ],
+        "relation": "implement",
+        "confidence": "INFERRED",
+        "confidence_score": 0.95,
+        "source_file": "git-repos-backup/internal/config/config.go"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": "backup_worker.sh",
+      "file_type": "code",
+      "source_file": "backup_worker.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "id": "backup_worker_sh",
+      "community": 5,
+      "norm_label": "backup_worker.sh"
+    },
+    {
+      "label": "backup_worker.sh script",
+      "file_type": "code",
+      "source_file": "backup_worker.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "id": "home_georg_projects_adeotek_tools_git_repos_backup_backup_worker_sh__entry",
+      "community": 5,
+      "norm_label": "backup_worker.sh script"
+    },
+    {
+      "label": "main.go",
+      "file_type": "code",
+      "source_file": "main.go",
+      "source_location": "L1",
+      "id": "main_go",
+      "community": 0,
+      "norm_label": "main.go"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "main.go",
+      "source_location": "L8",
+      "id": "main_go_git_repos_backup_main_main",
+      "community": 0,
+      "norm_label": "main()"
+    },
+    {
+      "label": "main.go",
+      "file_type": "code",
+      "source_file": "cmd/git-repos-backup/main.go",
+      "source_location": "L1",
+      "id": "cmd_git_repos_backup_main_go",
+      "community": 0,
+      "norm_label": "main.go"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "cmd/git-repos-backup/main.go",
+      "source_location": "L8",
+      "id": "cmd_git_repos_backup_main_go_git_repos_backup_main_main",
+      "community": 0,
+      "norm_label": "main()"
+    },
+    {
+      "label": "app.go",
+      "file_type": "code",
+      "source_file": "internal/app/app.go",
+      "source_location": "L1",
+      "id": "internal_app_app_go",
+      "community": 0,
+      "norm_label": "app.go"
+    },
+    {
+      "label": "Run()",
+      "file_type": "code",
+      "source_file": "internal/app/app.go",
+      "source_location": "L24",
+      "id": "app_app_run",
+      "community": 0,
+      "norm_label": "run()"
+    },
+    {
+      "label": "splitCommaSeparatedList()",
+      "file_type": "code",
+      "source_file": "internal/app/app.go",
+      "source_location": "L159",
+      "id": "app_app_splitcommaseparatedlist",
+      "community": 0,
+      "norm_label": "splitcommaseparatedlist()"
+    },
+    {
+      "label": "PrintUsage()",
+      "file_type": "code",
+      "source_file": "internal/app/app.go",
+      "source_location": "L175",
+      "id": "app_app_printusage",
+      "community": 0,
+      "norm_label": "printusage()"
+    },
+    {
+      "label": "app_test.go",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L1",
+      "id": "internal_app_app_test_go",
+      "community": 0,
+      "norm_label": "app_test.go"
+    },
+    {
+      "label": "TestPrintUsage()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L11",
+      "id": "app_app_test_testprintusage",
+      "community": 0,
+      "norm_label": "testprintusage()"
+    },
+    {
+      "label": "TestVersionDisplay()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L16",
+      "id": "app_app_test_testversiondisplay",
+      "community": 0,
+      "norm_label": "testversiondisplay()"
+    },
+    {
+      "label": "TestHelpDisplay()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L56",
+      "id": "app_app_test_testhelpdisplay",
+      "community": 0,
+      "norm_label": "testhelpdisplay()"
+    },
+    {
+      "label": "TestConfigLoad()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L96",
+      "id": "app_app_test_testconfigload",
+      "community": 0,
+      "norm_label": "testconfigload()"
+    },
+    {
+      "label": "TestSplitCommaSeparatedList()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L136",
+      "id": "app_app_test_testsplitcommaseparatedlist",
+      "community": 0,
+      "norm_label": "testsplitcommaseparatedlist()"
+    },
+    {
+      "label": "TestArgsConfig()",
+      "file_type": "code",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L184",
+      "id": "app_app_test_testargsconfig",
+      "community": 0,
+      "norm_label": "testargsconfig()"
+    },
+    {
+      "label": "config.go",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L1",
+      "id": "internal_config_config_go",
+      "community": 4,
+      "norm_label": "config.go"
+    },
+    {
+      "label": "ProviderType",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L12",
+      "id": "config_providertype",
+      "community": 4,
+      "norm_label": "providertype"
+    },
+    {
+      "label": "ProviderConfig",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L22",
+      "id": "config_providerconfig",
+      "community": 4,
+      "norm_label": "providerconfig"
+    },
+    {
+      "label": "Config",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L36",
+      "id": "config_config",
+      "community": 4,
+      "norm_label": "config"
+    },
+    {
+      "label": "Load()",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L41",
+      "id": "config_config_load",
+      "community": 4,
+      "norm_label": "load()"
+    },
+    {
+      "label": "CreateFromArgs()",
+      "file_type": "code",
+      "source_file": "internal/config/config.go",
+      "source_location": "L56",
+      "id": "config_config_createfromargs",
+      "community": 4,
+      "norm_label": "createfromargs()"
+    },
+    {
+      "label": "config_test.go",
+      "file_type": "code",
+      "source_file": "internal/config/config_test.go",
+      "source_location": "L1",
+      "id": "internal_config_config_test_go",
+      "community": 4,
+      "norm_label": "config_test.go"
+    },
+    {
+      "label": "TestLoad()",
+      "file_type": "code",
+      "source_file": "internal/config/config_test.go",
+      "source_location": "L9",
+      "id": "config_config_test_testload",
+      "community": 4,
+      "norm_label": "testload()"
+    },
+    {
+      "label": "TestCreateFromArgs()",
+      "file_type": "code",
+      "source_file": "internal/config/config_test.go",
+      "source_location": "L95",
+      "id": "config_config_test_testcreatefromargs",
+      "community": 4,
+      "norm_label": "testcreatefromargs()"
+    },
+    {
+      "label": "git_cli.go",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L1",
+      "id": "internal_git_git_cli_go",
+      "community": 1,
+      "norm_label": "git_cli.go"
+    },
+    {
+      "label": "FetchRepository()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L20",
+      "id": "git_git_cli_fetchrepository",
+      "community": 1,
+      "norm_label": "fetchrepository()"
+    },
+    {
+      "label": "RunGitFetch()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L44",
+      "id": "git_git_cli_rungitfetch",
+      "community": 1,
+      "norm_label": "rungitfetch()"
+    },
+    {
+      "label": "RunGitInit()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L56",
+      "id": "git_git_cli_rungitinit",
+      "community": 1,
+      "norm_label": "rungitinit()"
+    },
+    {
+      "label": "GetGitCommand()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L68",
+      "id": "git_git_cli_getgitcommand",
+      "community": 1,
+      "norm_label": "getgitcommand()"
+    },
+    {
+      "label": "GetRepoUrl()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L79",
+      "id": "git_git_cli_getrepourl",
+      "community": 1,
+      "norm_label": "getrepourl()"
+    },
+    {
+      "label": "GetRepoPath()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L119",
+      "id": "git_git_cli_getrepopath",
+      "community": 1,
+      "norm_label": "getrepopath()"
+    },
+    {
+      "label": "RepoExists()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L143",
+      "id": "git_git_cli_repoexists",
+      "community": 1,
+      "norm_label": "repoexists()"
+    },
+    {
+      "label": "git_cli_test.go",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L1",
+      "id": "internal_git_git_cli_test_go",
+      "community": 1,
+      "norm_label": "git_cli_test.go"
+    },
+    {
+      "label": "fakeExecCommand()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L15",
+      "id": "git_git_cli_test_fakeexeccommand",
+      "community": 1,
+      "norm_label": "fakeexeccommand()"
+    },
+    {
+      "label": "TestHelperProcess()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L24",
+      "id": "git_git_cli_test_testhelperprocess",
+      "community": 1,
+      "norm_label": "testhelperprocess()"
+    },
+    {
+      "label": "TestGetRepoUrl()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L51",
+      "id": "git_git_cli_test_testgetrepourl",
+      "community": 1,
+      "norm_label": "testgetrepourl()"
+    },
+    {
+      "label": "TestGetRepoPath()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L122",
+      "id": "git_git_cli_test_testgetrepopath",
+      "community": 1,
+      "norm_label": "testgetrepopath()"
+    },
+    {
+      "label": "TestRepoExists()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L163",
+      "id": "git_git_cli_test_testrepoexists",
+      "community": 1,
+      "norm_label": "testrepoexists()"
+    },
+    {
+      "label": "TestGetGitCommand()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L212",
+      "id": "git_git_cli_test_testgetgitcommand",
+      "community": 1,
+      "norm_label": "testgetgitcommand()"
+    },
+    {
+      "label": "TestFetchRepository()",
+      "file_type": "code",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L239",
+      "id": "git_git_cli_test_testfetchrepository",
+      "community": 2,
+      "norm_label": "testfetchrepository()"
+    },
+    {
+      "label": "repository.go",
+      "file_type": "code",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L1",
+      "id": "internal_repository_repository_go",
+      "community": 2,
+      "norm_label": "repository.go"
+    },
+    {
+      "label": "Repository",
+      "file_type": "code",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L14",
+      "id": "repository_repository",
+      "community": 2,
+      "norm_label": "repository"
+    },
+    {
+      "label": "GetRepositories()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L27",
+      "id": "repository_repository_getrepositories",
+      "community": 2,
+      "norm_label": "getrepositories()"
+    },
+    {
+      "label": "getGiteaRepositories()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L39",
+      "id": "repository_repository_getgitearepositories",
+      "community": 2,
+      "norm_label": "getgitearepositories()"
+    },
+    {
+      "label": "getGitHubRepositories()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L104",
+      "id": "repository_repository_getgithubrepositories",
+      "community": 2,
+      "norm_label": "getgithubrepositories()"
+    },
+    {
+      "label": "repository_test.go",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L1",
+      "id": "internal_repository_repository_test_go",
+      "community": 2,
+      "norm_label": "repository_test.go"
+    },
+    {
+      "label": "fakeExecCommand()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L14",
+      "id": "repository_repository_test_fakeexeccommand",
+      "community": 2,
+      "norm_label": "fakeexeccommand()"
+    },
+    {
+      "label": "TestGetRepositories_Gitea()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L32",
+      "id": "repository_repository_test_testgetrepositories_gitea",
+      "community": 2,
+      "norm_label": "testgetrepositories_gitea()"
+    },
+    {
+      "label": "TestGetRepositories_GitHub()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L86",
+      "id": "repository_repository_test_testgetrepositories_github",
+      "community": 2,
+      "norm_label": "testgetrepositories_github()"
+    },
+    {
+      "label": "TestRepository()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L141",
+      "id": "repository_repository_test_testrepository",
+      "community": 2,
+      "norm_label": "testrepository()"
+    },
+    {
+      "label": "TestHelperProcess()",
+      "file_type": "code",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L173",
+      "id": "repository_repository_test_testhelperprocess",
+      "community": 2,
+      "norm_label": "testhelperprocess()"
+    },
+    {
+      "label": "filter.go",
+      "file_type": "code",
+      "source_file": "pkg/filter/filter.go",
+      "source_location": "L1",
+      "id": "pkg_filter_filter_go",
+      "community": 3,
+      "norm_label": "filter.go"
+    },
+    {
+      "label": "FilterRepositories()",
+      "file_type": "code",
+      "source_file": "pkg/filter/filter.go",
+      "source_location": "L13",
+      "id": "filter_filter_filterrepositories",
+      "community": 3,
+      "norm_label": "filterrepositories()"
+    },
+    {
+      "label": "filter_test.go",
+      "file_type": "code",
+      "source_file": "pkg/filter/filter_test.go",
+      "source_location": "L1",
+      "id": "pkg_filter_filter_test_go",
+      "community": 3,
+      "norm_label": "filter_test.go"
+    },
+    {
+      "label": "TestFilterRepositories()",
+      "file_type": "code",
+      "source_file": "pkg/filter/filter_test.go",
+      "source_location": "L11",
+      "id": "filter_filter_test_testfilterrepositories",
+      "community": 3,
+      "norm_label": "testfilterrepositories()"
+    },
+    {
+      "label": "integration_test.go",
+      "file_type": "code",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L1",
+      "id": "tests_integration_test_go",
+      "community": 3,
+      "norm_label": "integration_test.go"
+    },
+    {
+      "label": "TestIntegration()",
+      "file_type": "code",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L17",
+      "id": "tests_integration_test_testintegration",
+      "community": 3,
+      "norm_label": "testintegration()"
+    },
+    {
+      "label": "testFilterIntegration()",
+      "file_type": "code",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L34",
+      "id": "tests_integration_test_testfilterintegration",
+      "community": 3,
+      "norm_label": "testfilterintegration()"
+    },
+    {
+      "label": "TestBasicWorkflow()",
+      "file_type": "code",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L91",
+      "id": "tests_integration_test_testbasicworkflow",
+      "community": 1,
+      "norm_label": "testbasicworkflow()"
+    },
+    {
+      "label": "backup_worker.sh - Docker entrypoint loop script",
+      "file_type": "code",
+      "source_file": "git-repos-backup/backup_worker.sh",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "git_repos_backup_backup_worker",
+      "community": 0,
+      "norm_label": "backup_worker.sh - docker entrypoint loop script"
+    },
+    {
+      "label": "main.go - Root convenience wrapper entry point",
+      "file_type": "code",
+      "source_file": "git-repos-backup/main.go",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "git_repos_backup_main",
+      "community": 0,
+      "norm_label": "main.go - root convenience wrapper entry point"
+    },
+    {
+      "label": "cmd/git-repos-backup/main.go - CLI entry point",
+      "file_type": "code",
+      "source_file": "git-repos-backup/cmd/git-repos-backup/main.go",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cmd_main_main",
+      "community": 0,
+      "norm_label": "cmd/git-repos-backup/main.go - cli entry point"
+    },
+    {
+      "label": "config.ProviderConfig - Per-provider configuration struct",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/config/config.go",
+      "source_location": "22",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "config_config_providerconfig",
+      "community": 3,
+      "norm_label": "config.providerconfig - per-provider configuration struct"
+    },
+    {
+      "label": "config.Config - Top-level configuration struct holding providers slice",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/config/config.go",
+      "source_location": "36",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "config_config_config",
+      "community": 3,
+      "norm_label": "config.config - top-level configuration struct holding providers slice"
+    },
+    {
+      "label": "config.ProviderType - Enum string type for git provider kind",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/config/config.go",
+      "source_location": "12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "config_config_providertype",
+      "community": 6,
+      "norm_label": "config.providertype - enum string type for git provider kind"
+    },
+    {
+      "label": "repository.Repository - Common repository struct",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "14",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "repository_repository_repository",
+      "community": 3,
+      "norm_label": "repository.repository - common repository struct"
+    },
+    {
+      "label": "git.ExecCommand - Swappable exec.Command variable for testing",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "17",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "git_git_cli_execcommand",
+      "community": 2,
+      "norm_label": "git.execcommand - swappable exec.command variable for testing"
+    },
+    {
+      "label": "repository.ExecCommand - Swappable exec.Command variable for testing",
+      "file_type": "code",
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "repository_repository_execcommand",
+      "community": 2,
+      "norm_label": "repository.execcommand - swappable exec.command variable for testing"
+    },
+    {
+      "label": "README.md - git-repos-backup user documentation",
+      "file_type": "document",
+      "source_file": "git-repos-backup/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "git_repos_backup_readme",
+      "community": 3,
+      "norm_label": "readme.md - git-repos-backup user documentation"
+    },
+    {
+      "label": "CLAUDE.md - git-repos-backup agent instructions",
+      "file_type": "document",
+      "source_file": "git-repos-backup/CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "git_repos_backup_claude_md",
+      "community": 7,
+      "norm_label": "claude.md - git-repos-backup agent instructions"
+    },
+    {
+      "label": "Bare Repository Mirror Backup Pattern",
+      "file_type": "rationale",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_bare_repo_mirror_backup",
+      "community": 1,
+      "norm_label": "bare repository mirror backup pattern"
+    },
+    {
+      "label": "Swappable ExecCommand Pattern for testability",
+      "file_type": "rationale",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "17",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_swappable_execcommand",
+      "community": 2,
+      "norm_label": "swappable execcommand pattern for testability"
+    },
+    {
+      "label": "Dual Configuration Mode (YAML file vs CLI args)",
+      "file_type": "rationale",
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "60",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_dual_config_mode",
+      "community": 0,
+      "norm_label": "dual configuration mode (yaml file vs cli args)"
+    },
+    {
+      "label": "Include-takes-precedence Filter Strategy",
+      "file_type": "rationale",
+      "source_file": "git-repos-backup/pkg/filter/filter.go",
+      "source_location": "57",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_include_exclude_filter",
+      "community": 3,
+      "norm_label": "include-takes-precedence filter strategy"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backup_worker.sh",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "backup_worker_sh",
+      "target": "home_georg_projects_adeotek_tools_git_repos_backup_backup_worker_sh__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "main.go",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "main_go",
+      "target": "main_go_git_repos_backup_main_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "main.go",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "main_go_git_repos_backup_main_main",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/git-repos-backup/main.go",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "cmd_git_repos_backup_main_go",
+      "target": "cmd_git_repos_backup_main_go_git_repos_backup_main_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/git-repos-backup/main.go",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "cmd_git_repos_backup_main_go_git_repos_backup_main_main",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app.go",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "internal_app_app_go",
+      "target": "app_app_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app.go",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "internal_app_app_go",
+      "target": "app_app_splitcommaseparatedlist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app.go",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "internal_app_app_go",
+      "target": "app_app_printusage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "54",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_app_run",
+      "target": "app_app_printusage"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "79",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_app_run",
+      "target": "app_app_splitcommaseparatedlist"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "66",
+      "weight": 1.0,
+      "source": "app_app_run",
+      "target": "config_config_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "89",
+      "weight": 1.0,
+      "source": "app_app_run",
+      "target": "config_config_createfromargs"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "130",
+      "weight": 1.0,
+      "source": "app_app_run",
+      "target": "repository_repository_getrepositories"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "139",
+      "weight": 1.0,
+      "source": "app_app_run",
+      "target": "filter_filter_filterrepositories"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "151",
+      "weight": 1.0,
+      "source": "app_app_run",
+      "target": "git_git_cli_fetchrepository"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app_test.go",
+      "source_location": "40",
+      "weight": 1.0,
+      "source": "app_app_test_testversiondisplay",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app_test.go",
+      "source_location": "77",
+      "weight": 1.0,
+      "source": "app_app_test_testhelpdisplay",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L130",
+      "weight": 1.0,
+      "source": "app_app_test_testconfigload",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "app_app_test_testargsconfig",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/main.go",
+      "source_location": "9",
+      "weight": 1.0,
+      "source": "git_repos_backup_main",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/cmd/git-repos-backup/main.go",
+      "source_location": "9",
+      "weight": 1.0,
+      "source": "cmd_main_main",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/backup_worker.sh",
+      "source_location": "82",
+      "weight": 1.0,
+      "source": "git_repos_backup_backup_worker",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/app/app.go",
+      "source_location": "60",
+      "weight": 1.0,
+      "source": "concept_dual_config_mode",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "git-repos-backup/README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "git_repos_backup_readme",
+      "target": "app_app_run"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app_test.go",
+      "source_location": "171",
+      "weight": 1.0,
+      "source": "app_app_test_testsplitcommaseparatedlist",
+      "target": "app_app_splitcommaseparatedlist"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app_test.go",
+      "source_location": "13",
+      "weight": 1.0,
+      "source": "app_app_test_testprintusage",
+      "target": "app_app_printusage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testprintusage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testversiondisplay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testhelpdisplay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testconfigload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testsplitcommaseparatedlist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/app/app_test.go",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "internal_app_app_test_go",
+      "target": "app_app_test_testargsconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "internal_config_config_go",
+      "target": "config_providertype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "internal_config_config_go",
+      "target": "config_providerconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "internal_config_config_go",
+      "target": "config_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "internal_config_config_go",
+      "target": "config_config_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "internal_config_config_go",
+      "target": "config_config_createfromargs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config.go",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "config_config_createfromargs",
+      "target": "config_providertype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/config/config_test.go",
+      "source_location": "34",
+      "weight": 1.0,
+      "source": "config_config_test_testload",
+      "target": "config_config_load"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "git-repos-backup/internal/config/config.go",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "config_config_load",
+      "target": "config_config_createfromargs"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/config/config_test.go",
+      "source_location": "144",
+      "weight": 1.0,
+      "source": "config_config_test_testcreatefromargs",
+      "target": "config_config_createfromargs"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config_test.go",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "internal_config_config_test_go",
+      "target": "config_config_test_testload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/config/config_test.go",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "internal_config_config_test_go",
+      "target": "config_config_test_testcreatefromargs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_fetchrepository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_rungitfetch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_rungitinit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_getgitcommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_getrepourl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_getrepopath",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli.go",
+      "source_location": "L143",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_go",
+      "target": "git_git_cli_repoexists",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "git_git_cli_getrepopath"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "git_git_cli_getrepourl"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "git_git_cli_repoexists"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "git_git_cli_rungitinit"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "41",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "git_git_cli_rungitfetch"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli_test.go",
+      "source_location": "277",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testfetchrepository",
+      "target": "git_git_cli_fetchrepository"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "20",
+      "weight": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "config_config_providerconfig"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "20",
+      "weight": 1.0,
+      "source": "git_git_cli_fetchrepository",
+      "target": "repository_repository_repository"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "git_git_cli_rungitfetch",
+      "target": "git_git_cli_getgitcommand"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "46",
+      "weight": 1.0,
+      "source": "concept_bare_repo_mirror_backup",
+      "target": "git_git_cli_rungitfetch"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "58",
+      "weight": 1.0,
+      "source": "git_git_cli_rungitinit",
+      "target": "git_git_cli_execcommand"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "58",
+      "weight": 1.0,
+      "source": "concept_bare_repo_mirror_backup",
+      "target": "git_git_cli_rungitinit"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L218",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testgetgitcommand",
+      "target": "git_git_cli_getgitcommand"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "69",
+      "weight": 1.0,
+      "source": "git_git_cli_getgitcommand",
+      "target": "git_git_cli_execcommand"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli_test.go",
+      "source_location": "106",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testgetrepourl",
+      "target": "git_git_cli_getrepourl"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testgetrepopath",
+      "target": "git_git_cli_getrepopath"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/tests/integration_test.go",
+      "source_location": "118",
+      "weight": 1.0,
+      "source": "tests_integration_test_testbasicworkflow",
+      "target": "git_git_cli_getrepopath"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L169",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testrepoexists",
+      "target": "git_git_cli_repoexists"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/tests/integration_test.go",
+      "source_location": "141",
+      "weight": 1.0,
+      "source": "tests_integration_test_testbasicworkflow",
+      "target": "git_git_cli_repoexists"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_fakeexeccommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testhelperprocess",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testgetrepourl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testgetrepopath",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testrepoexists",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L212",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testgetgitcommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/git/git_cli_test.go",
+      "source_location": "L239",
+      "weight": 1.0,
+      "source": "internal_git_git_cli_test_go",
+      "target": "git_git_cli_test_testfetchrepository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/git/git_cli_test.go",
+      "source_location": "245",
+      "weight": 1.0,
+      "source": "git_git_cli_test_testfetchrepository",
+      "target": "git_git_cli_execcommand"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "internal_repository_repository_go",
+      "target": "repository_repository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "internal_repository_repository_go",
+      "target": "repository_repository_getrepositories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "internal_repository_repository_go",
+      "target": "repository_repository_getgitearepositories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository.go",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "internal_repository_repository_go",
+      "target": "repository_repository_getgithubrepositories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "repository_repository_getrepositories",
+      "target": "repository_repository_getgitearepositories"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "repository_repository_getrepositories",
+      "target": "repository_repository_getgithubrepositories"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository_test.go",
+      "source_location": "48",
+      "weight": 1.0,
+      "source": "repository_repository_test_testgetrepositories_gitea",
+      "target": "repository_repository_getrepositories"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository_test.go",
+      "source_location": "101",
+      "weight": 1.0,
+      "source": "repository_repository_test_testgetrepositories_github",
+      "target": "repository_repository_getrepositories"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "27",
+      "weight": 1.0,
+      "source": "repository_repository_getrepositories",
+      "target": "config_config_providerconfig"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "44",
+      "weight": 1.0,
+      "source": "repository_repository_getgitearepositories",
+      "target": "repository_repository_execcommand"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "repository_repository_getgitearepositories",
+      "target": "repository_repository_getgithubrepositories"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "113",
+      "weight": 1.0,
+      "source": "repository_repository_getgithubrepositories",
+      "target": "repository_repository_execcommand"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "internal_repository_repository_test_go",
+      "target": "repository_repository_test_fakeexeccommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "internal_repository_repository_test_go",
+      "target": "repository_repository_test_testgetrepositories_gitea",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "internal_repository_repository_test_go",
+      "target": "repository_repository_test_testgetrepositories_github",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "internal_repository_repository_test_go",
+      "target": "repository_repository_test_testrepository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/repository/repository_test.go",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "internal_repository_repository_test_go",
+      "target": "repository_repository_test_testhelperprocess",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/repository/repository_test.go",
+      "source_location": "35",
+      "weight": 1.0,
+      "source": "repository_repository_test_testgetrepositories_gitea",
+      "target": "repository_repository_execcommand"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pkg/filter/filter.go",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "pkg_filter_filter_go",
+      "target": "filter_filter_filterrepositories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/pkg/filter/filter_test.go",
+      "source_location": "86",
+      "weight": 1.0,
+      "source": "filter_filter_test_testfilterrepositories",
+      "target": "filter_filter_filterrepositories"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/integration_test.go",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "tests_integration_test_testfilterintegration",
+      "target": "filter_filter_filterrepositories"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/tests/integration_test.go",
+      "source_location": "67",
+      "weight": 1.0,
+      "source": "tests_integration_test_testintegration",
+      "target": "filter_filter_filterrepositories"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/pkg/filter/filter.go",
+      "source_location": "57",
+      "weight": 1.0,
+      "source": "concept_include_exclude_filter",
+      "target": "filter_filter_filterrepositories"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/pkg/filter/filter.go",
+      "source_location": "13",
+      "weight": 1.0,
+      "source": "filter_filter_filterrepositories",
+      "target": "config_config_providerconfig"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/pkg/filter/filter.go",
+      "source_location": "13",
+      "weight": 1.0,
+      "source": "filter_filter_filterrepositories",
+      "target": "repository_repository_repository"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pkg/filter/filter_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "pkg_filter_filter_test_go",
+      "target": "filter_filter_test_testfilterrepositories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "tests_integration_test_go",
+      "target": "tests_integration_test_testintegration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "tests_integration_test_go",
+      "target": "tests_integration_test_testfilterintegration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "tests_integration_test_go",
+      "target": "tests_integration_test_testbasicworkflow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/integration_test.go",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "tests_integration_test_testintegration",
+      "target": "tests_integration_test_testfilterintegration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "git-repos-backup/backup_worker.sh",
+      "source_location": "16",
+      "weight": 1.0,
+      "source": "concept_dual_config_mode",
+      "target": "git_repos_backup_backup_worker"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "git-repos-backup/README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "git_repos_backup_readme",
+      "target": "config_config_providerconfig"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/config/config.go",
+      "source_location": "37",
+      "weight": 1.0,
+      "source": "config_config_providerconfig",
+      "target": "config_config_config"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "17",
+      "weight": 1.0,
+      "source": "concept_swappable_execcommand",
+      "target": "git_git_cli_execcommand"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/git/git_cli.go",
+      "source_location": "17",
+      "weight": 1.0,
+      "source": "git_git_cli_execcommand",
+      "target": "repository_repository_execcommand"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/repository/repository.go",
+      "source_location": "24",
+      "weight": 1.0,
+      "source": "concept_swappable_execcommand",
+      "target": "repository_repository_execcommand"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "backup_pipeline_flow",
+      "label": "Core Backup Pipeline: Config -> Fetch Repos -> Filter -> Git Fetch",
+      "nodes": [
+        "app_app_run",
+        "repository_repository_getrepositories",
+        "filter_filter_filterrepositories",
+        "git_git_cli_fetchrepository"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "git-repos-backup/internal/app/app.go"
+    },
+    {
+      "id": "swappable_exec_testability",
+      "label": "Swappable ExecCommand pattern used across git and repository packages for test mocking",
+      "nodes": [
+        "git_git_cli_execcommand",
+        "repository_repository_execcommand",
+        "concept_swappable_execcommand"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/git/git_cli.go"
+    },
+    {
+      "id": "dual_config_entry_points",
+      "label": "Dual configuration modes: YAML file load vs CLI args construction",
+      "nodes": [
+        "config_config_load",
+        "config_config_createfromargs",
+        "concept_dual_config_mode"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "git-repos-backup/internal/config/config.go"
+    }
+  ],
+  "built_at_commit": "5a8fc38e0c54308fd3f8cfe29073d296209c1ff4"
+}
