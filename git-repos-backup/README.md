@@ -1,12 +1,12 @@
 # Git Repos Backup
 
-A cross-platform CLI tool to backup multiple Git repositories from Gitea and/or GitHub servers.
+A cross-platform CLI tool to backup multiple Git repositories from Gitea, Forgejo and/or GitHub servers.
 
 > **Note:** This tool is part of the [AdeoTEK Tools](https://github.com/adeotek/adeotek-tools) mono-repo.
 
 ## Features
 
-- Support for multiple Git providers (Gitea and GitHub)
+- Support for multiple Git providers (Gitea, Forgejo and GitHub)
 - Mirror-based backup of repositories (bare repositories)
 - Filtering repositories via include/exclude lists
 - Authentication via tokens or basic auth
@@ -24,10 +24,10 @@ You can also run git-repos-backup using Docker:
 docker pull adeotek/git-repos-backup:latest
 
 # Run with a configuration file (mount it as a volume)
-docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
+docker run -v $(pwd)/config.yaml:/app/config.yaml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
 
 # Run with command-line arguments
-docker run -v /path/to/backups:/backups adeotek/git-repos-backup:latest -provider github -token your_github_token -target-dir /backups
+docker run -v /path/to/backups:/backups -e GB_PROVIDER=github -e GB_TOKEN=your_github_token -e GB_TARGET_DIR=/backups adeotek/git-repos-backup:latest
 ```
 
 ### Building the Docker image locally
@@ -40,7 +40,7 @@ cd git-repos-backup
 docker build -t git-repos-backup .
 
 # Run the container
-docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups git-repos-backup
+docker run -v $(pwd)/config.yaml:/app/config.yaml -v /path/to/backups:/backups git-repos-backup
 ```
 
 ### Docker environment variables
@@ -50,7 +50,7 @@ docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups git
 | `GB_BACKUP_INTERVAL` | Seconds between backup runs (for scheduled backups) | `86400` (24 hours) |
 | `GB_VERBOSE` | Enable verbose output | `false` |
 | `GB_CONFIG` | Path to config file (if using config file mode) | `/app/config.yaml` |
-| `GB_PROVIDER` | Provider type (gitea or github) | - |
+| `GB_PROVIDER` | Provider type (gitea, forgejo or github) | - |
 | `GB_TARGET_DIR` | Directory to clone repositories into | - |
 | `GB_SERVER_URL` | URL of the Git server (required for Gitea, optional for GitHub) | - |
 | `GB_TOKEN` | API token for authentication | - |
@@ -65,7 +65,7 @@ The Docker image can operate in two modes:
 
 1. **Config file mode (default)**: Loads configuration from a mounted config file
    ```bash
-   docker run -v $(pwd)/config.yml:/app/config.yml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
+   docker run -v $(pwd)/config.yaml:/app/config.yaml -v /path/to/backups:/backups adeotek/git-repos-backup:latest
    ```
 
 2. **Command-line mode**: Uses environment variables directly
@@ -173,7 +173,7 @@ Flags:
   -config string
         Path to configuration file (if not specified, defaults to config.yaml in current directory if it exists)
   -provider string
-        Provider type (gitea or github)
+        Provider type (gitea, forgejo or github)
   -server-url string
         URL of the Git server (required for Gitea, optional for GitHub)
   -token string
@@ -217,7 +217,15 @@ Flags:
    ./git-repos-backup -provider gitea -server-url https://gitea.example.com -token your_gitea_token -target-dir /path/to/gitea/backups -verbose
    ```
 
-4. With repository filtering:
+4. Using command-line arguments for Forgejo:
+   ```bash
+   ./git-repos-backup -provider forgejo -server-url https://forgejo.example.com -token your_forgejo_token -target-dir /path/to/forgejo/backups -verbose
+   ```
+   Forgejo is a Gitea fork and exposes the same API, so `-provider gitea` also
+   works against a Forgejo instance; use `forgejo` to make the logs and errors
+   refer to the right server.
+
+5. With repository filtering:
    ```bash
    ./git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups -include "owner/repo1,owner/repo2" -verbose
    ```
@@ -249,7 +257,19 @@ providers:
     #   - owner/repo3
     # Target directory for repositories backup
     target_dir: /path/to/gitea/backups
-    
+
+  # Forgejo provider (Forgejo is a Gitea fork and uses the same API)
+  - type: forgejo
+    server_url: https://forgejo.example.com
+    access_token: your_forgejo_access_token
+    # Optional repository filtering, same options as the Gitea provider
+    # include:
+    #   - owner/repo1
+    # exclude:
+    #   - owner/repo2
+    # Target directory for repositories backup
+    target_dir: /path/to/forgejo/backups
+
   # GitHub provider
   - type: github
     # For GitHub Enterprise, specify the server URL
@@ -269,7 +289,7 @@ providers:
 ### Provider Configuration
 
 Each provider configuration requires:
-- `type`: Provider type (either `gitea` or `github`)
+- `type`: Provider type (`gitea`, `forgejo` or `github`)
 - `server_url`: URL of the Git server (required for Gitea, optional for GitHub - only needed for GitHub Enterprise)
 - `target_dir`: Directory where repositories will be backed up
 

@@ -23,7 +23,6 @@ bin/
 *.dylib
 
 # Scripts
-backup_worker.sh
 build.sh
 Makefile
 

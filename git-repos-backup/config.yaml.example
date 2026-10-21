@@ -21,6 +21,12 @@ providers:
     # Target directory for repositories backup
     target_dir: /path/to/gitea/backups
 
+  # Forgejo provider (Forgejo is a Gitea fork and uses the same API)
+  - type: forgejo
+    server_url: https://forgejo.example.com
+    access_token: your_forgejo_access_token
+    target_dir: /path/to/forgejo/backups
+
   # GitHub provider
   - type: github
     # For GitHub Enterprise, specify the server URL

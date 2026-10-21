@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -89,6 +90,56 @@ providers:
 	_, err = Load(configFile)
 	if err == nil {
 		t.Error("Expected error for invalid YAML, got nil")
+	}
+}
+
+func TestForgejoProviderConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	configFile := filepath.Join(tmpDir, "config.yaml")
+
+	content := `
+providers:
+  - type: forgejo
+    server_url: https://forgejo.example.com
+    access_token: forgejo_token
+    target_dir: /forgejo/backup
+`
+	if err := os.WriteFile(configFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test config file: %v", err)
+	}
+
+	cfg, err := Load(configFile)
+	if err != nil {
+		t.Fatalf("Failed to load config: %v", err)
+	}
+	if len(cfg.Providers) != 1 {
+		t.Fatalf("Expected 1 provider, got %d", len(cfg.Providers))
+	}
+	if cfg.Providers[0].Type != ProviderForgejo {
+		t.Errorf("Expected type %q, got %q", ProviderForgejo, cfg.Providers[0].Type)
+	}
+	if !IsSupportedProvider(cfg.Providers[0].Type) {
+		t.Errorf("IsSupportedProvider(%q) = false, want true", cfg.Providers[0].Type)
+	}
+}
+
+func TestIsSupportedProvider(t *testing.T) {
+	for _, provider := range []ProviderType{ProviderGitea, ProviderForgejo, ProviderGitHub} {
+		if !IsSupportedProvider(provider) {
+			t.Errorf("IsSupportedProvider(%q) = false, want true", provider)
+		}
+	}
+	for _, provider := range []ProviderType{"", "gitlab", "bitbucket", "Gitea"} {
+		if IsSupportedProvider(provider) {
+			t.Errorf("IsSupportedProvider(%q) = true, want false", provider)
+		}
+	}
+
+	names := SupportedProviderNames()
+	for _, want := range []string{"gitea", "forgejo", "github"} {
+		if !strings.Contains(names, want) {
+			t.Errorf("SupportedProviderNames() = %q, missing %q", names, want)
+		}
 	}
 }
 
