@@ -319,7 +319,7 @@ target_dir/
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.27 or later
 - Git
 
 ### Setup Development Environment
