@@ -113,8 +113,11 @@ func (svc *S3UploadService) Upload(localPath, key, bucket string) error {
 // BuildS3Key constructs the S3 object key from a local file path, database name, and optional prefix
 func BuildS3Key(prefix, dbName, filePath string) string {
 	key := dbName + "/" + filepath.Base(filePath)
-	if prefix != "" {
-		return prefix + key
+	if prefix == "" {
+		return key
 	}
-	return key
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	return prefix + key
 }

@@ -24,7 +24,7 @@ func newMigrationCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("target-path", "t", "", "[required] Target path (path to the SQL scripts directory)")
-	cmd.Flags().StringP("provider", "r", "postgresql", "Database provider (postgresql/sqlite)")
+	cmd.Flags().StringP("provider", "r", "", "Database provider (postgresql/sqlite, default: postgresql)")
 	cmd.Flags().StringP("connection-string", "c", "", "Database connection string")
 	cmd.Flags().StringP("host", "o", "", "Database host")
 	cmd.Flags().IntP("port", "p", 0, "Database port")
@@ -228,11 +228,11 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// resolveString returns the viper value if set via CLI/env, otherwise falls back to config file value
+// resolveString returns the value set via CLI flag, env var, or Viper, otherwise the
+// config file value. Viper's IsSet is used because it reports CLI/env only, not pflag defaults.
 func resolveString(v *viper.Viper, key string, cfg *models.MigrationConfig, getter func(*models.MigrationConfig) string) string {
-	val := v.GetString(key)
-	if val != "" {
-		return val
+	if v.IsSet(key) {
+		return v.GetString(key)
 	}
 	if cfg != nil {
 		return getter(cfg)
@@ -240,11 +240,10 @@ func resolveString(v *viper.Viper, key string, cfg *models.MigrationConfig, gett
 	return ""
 }
 
-// resolveInt returns the viper value if set via CLI/env, otherwise falls back to config file value
+// resolveInt returns the value set via CLI flag, env var, or Viper, otherwise the config file value
 func resolveInt(v *viper.Viper, key string, cfg *models.MigrationConfig, getter func(*models.MigrationConfig) int) int {
-	val := v.GetInt(key)
-	if val != 0 {
-		return val
+	if v.IsSet(key) {
+		return v.GetInt(key)
 	}
 	if cfg != nil {
 		return getter(cfg)
@@ -252,10 +251,10 @@ func resolveInt(v *viper.Viper, key string, cfg *models.MigrationConfig, getter 
 	return 0
 }
 
-// resolveBool returns the viper value if set via CLI/env, otherwise falls back to config file value
+// resolveBool returns the value set via CLI flag, env var, or Viper, otherwise the config file value
 func resolveBool(v *viper.Viper, key string, cfg *models.MigrationConfig, getter func(*models.MigrationConfig) bool) bool {
-	if v.GetBool(key) {
-		return true
+	if v.IsSet(key) {
+		return v.GetBool(key)
 	}
 	if cfg != nil {
 		return getter(cfg)

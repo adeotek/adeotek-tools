@@ -52,19 +52,23 @@ func runBackup(cmd *cobra.Command, args []string) error {
 
 	config := unifiedConfig.Backup
 
+	// Link defaults and S3 config to each database target before validation and
+	// wildcard expansion, so inherited values (e.g. ssh_tunnel, schemas) apply there too
+	for i := range config.Databases {
+		config.Databases[i].SetDefaults(&config.Defaults, &config.S3)
+	}
+
+	if err := config.Validate(); err != nil {
+		return fmt.Errorf("invalid backup configuration: %w", err)
+	}
+
 	// Expand wildcard database entries (with SSH tunnel support)
 	if err := services.ExpandWildcardsWithTunnels(config, verbose); err != nil {
 		return fmt.Errorf("failed to expand wildcard databases: %w", err)
 	}
 
-	// Validate the backup config (validation happens in LoadBackupConfig, but check count)
 	if len(config.Databases) == 0 {
 		return fmt.Errorf("no databases to backup after wildcard expansion")
-	}
-
-	// Link defaults and S3 config to each database target
-	for i := range config.Databases {
-		config.Databases[i].SetDefaults(&config.Defaults, &config.S3)
 	}
 
 	if verbose {

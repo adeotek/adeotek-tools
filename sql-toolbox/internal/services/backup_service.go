@@ -130,14 +130,27 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 		return "", nil
 	}
 
-	// Sort by modification time (most recent first)
-	sort.Slice(backupFiles, func(i, j int) bool {
-		infoI, _ := os.Stat(backupFiles[i])
-		infoJ, _ := os.Stat(backupFiles[j])
-		return infoI.ModTime().After(infoJ.ModTime())
+	// Sort by modification time (most recent first); skip files we cannot stat
+	type backupFileInfo struct {
+		path    string
+		modTime time.Time
+	}
+	infos := make([]backupFileInfo, 0, len(backupFiles))
+	for _, path := range backupFiles {
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		infos = append(infos, backupFileInfo{path: path, modTime: info.ModTime()})
+	}
+	if len(infos) == 0 {
+		return "", nil
+	}
+	sort.Slice(infos, func(i, j int) bool {
+		return infos[i].modTime.After(infos[j].modTime)
 	})
 
-	return backupFiles[0], nil
+	return infos[0].path, nil
 }
 
 func (bs *BackupService) createPostgresBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
@@ -232,35 +245,50 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 func (bs *BackupService) restorePostgresBackup(connectionParams *models.ConnectionParameters, backupPath string) error {
 	log.Printf("Restoring PostgreSQL backup from: %s", backupPath)
 
+	// Build connection arguments; a raw connection string takes precedence and must be
+	// normalized (lib/pq format) because pg_restore/psql accept conninfo strings
+	var connArgs []string
+	if connectionParams.RawConnectionString != "" {
+		connStr, err := connectionParams.GetConnectionString()
+		if err != nil {
+			return fmt.Errorf("failed to build connection string: %w", err)
+		}
+		connArgs = []string{fmt.Sprintf("--dbname=%s", connStr)}
+	} else {
+		host := connectionParams.Host
+		port := connectionParams.Port
+		if activeTunnel := connectionParams.GetActiveTunnel(); activeTunnel != nil {
+			type localPortGetter interface {
+				GetLocalPort() int
+			}
+			if t, ok := activeTunnel.(localPortGetter); ok {
+				host = "127.0.0.1"
+				port = t.GetLocalPort()
+			}
+		}
+		connArgs = []string{
+			fmt.Sprintf("--host=%s", host),
+			fmt.Sprintf("--port=%d", port),
+			fmt.Sprintf("--username=%s", connectionParams.User),
+			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
+		}
+	}
+
 	var cmd *exec.Cmd
 	var cmdName string
 
 	// Use pg_restore for custom format (.dump), psql for plain format (.sql)
 	if strings.HasSuffix(backupPath, ".dump") {
 		cmdName = "pg_restore"
-		args := []string{
-			fmt.Sprintf("--host=%s", connectionParams.Host),
-			fmt.Sprintf("--port=%d", connectionParams.Port),
-			fmt.Sprintf("--username=%s", connectionParams.User),
-			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-			"--clean",
-			"--if-exists",
-			backupPath,
-		}
+		args := append(connArgs, "--clean", "--if-exists", backupPath)
 		cmd = exec.Command(cmdName, args...)
 	} else {
 		cmdName = "psql"
-		args := []string{
-			fmt.Sprintf("--host=%s", connectionParams.Host),
-			fmt.Sprintf("--port=%d", connectionParams.Port),
-			fmt.Sprintf("--username=%s", connectionParams.User),
-			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-			fmt.Sprintf("--file=%s", backupPath),
-		}
+		args := append(connArgs, fmt.Sprintf("--file=%s", backupPath))
 		cmd = exec.Command(cmdName, args...)
 	}
 
-	if connectionParams.Password != "" {
+	if connectionParams.RawConnectionString == "" && connectionParams.Password != "" {
 		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", connectionParams.Password))
 	}
 

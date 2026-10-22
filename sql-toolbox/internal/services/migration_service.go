@@ -67,7 +67,7 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 				log.Println("History table created.")
 			}
 		}
-    executedScripts = []models.ScriptExecutionHistory{}
+		executedScripts = []models.ScriptExecutionHistory{}
 	} else {
 		// Get executed scripts from history table (both dry-run and normal modes)
 		executedScripts, err = migrationRepo.GetExecutedScripts()
@@ -183,7 +183,7 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 			continue
 		}
 
-    log.Printf("Script %s executed successfully [%s]", scriptName, hash)
+		log.Printf("Script %s executed successfully [%s]", scriptName, hash)
 
 		// Update execution history
 		executionHistory := &models.ScriptExecutionHistory{
