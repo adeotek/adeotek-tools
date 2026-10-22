@@ -200,12 +200,34 @@ func (bs *BackupService) createPostgresBackup(connectionParams *models.Connectio
 	}
 	defer file.Close()
 
-	if err := dumper.Dump(file); err != nil {
-		return "", fmt.Errorf("backup failed: %w", err)
+	if err := bs.dumpToFile(file, backupPath, dumper); err != nil {
+		return "", err
 	}
 
 	log.Printf("PostgreSQL backup created successfully: %s (method: %s)", backupPath, bs.backupMethod)
 	return backupPath, nil
+}
+
+// dumpToFile runs the dump into file and removes the partially written backup on failure,
+// so a failed dump never leaves a truncated .sql/.dump file behind that could later be
+// picked as "the last backup".
+func (bs *BackupService) dumpToFile(file *os.File, backupPath string, dumper DatabaseDumper) error {
+	dumpSucceeded := false
+	defer func() {
+		if !dumpSucceeded {
+			file.Close()
+			_ = os.Remove(backupPath)
+		}
+	}()
+
+	if err := dumper.Dump(file); err != nil {
+		return fmt.Errorf("backup failed: %w", err)
+	}
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("failed to close backup file: %w", err)
+	}
+	dumpSucceeded = true
+	return nil
 }
 
 func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
@@ -234,9 +256,22 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 	}
 	defer destFile.Close()
 
+	// Remove a partially copied backup on failure (e.g. disk full mid-copy).
+	copySucceeded := false
+	defer func() {
+		if !copySucceeded {
+			destFile.Close()
+			_ = os.Remove(backupPath)
+		}
+	}()
+
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
 		return "", fmt.Errorf("failed to copy database file: %w", err)
 	}
+	if err := destFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close backup file: %w", err)
+	}
+	copySucceeded = true
 
 	log.Printf("SQLite backup created successfully: %s", backupPath)
 	return backupPath, nil
@@ -315,14 +350,32 @@ func (bs *BackupService) restoreSQLiteBackup(connectionParams *models.Connection
 	}
 	defer sourceFile.Close()
 
-	destFile, err := os.Create(targetPath)
+	// Copy to a temporary file in the target directory and rename it into place, so a
+	// failed restore never leaves a half-written (and therefore corrupt) database file.
+	tmpFile, err := os.CreateTemp(filepath.Dir(targetPath), ".restore-*.tmp")
 	if err != nil {
-		return fmt.Errorf("failed to create target database file: %w", err)
+		return fmt.Errorf("failed to create temporary restore file: %w", err)
 	}
-	defer destFile.Close()
+	tmpPath := tmpFile.Name()
+	defer func() {
+		tmpFile.Close()
+		_ = os.Remove(tmpPath)
+	}()
 
-	if _, err := io.Copy(destFile, sourceFile); err != nil {
+	if _, err := io.Copy(tmpFile, sourceFile); err != nil {
 		return fmt.Errorf("failed to copy backup file: %w", err)
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return fmt.Errorf("failed to flush restore file: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close restore file: %w", err)
+	}
+	if err := os.Chmod(tmpPath, 0644); err != nil {
+		return fmt.Errorf("failed to set restore file permissions: %w", err)
+	}
+	if err := os.Rename(tmpPath, targetPath); err != nil {
+		return fmt.Errorf("failed to replace database file: %w", err)
 	}
 
 	log.Printf("SQLite backup restored successfully")

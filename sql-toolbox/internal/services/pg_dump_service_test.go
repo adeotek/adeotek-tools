@@ -22,14 +22,14 @@ func TestEscapeStringLiteral(t *testing.T) {
 			expected: "it''s a test",
 		},
 		{
-			name:     "backslash",
+			name:     "backslash stays literal (standard_conforming_strings = on)",
 			input:    `path\to\file`,
-			expected: `path\\to\\file`,
+			expected: `path\to\file`,
 		},
 		{
 			name:     "both quotes and backslashes",
 			input:    `it's a \test`,
-			expected: `it''s a \\test`,
+			expected: `it''s a \test`,
 		},
 		{
 			name:     "empty string",

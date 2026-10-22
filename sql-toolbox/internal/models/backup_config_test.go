@@ -345,6 +345,78 @@ func strPtr(s string) *string {
 	return &s
 }
 
+func TestDatabaseTarget_GetEffectivePort(t *testing.T) {
+	tests := []struct {
+		name     string
+		db       DatabaseTarget
+		expected int
+	}{
+		{name: "explicit port", db: DatabaseTarget{Port: 6543}, expected: 6543},
+		{name: "omitted port defaults to 5432", db: DatabaseTarget{}, expected: 5432},
+		{name: "negative port defaults to 5432", db: DatabaseTarget{Port: -1}, expected: 5432},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.db.GetEffectivePort(); got != tt.expected {
+				t.Errorf("expected %d, got %d", tt.expected, got)
+			}
+		})
+	}
+}
+
+func TestDatabaseTarget_ToConnectionString_OmittedPort(t *testing.T) {
+	db := DatabaseTarget{Host: "db.example.com", Database: "mydb", User: "u"}
+	expected := "host=db.example.com port=5432 dbname=mydb user=u sslmode=disable"
+	if got := db.ToConnectionString(); got != expected {
+		t.Errorf("expected %q, got %q", expected, got)
+	}
+}
+
+// The backup command relies on this validation; it used to be unexported and never called.
+func TestBackupConfig_Validate(t *testing.T) {
+	valid := BackupConfig{
+		Databases: []DatabaseTarget{
+			{Name: "ok", Host: "localhost", Database: "mydb"},
+		},
+	}
+	if err := valid.Validate(); err != nil {
+		t.Errorf("expected valid config, got error: %v", err)
+	}
+
+	tests := []struct {
+		name   string
+		config BackupConfig
+	}{
+		{name: "no databases", config: BackupConfig{}},
+		{
+			name:   "missing name",
+			config: BackupConfig{Databases: []DatabaseTarget{{Host: "localhost", Database: "mydb"}}},
+		},
+		{
+			name:   "missing host and connection_string",
+			config: BackupConfig{Databases: []DatabaseTarget{{Name: "x", Database: "mydb"}}},
+		},
+		{
+			name:   "missing database name",
+			config: BackupConfig{Databases: []DatabaseTarget{{Name: "x", Host: "localhost"}}},
+		},
+		{
+			name: "s3 enabled without bucket",
+			config: BackupConfig{
+				Databases: []DatabaseTarget{{Name: "x", Host: "localhost", Database: "mydb"}},
+				S3:        S3Config{Enabled: true},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.config.Validate(); err == nil {
+				t.Error("expected validation error")
+			}
+		})
+	}
+}
+
 func TestDatabaseTarget_GetEffectiveBackupMethod(t *testing.T) {
 	tests := []struct {
 		name     string
