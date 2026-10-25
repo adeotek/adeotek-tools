@@ -1,14 +1,20 @@
 package gitea
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 )
 
-const pageLimit = 50
+const (
+	pageLimit      = 50
+	requestTimeout = 2 * time.Minute
+)
 
 // Owner is the repo owner as returned by the Gitea API.
 type Owner struct {
@@ -38,23 +44,23 @@ func NewClient(baseURL, token string) *Client {
 	return &Client{
 		baseURL:    strings.TrimRight(baseURL, "/"),
 		token:      token,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Timeout: requestTimeout},
 	}
 }
 
 // ListRepos returns repos for the given orgs and users.
 // If both slices are empty, all repos visible to the token are returned via /repos/search.
 // Repos appearing in multiple sources are deduplicated by ID.
-func (c *Client) ListRepos(orgs, users []string) ([]Repo, error) {
+func (c *Client) ListRepos(ctx context.Context, orgs, users []string) ([]Repo, error) {
 	if len(orgs) == 0 && len(users) == 0 {
-		return c.listAllRepos()
+		return c.listAllRepos(ctx)
 	}
 
 	var all []Repo
 	seen := make(map[int]bool)
 
 	for _, org := range orgs {
-		repos, err := c.listOrgRepos(org)
+		repos, err := c.listOrgRepos(ctx, org)
 		if err != nil {
 			return nil, fmt.Errorf("listing org %s: %w", org, err)
 		}
@@ -67,7 +73,7 @@ func (c *Client) ListRepos(orgs, users []string) ([]Repo, error) {
 	}
 
 	for _, user := range users {
-		repos, err := c.listUserRepos(user)
+		repos, err := c.listUserRepos(ctx, user)
 		if err != nil {
 			return nil, fmt.Errorf("listing user %s: %w", user, err)
 		}
@@ -82,20 +88,19 @@ func (c *Client) ListRepos(orgs, users []string) ([]Repo, error) {
 	return all, nil
 }
 
-func (c *Client) listOrgRepos(org string) ([]Repo, error) {
-	return c.paginateArray(fmt.Sprintf("/api/v1/orgs/%s/repos", org))
+func (c *Client) listOrgRepos(ctx context.Context, org string) ([]Repo, error) {
+	return c.paginateArray(ctx, fmt.Sprintf("/api/v1/orgs/%s/repos", url.PathEscape(org)))
 }
 
-func (c *Client) listUserRepos(user string) ([]Repo, error) {
-	return c.paginateArray(fmt.Sprintf("/api/v1/users/%s/repos", user))
+func (c *Client) listUserRepos(ctx context.Context, user string) ([]Repo, error) {
+	return c.paginateArray(ctx, fmt.Sprintf("/api/v1/users/%s/repos", url.PathEscape(user)))
 }
 
 // listAllRepos uses /api/v1/repos/search which wraps results in {"data":[...]}.
-func (c *Client) listAllRepos() ([]Repo, error) {
-	var all []Repo
-	for page := 1; ; page++ {
+func (c *Client) listAllRepos(ctx context.Context) ([]Repo, error) {
+	return c.paginate(ctx, func(page int) ([]Repo, error) {
 		path := fmt.Sprintf("/api/v1/repos/search?limit=%d&page=%d", pageLimit, page)
-		body, status, err := c.doGet(path)
+		body, status, err := c.doGet(ctx, path)
 		if err != nil {
 			return nil, err
 		}
@@ -109,20 +114,15 @@ func (c *Client) listAllRepos() ([]Repo, error) {
 		if err := json.Unmarshal(body, &resp); err != nil {
 			return nil, fmt.Errorf("parsing search response: %w", err)
 		}
-		all = append(all, resp.Data...)
-		if len(resp.Data) < pageLimit {
-			break
-		}
-	}
-	return all, nil
+		return resp.Data, nil
+	})
 }
 
 // paginateArray pages through endpoints that return a plain JSON array of Repos.
-func (c *Client) paginateArray(basePath string) ([]Repo, error) {
-	var all []Repo
-	for page := 1; ; page++ {
+func (c *Client) paginateArray(ctx context.Context, basePath string) ([]Repo, error) {
+	return c.paginate(ctx, func(page int) ([]Repo, error) {
 		path := fmt.Sprintf("%s?limit=%d&page=%d", basePath, pageLimit, page)
-		body, status, err := c.doGet(path)
+		body, status, err := c.doGet(ctx, path)
 		if err != nil {
 			return nil, err
 		}
@@ -134,16 +134,46 @@ func (c *Client) paginateArray(basePath string) ([]Repo, error) {
 		if err := json.Unmarshal(body, &repos); err != nil {
 			return nil, fmt.Errorf("parsing response: %w", err)
 		}
-		all = append(all, repos...)
-		if len(repos) < pageLimit {
+		return repos, nil
+	})
+}
+
+// paginate walks pages until a page yields no new repos. Servers may cap the
+// page size below pageLimit, so a short page is not treated as the last one;
+// stopping on repeated IDs also guards against servers that ignore the page
+// parameter.
+func (c *Client) paginate(ctx context.Context, fetch func(page int) ([]Repo, error)) ([]Repo, error) {
+	var all []Repo
+	seen := make(map[int]bool)
+	for page := 1; ; page++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		repos, err := fetch(page)
+		if err != nil {
+			return nil, err
+		}
+		if len(repos) == 0 {
+			break
+		}
+		added := 0
+		for _, r := range repos {
+			if seen[r.ID] {
+				continue
+			}
+			seen[r.ID] = true
+			all = append(all, r)
+			added++
+		}
+		if added == 0 {
 			break
 		}
 	}
 	return all, nil
 }
 
-func (c *Client) doGet(path string) ([]byte, int, error) {
-	req, err := http.NewRequest(http.MethodGet, c.baseURL+path, nil)
+func (c *Client) doGet(ctx context.Context, path string) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
 	if err != nil {
 		return nil, 0, err
 	}

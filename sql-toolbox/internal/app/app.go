@@ -11,7 +11,7 @@ import (
 
 // Version information
 const (
-	Version   = "0.8.3"
+	Version   = "0.8.4"
 	EnvPrefix = "SQLTB"
 )
 

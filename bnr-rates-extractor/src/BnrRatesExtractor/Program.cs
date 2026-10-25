@@ -43,7 +43,8 @@ static async Task<int> ExtractRatesAsync(int year, string currencyCode)
     Console.WriteLine($"Fetching rates for {currencyCode} in {year}...");
 
     using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("bnr-rates-extractor/1.0");
+    var version = typeof(BnrRatesParser).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"bnr-rates-extractor/{version}");
 
     var xmlContent = await BnrRatesParser.FetchYearXmlAsync(httpClient, year);
     var rates = BnrRatesParser.Parse(xmlContent, currencyCode, year);

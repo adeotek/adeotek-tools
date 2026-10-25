@@ -90,11 +90,14 @@ func (c *Config) Validate() error {
 	if c.GiteaToken == "" {
 		return fmt.Errorf("--gitea-token or GITEA_TOKEN is required")
 	}
-	if c.ForgejoURL == "" {
-		return fmt.Errorf("--forgejo-url is required")
-	}
-	if c.ForgejoToken == "" {
-		return fmt.Errorf("--forgejo-token or FORGEJO_TOKEN is required")
+	// A dry run only queries Gitea; no Forgejo credentials are needed.
+	if !c.DryRun {
+		if c.ForgejoURL == "" {
+			return fmt.Errorf("--forgejo-url is required")
+		}
+		if c.ForgejoToken == "" {
+			return fmt.Errorf("--forgejo-token or FORGEJO_TOKEN is required")
+		}
 	}
 	switch c.OnConflict {
 	case "skip", "fail", "remigrate":

@@ -9,6 +9,7 @@
     <PublishTrimmed>true</PublishTrimmed>
     <RootNamespace>BnrRatesExtractor</RootNamespace>
     <AssemblyName>bnr-rates-extractor</AssemblyName>
+    <Version>1.0.1</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 

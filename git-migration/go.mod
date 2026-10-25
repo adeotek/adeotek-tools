@@ -1,3 +1,3 @@
 module github.com/adeotek/adeotek-tools/git-migration
 
-go 1.21
+go 1.27

@@ -1,0 +1,16 @@
+# Binaries
+/git-migration
+git-migration.exe
+bin/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
