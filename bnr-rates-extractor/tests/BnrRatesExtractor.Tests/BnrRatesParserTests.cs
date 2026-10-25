@@ -271,7 +271,8 @@ public class BnrRatesParserTests
         using var httpClient = new HttpClient(handler);
 
         // Act
-        var xml = await BnrRatesParser.FetchYearXmlAsync(httpClient, 2024);
+        var xml = await BnrRatesParser.FetchYearXmlAsync(
+            httpClient, 2024, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(SampleXml, xml);
@@ -287,7 +288,7 @@ public class BnrRatesParserTests
 
         // Act
         var ex = await Assert.ThrowsAsync<HttpRequestException>(
-            () => BnrRatesParser.FetchYearXmlAsync(httpClient, 2024));
+            () => BnrRatesParser.FetchYearXmlAsync(httpClient, 2024, TestContext.Current.CancellationToken));
 
         // Assert
         Assert.Contains("HTTP 503", ex.Message);
