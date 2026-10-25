@@ -35,6 +35,10 @@ jobs:
         working-directory: homelab-chatbot/backend
         run: uv run ruff check .
 
+      - name: Type check (mypy)
+        working-directory: homelab-chatbot/backend
+        run: uv run mypy app
+
       - name: Unit tests
         working-directory: homelab-chatbot/backend
         run: uv run pytest -q

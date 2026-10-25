@@ -73,6 +73,30 @@ def test_pull_detects_changed_files(tmp_path: Path, local_repo: Path):
     assert "docs.md" in names
 
 
+def test_rename_reports_old_path(tmp_path: Path, local_repo: Path):
+    cfg = RepoConfig(
+        name="r", url=f"file://{local_repo}", branch="main", token_env="UNUSED"
+    )
+    sync = GitSync(clone_root=tmp_path / "repos", get_token=lambda _: None)
+    sync.sync(cfg)  # initial clone (README.md)
+
+    work_dir = tmp_path / "upstream_work"
+    subprocess.run(["git", "clone", f"file://{local_repo}", str(work_dir)], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "config", "user.email", "t@t"], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "config", "user.name", "t"], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "config", "commit.gpgsign", "false"], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "mv", "README.md", "docs.md"], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "commit", "-m", "rename"], check=True)
+    subprocess.run(["git", "-C", str(work_dir), "push"], check=True)
+
+    result = sync.sync(cfg)
+    renamed = [c for c in result.changed_files if c.path == "docs.md"]
+    assert renamed, f"rename not reported: {result.changed_files}"
+    assert renamed[0].status == "R"
+    assert renamed[0].old_path == "README.md"
+    assert "docs.md" in [c.path for c in result.matched_files]
+
+
 def test_no_change_returns_empty(tmp_path: Path, local_repo: Path):
     cfg = RepoConfig(
         name="r", url=f"file://{local_repo}", branch="main", token_env="UNUSED"

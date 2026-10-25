@@ -7,6 +7,7 @@ chatbot can answer questions like "what files were uploaded last week".
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 _CREATE = """
 CREATE TABLE IF NOT EXISTS upload_log (
@@ -72,7 +73,7 @@ class UploadLogDB:
             )
             return cur.lastrowid  # type: ignore[return-value]
 
-    def list_upload_log(self, limit: int = 50) -> list[dict]:
+    def list_upload_log(self, limit: int = 50) -> list[dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute(
                 """
@@ -86,7 +87,7 @@ class UploadLogDB:
             ).fetchall()
         return [dict(r) for r in rows]
 
-    def count_upload_stats(self) -> dict:
+    def count_upload_stats(self) -> dict[str, int]:
         with self._connect() as conn:
             row = conn.execute(
                 """

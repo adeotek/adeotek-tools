@@ -5,7 +5,7 @@ import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 from urllib.parse import urlparse, urlunparse
 
 from app.config import RepoConfig
@@ -17,6 +17,7 @@ ChangeStatus = Literal["A", "M", "D", "R"]
 class ChangedFile:
     path: str
     status: ChangeStatus
+    old_path: str | None = None
 
 
 @dataclass
@@ -84,7 +85,10 @@ class GitSync:
     def _match(self, paths: list[ChangedFile], globs: list[str]) -> list[ChangedFile]:
         out = []
         for cf in paths:
-            if any(self._glob_match(cf.path, g) for g in globs):
+            if any(self._glob_match(cf.path, g) for g in globs) or (
+                cf.old_path is not None
+                and any(self._glob_match(cf.old_path, g) for g in globs)
+            ):
                 out.append(cf)
         return out
 
@@ -120,7 +124,14 @@ class GitSync:
                 if len(parts) >= 2:
                     status_char = parts[0][0]
                     if status_char in ("A", "M", "D", "R"):
-                        changed.append(ChangedFile(path=parts[-1], status=status_char))
+                        old_path = parts[1] if status_char == "R" and len(parts) >= 3 else None
+                        changed.append(
+                            ChangedFile(
+                                path=parts[-1],
+                                status=cast(ChangeStatus, status_char),
+                                old_path=old_path,
+                            )
+                        )
 
         matched = self._match(changed, cfg.include_globs)
         return SyncResult(
