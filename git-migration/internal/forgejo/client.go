@@ -2,12 +2,18 @@ package forgejo
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 )
+
+// requestTimeout bounds every API call so a hung server cannot block the tool forever.
+const requestTimeout = 2 * time.Minute
 
 // MigrateRequest is the payload for POST /api/v1/repos/migrate.
 type MigrateRequest struct {
@@ -39,13 +45,13 @@ func NewClient(baseURL, token string) *Client {
 	return &Client{
 		baseURL:    strings.TrimRight(baseURL, "/"),
 		token:      token,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Timeout: requestTimeout},
 	}
 }
 
 // RepoExists returns true if the named repo exists in Forgejo.
-func (c *Client) RepoExists(owner, name string) (bool, error) {
-	_, status, err := c.doGet(fmt.Sprintf("/api/v1/repos/%s/%s", owner, name))
+func (c *Client) RepoExists(ctx context.Context, owner, name string) (bool, error) {
+	_, status, err := c.doGet(ctx, fmt.Sprintf("/api/v1/repos/%s/%s", url.PathEscape(owner), url.PathEscape(name)))
 	if err != nil {
 		return false, err
 	}
@@ -60,9 +66,11 @@ func (c *Client) RepoExists(owner, name string) (bool, error) {
 }
 
 // EnsureOrg ensures the named owner exists in Forgejo.
-// Checks for org, then user; creates an org if neither is found.
-func (c *Client) EnsureOrg(name string) error {
-	_, status, err := c.doGet("/api/v1/orgs/" + name)
+// Checks for org, then user; creates an org if neither is found. A created org
+// inherits the privacy of the repos being migrated.
+func (c *Client) EnsureOrg(ctx context.Context, name string, private bool) error {
+	escaped := url.PathEscape(name)
+	_, status, err := c.doGet(ctx, "/api/v1/orgs/"+escaped)
 	if err != nil {
 		return err
 	}
@@ -73,7 +81,7 @@ func (c *Client) EnsureOrg(name string) error {
 		return fmt.Errorf("checking org %q returned status %d", name, status)
 	}
 
-	_, status, err = c.doGet("/api/v1/users/" + name)
+	_, status, err = c.doGet(ctx, "/api/v1/users/"+escaped)
 	if err != nil {
 		return err
 	}
@@ -84,9 +92,13 @@ func (c *Client) EnsureOrg(name string) error {
 		return fmt.Errorf("checking user %q returned status %d", name, status)
 	}
 
-	body, status, err := c.doPost("/api/v1/orgs", map[string]string{
+	visibility := "public"
+	if private {
+		visibility = "private"
+	}
+	body, status, err := c.doPost(ctx, "/api/v1/orgs", map[string]string{
 		"username":   name,
-		"visibility": "public",
+		"visibility": visibility,
 	})
 	if err != nil {
 		return err
@@ -97,30 +109,35 @@ func (c *Client) EnsureOrg(name string) error {
 	return nil
 }
 
-// DeleteRepo deletes a repo from Forgejo. Used before re-migrating.
-func (c *Client) DeleteRepo(owner, name string) error {
-	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/api/v1/repos/%s/%s", c.baseURL, owner, name), nil)
+// DeleteRepo deletes a repo from Forgejo.
+func (c *Client) DeleteRepo(ctx context.Context, owner, name string) error {
+	body, status, err := c.doRequest(ctx, http.MethodDelete, fmt.Sprintf("/api/v1/repos/%s/%s", url.PathEscape(owner), url.PathEscape(name)), nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", "token "+c.token)
+	if status != http.StatusNoContent {
+		return fmt.Errorf("delete repo %s/%s returned status %d: %s", owner, name, status, strings.TrimSpace(string(body)))
+	}
+	return nil
+}
 
-	resp, err := c.httpClient.Do(req)
+// RenameRepo renames a repo in Forgejo. Used to preserve the previous repo
+// under a backup name before re-migrating.
+func (c *Client) RenameRepo(ctx context.Context, owner, name, newName string) error {
+	body, status, err := c.doRequest(ctx, http.MethodPatch, fmt.Sprintf("/api/v1/repos/%s/%s", url.PathEscape(owner), url.PathEscape(name)), map[string]string{"name": newName})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("delete repo %s/%s returned status %d: %s", owner, name, resp.StatusCode, strings.TrimSpace(string(body)))
+	if status != http.StatusOK {
+		return fmt.Errorf("rename repo %s/%s to %q returned status %d: %s", owner, name, newName, status, strings.TrimSpace(string(body)))
 	}
 	return nil
 }
 
 // MigrateRepo triggers a server-side migration in Forgejo.
 // Forgejo processes the migration asynchronously; a 201 response means it was accepted.
-func (c *Client) MigrateRepo(req MigrateRequest) error {
-	body, status, err := c.doPost("/api/v1/repos/migrate", req)
+func (c *Client) MigrateRepo(ctx context.Context, req MigrateRequest) error {
+	body, status, err := c.doPost(ctx, "/api/v1/repos/migrate", req)
 	if err != nil {
 		return err
 	}
@@ -130,41 +147,38 @@ func (c *Client) MigrateRepo(req MigrateRequest) error {
 	return nil
 }
 
-func (c *Client) doGet(path string) ([]byte, int, error) {
-	req, err := http.NewRequest(http.MethodGet, c.baseURL+path, nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	req.Header.Set("Authorization", "token "+c.token)
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	return body, resp.StatusCode, err
+func (c *Client) doGet(ctx context.Context, path string) ([]byte, int, error) {
+	return c.doRequest(ctx, http.MethodGet, path, nil)
 }
 
-func (c *Client) doPost(path string, payload interface{}) ([]byte, int, error) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, 0, err
+func (c *Client) doPost(ctx context.Context, path string, payload interface{}) ([]byte, int, error) {
+	return c.doRequest(ctx, http.MethodPost, path, payload)
+}
+
+func (c *Client) doRequest(ctx context.Context, method, path string, payload interface{}) ([]byte, int, error) {
+	var body io.Reader
+	if payload != nil {
+		data, err := json.Marshal(payload)
+		if err != nil {
+			return nil, 0, err
+		}
+		body = bytes.NewReader(data)
 	}
-	req, err := http.NewRequest(http.MethodPost, c.baseURL+path, bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	if err != nil {
 		return nil, 0, err
 	}
 	req.Header.Set("Authorization", "token "+c.token)
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	if payload != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	return body, resp.StatusCode, err
+	respBody, err := io.ReadAll(resp.Body)
+	return respBody, resp.StatusCode, err
 }

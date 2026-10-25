@@ -1,18 +1,19 @@
 # Makefile for git-migration
 
 BINARY=git-migration
-VERSION=0.1.0
+VERSION?=0.2.0
 MAIN_PACKAGE=./cmd/git-migration
 BUILD_DIR=bin
 PLATFORMS=linux windows darwin
 ARCH=amd64
+LDFLAGS=-s -w -X github.com/adeotek/adeotek-tools/git-migration/internal/app.Version=$(VERSION)
 
 .PHONY: all
 all: clean build
 
 .PHONY: build
 build:
-	go build -o $(BINARY) $(MAIN_PACKAGE)
+	go build -ldflags "$(LDFLAGS)" -o $(BINARY) $(MAIN_PACKAGE)
 
 .PHONY: build-all
 build-all: clean
@@ -20,9 +21,9 @@ build-all: clean
 	for platform in $(PLATFORMS); do \
 		echo "Building for $${platform}/$(ARCH)..."; \
 		if [ "$${platform}" = "windows" ]; then \
-			GOOS=$${platform} GOARCH=$(ARCH) go build -o $(BUILD_DIR)/$(BINARY)_$(VERSION)_$${platform}_$(ARCH).exe $(MAIN_PACKAGE); \
+			GOOS=$${platform} GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)_$(VERSION)_$${platform}_$(ARCH).exe $(MAIN_PACKAGE); \
 		else \
-			GOOS=$${platform} GOARCH=$(ARCH) go build -o $(BUILD_DIR)/$(BINARY)_$(VERSION)_$${platform}_$(ARCH) $(MAIN_PACKAGE); \
+			GOOS=$${platform} GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY)_$(VERSION)_$${platform}_$(ARCH) $(MAIN_PACKAGE); \
 		fi; \
 	done
 

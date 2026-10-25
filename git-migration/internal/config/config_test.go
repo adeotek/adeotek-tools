@@ -84,6 +84,30 @@ func TestValidate_missing_fields(t *testing.T) {
 	}
 }
 
+func TestValidate_dryRun_doesNotRequireForgejo(t *testing.T) {
+	cfg := &Config{
+		GiteaURL:   "http://gitea.lan",
+		GiteaToken: "tok",
+		OnConflict: "skip",
+		DryRun:     true,
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestValidate_remigrate_requiresForgejo(t *testing.T) {
+	cfg := &Config{
+		GiteaURL:   "http://gitea.lan",
+		GiteaToken: "tok",
+		OnConflict: "skip",
+		DryRun:     false,
+	}
+	if err := cfg.Validate(); err == nil {
+		t.Error("expected error for missing forgejo-url outside dry run")
+	}
+}
+
 func TestValidate_invalid_on_conflict(t *testing.T) {
 	cfg := &Config{
 		GiteaURL: "http://gitea.lan", GiteaToken: "tok",

@@ -1,6 +1,7 @@
 package gitea
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +27,7 @@ func TestListOrgRepos(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(server.URL, "test-token")
-	repos, err := c.listOrgRepos("myorg")
+	repos, err := c.listOrgRepos(context.Background(), "myorg")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -47,7 +48,7 @@ func TestListOrgRepos_setsAuthHeader(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(server.URL, "my-secret-token")
-	c.listOrgRepos("org")
+	c.listOrgRepos(context.Background(), "org")
 	if gotAuth != "token my-secret-token" {
 		t.Errorf("expected 'token my-secret-token', got %q", gotAuth)
 	}
@@ -68,7 +69,7 @@ func TestListAllRepos(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(server.URL, "tok")
-	repos, err := c.listAllRepos()
+	repos, err := c.listAllRepos(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -87,12 +88,71 @@ func TestListRepos_deduplicates(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(server.URL, "tok")
-	repos, err := c.ListRepos([]string{"org"}, []string{"user"})
+	repos, err := c.ListRepos(context.Background(), []string{"org"}, []string{"user"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(repos) != 1 {
 		t.Errorf("expected 1 repo after dedup, got %d", len(repos))
+	}
+}
+
+func TestPaginate_shortPageIsNotLastPage(t *testing.T) {
+	// Page 1 holds fewer than pageLimit repos (servers may cap the page size),
+	// yet page 2 still has repos that must not be dropped.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Query().Get("page") {
+		case "1":
+			json.NewEncoder(w).Encode([]Repo{{ID: 1, Name: "repo1"}, {ID: 2, Name: "repo2"}})
+		case "2":
+			json.NewEncoder(w).Encode([]Repo{{ID: 3, Name: "repo3"}})
+		default:
+			json.NewEncoder(w).Encode([]Repo{})
+		}
+	}))
+	defer server.Close()
+
+	c := NewClient(server.URL, "tok")
+	repos, err := c.listOrgRepos(context.Background(), "org")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(repos) != 3 {
+		t.Errorf("expected 3 repos across pages, got %d", len(repos))
+	}
+}
+
+func TestPaginate_stopsWhenServerIgnoresPage(t *testing.T) {
+	// A server that ignores the page parameter would otherwise loop forever.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode([]Repo{{ID: 1, Name: "repo1"}})
+	}))
+	defer server.Close()
+
+	c := NewClient(server.URL, "tok")
+	repos, err := c.listOrgRepos(context.Background(), "org")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(repos) != 1 {
+		t.Errorf("expected 1 repo, got %d", len(repos))
+	}
+}
+
+func TestListOrgRepos_escapesPath(t *testing.T) {
+	var gotPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.EscapedPath()
+		json.NewEncoder(w).Encode([]Repo{})
+	}))
+	defer server.Close()
+
+	c := NewClient(server.URL, "tok")
+	if _, err := c.listOrgRepos(context.Background(), "my org"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := "/api/v1/orgs/my%20org/repos"; gotPath != want {
+		t.Errorf("expected path %q, got %q", want, gotPath)
 	}
 }
 
@@ -107,7 +167,7 @@ func TestListRepos_noFilter_callsSearch(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(server.URL, "tok")
-	c.ListRepos(nil, nil)
+	c.ListRepos(context.Background(), nil, nil)
 	if !searchCalled {
 		t.Error("expected /api/v1/repos/search to be called when no orgs/users given")
 	}
