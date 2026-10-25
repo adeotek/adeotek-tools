@@ -1,11 +1,15 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"github.com/adeotek/adeotek-tools/git-migration/internal/config"
 	"github.com/adeotek/adeotek-tools/git-migration/internal/forgejo"
@@ -13,7 +17,9 @@ import (
 	"github.com/adeotek/adeotek-tools/git-migration/internal/migration"
 )
 
-const Version = "0.1.0"
+// Version is the fallback version; builds from the Makefile override it with
+// -ldflags "-X .../internal/app.Version=<version>".
+var Version = "0.2.0"
 
 // Run is the application entry point.
 func Run() {
@@ -103,8 +109,16 @@ func Run() {
 	forgejoClient := forgejo.NewClient(cfg.ForgejoURL, cfg.ForgejoToken)
 	migrator := migration.New(giteaClient, forgejoClient, cfg)
 
-	result, err := migrator.Run()
+	// SIGINT/SIGTERM cancels in-flight API calls and stops before the next repo.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	result, err := migrator.Run(ctx)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			fmt.Printf("\nInterrupted: %d migrated, %d skipped, %d failed\n", result.Migrated, result.Skipped, result.Failed)
+			os.Exit(130)
+		}
 		log.Fatalf("migration failed: %v", err)
 	}
 
@@ -120,16 +134,18 @@ func Run() {
 // Replaces flag.PrintDefaults() which always renders single-dash output.
 func printFlagDefaults() {
 	flag.VisitAll(func(f *flag.Flag) {
-		isBool := f.DefValue == "true" || f.DefValue == "false"
-		if isBool {
+		// UnquoteUsage reports the value placeholder ("string", "value", ...)
+		// and returns an empty name for boolean flags.
+		name, usage := flag.UnquoteUsage(f)
+		if name == "" {
 			fmt.Printf("  --%s\n", f.Name)
 		} else {
-			fmt.Printf("  --%s string\n", f.Name)
+			fmt.Printf("  --%s %s\n", f.Name, name)
 		}
-		if f.DefValue != "" && !isBool {
-			fmt.Printf("\t%s (default %q)\n", f.Usage, f.DefValue)
+		if f.DefValue != "" && name != "" {
+			fmt.Printf("\t%s (default %q)\n", usage, f.DefValue)
 		} else {
-			fmt.Printf("\t%s\n", f.Usage)
+			fmt.Printf("\t%s\n", usage)
 		}
 	})
 }

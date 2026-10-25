@@ -70,7 +70,7 @@ Flags:
   --gitea-token string    Gitea API token (or set GITEA_TOKEN)
   --gitea-url string      Gitea server URL (required)
   --help                  Print usage and exit
-  --map-org string        Map source org to destination org (format: src:dst, repeatable)
+  --map-org value         Map source org to destination org (format: src:dst, repeatable)
   --on-conflict string    Behaviour when repo already exists: skip|fail|remigrate (default: "skip")
   --orgs string           Comma-separated Gitea orgs to migrate
   --skip-issues           Skip migrating issues
@@ -117,7 +117,7 @@ git-migration \
   --exclude infra-legacy
 ```
 
-### Re-migrate everything, overwriting existing repos
+### Re-migrate existing repos (previous copies are kept as backups)
 
 ```bash
 git-migration \
@@ -148,15 +148,23 @@ git-migration \
 
 - **Migration is server-side**: Forgejo pulls from Gitea directly. The tool only orchestrates API calls.
 - **Migration is asynchronous**: the tool logs success when the request is accepted (HTTP 201). Check the Forgejo UI for final status.
+- **Dry runs only need Gitea access**: `--gitea-url` and `--gitea-token` are required, the Forgejo flags are optional.
+- **`--on-conflict remigrate` never deletes the previous repo**: it is renamed to
+  `<repo>-backup-<timestamp>` before the migration starts. The backup is restored to its
+  original name if the migration request fails; otherwise it is kept so you can delete it
+  manually once the asynchronous migration has completed successfully.
+- Destination orgs that don't exist in Forgejo are created automatically, with the privacy of
+  the repository being migrated (private repos get a private org).
+- `Ctrl+C` (SIGINT/SIGTERM) cancels in-flight API calls, stops before the next repo, prints a
+  summary, and exits with code 130.
 - If neither `--orgs` nor `--users` is specified, all repos visible to the Gitea token are enumerated.
-- Destination orgs that don't exist in Forgejo are created automatically.
 - Exit code is non-zero if any repo migration failed.
 
 ## Building from Source
 
 ### Prerequisites
 
-- Go 1.18 or later
+- Go 1.27 or later
 
 ### Build
 
