@@ -64,6 +64,13 @@ func TestBuildS3Key(t *testing.T) {
 			filePath: "/backups/mydb_backup_20240115.sql.gz",
 			expected: "production/sql-backups/mydb/mydb_backup_20240115.sql.gz",
 		},
+		{
+			name:     "prefix without trailing slash gets one",
+			prefix:   "production",
+			dbName:   "mydb",
+			filePath: "/backups/mydb_backup_20240115.sql",
+			expected: "production/mydb/mydb_backup_20240115.sql",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

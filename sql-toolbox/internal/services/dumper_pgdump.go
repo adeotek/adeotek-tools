@@ -27,10 +27,15 @@ func NewPgDumpBinaryDumper(connParams *models.ConnectionParameters, options PgDu
 func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 	var args []string
 
-	// pg_dump accepts a conninfo string as the --dbname argument
+	// pg_dump accepts a conninfo string as the --dbname argument; normalize it so the
+	// .NET and URL formats accepted elsewhere also work with the external binary
 	if d.connParams.RawConnectionString != "" {
+		connStr, err := d.connParams.GetConnectionString()
+		if err != nil {
+			return fmt.Errorf("failed to build connection string: %w", err)
+		}
 		args = []string{
-			fmt.Sprintf("--dbname=%s", d.connParams.RawConnectionString),
+			fmt.Sprintf("--dbname=%s", connStr),
 			"--format=custom",
 		}
 	} else {

@@ -26,8 +26,8 @@ func NewSqlScriptsHelpers() *SqlScriptsHelpers {
 // Execution order:
 // 1. Files in the target directory (ignoring subdirectories), ordered alphabetically
 // 2. For each subdirectory in alphabetical order:
-//    - Files directly under it, ordered alphabetically
-//    - Then recursively process its subdirectories in the same manner
+//   - Files directly under it, ordered alphabetically
+//   - Then recursively process its subdirectories in the same manner
 func (s *SqlScriptsHelpers) ScanForSqlFiles(directory string) ([]string, error) {
 	if directory == "" {
 		return nil, fmt.Errorf("directory path cannot be empty")

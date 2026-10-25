@@ -123,7 +123,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		}
 
 		var err error
-		sshTunnel, err = tunnel.EstablishIfNeeded(sshConfig, dbTarget.Host, dbTarget.Port)
+		sshTunnel, err = tunnel.EstablishIfNeeded(sshConfig, dbTarget.Host, dbTarget.GetEffectivePort())
 		if err != nil {
 			result.Error = fmt.Errorf("failed to establish SSH tunnel: %w", err)
 			return result
@@ -191,7 +191,16 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		return result
 	}
 	// Note: We explicitly close the writer before S3 upload instead of using defer
-	// to ensure gzip-compressed data is fully flushed to disk before upload
+	// to ensure gzip-compressed data is fully flushed to disk before upload.
+	// The deferred cleanup only runs when an error is returned earlier (success sets
+	// writerClosed), so a failed dump never leaves a truncated backup file behind.
+	writerClosed := false
+	defer func() {
+		if !writerClosed {
+			_ = closer()
+			_ = os.Remove(filePath)
+		}
+	}()
 
 	// Run dump using the configured backup method
 	options := PgDumpOptions{
@@ -206,7 +215,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		connParams := &models.ConnectionParameters{
 			Provider:     "postgresql",
 			Host:         dbTarget.Host,
-			Port:         dbTarget.Port,
+			Port:         dbTarget.GetEffectivePort(),
 			DatabaseName: dbTarget.Database,
 			User:         dbTarget.User,
 			Password:     dbTarget.Password,
@@ -273,6 +282,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		result.Error = fmt.Errorf("failed to close output file: %w", err)
 		return result
 	}
+	writerClosed = true
 
 	// Upload to S3 if configured
 	if dbTarget.GetEffectiveUploadToS3() && o.config.S3.Enabled && s3Uploader != nil {

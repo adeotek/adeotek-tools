@@ -47,32 +47,45 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 	dbFactory := database.NewFactory(connectionParams)
 	migrationRepo := repository.NewMigrationHistoryRepository(dbFactory)
 
+	// In dry-run mode against a SQLite database that does not exist yet, skip history
+	// lookups entirely: opening the connection would create the database file, which a
+	// dry run must never do.
+	skipHistoryLookup := ms.isDryRun && connectionParams.GetDbProvider() == models.SQLite &&
+		!fileExists(connectionParams.DatabaseName)
+
 	// Check if history table exists, create if not
 	var executedScripts []models.ScriptExecutionHistory
-	historyExists, err := migrationRepo.IsHistoryTableCreated()
-	if err != nil {
-		return fmt.Errorf("failed to check history table: %w", err)
-	}
-
-	if !historyExists {
-		if !ms.isDryRun {
-			if ms.verbose {
-				log.Println("History table not found. Creating...")
-			}
-			err = migrationRepo.CreateHistoryTable()
-			if err != nil {
-				return fmt.Errorf("failed to create history table: %w", err)
-			}
-			if ms.verbose {
-				log.Println("History table created.")
-			}
+	if skipHistoryLookup {
+		if ms.verbose {
+			log.Println("Dry run: database does not exist yet, treating all scripts as unapplied.")
 		}
-    executedScripts = []models.ScriptExecutionHistory{}
+		executedScripts = []models.ScriptExecutionHistory{}
 	} else {
-		// Get executed scripts from history table (both dry-run and normal modes)
-		executedScripts, err = migrationRepo.GetExecutedScripts()
+		historyExists, err := migrationRepo.IsHistoryTableCreated()
 		if err != nil {
-			return fmt.Errorf("failed to get executed scripts: %w", err)
+			return fmt.Errorf("failed to check history table: %w", err)
+		}
+
+		if !historyExists {
+			if !ms.isDryRun {
+				if ms.verbose {
+					log.Println("History table not found. Creating...")
+				}
+				err = migrationRepo.CreateHistoryTable()
+				if err != nil {
+					return fmt.Errorf("failed to create history table: %w", err)
+				}
+				if ms.verbose {
+					log.Println("History table created.")
+				}
+			}
+			executedScripts = []models.ScriptExecutionHistory{}
+		} else {
+			// Get executed scripts from history table (both dry-run and normal modes)
+			executedScripts, err = migrationRepo.GetExecutedScripts()
+			if err != nil {
+				return fmt.Errorf("failed to get executed scripts: %w", err)
+			}
 		}
 	}
 
@@ -183,7 +196,7 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 			continue
 		}
 
-    log.Printf("Script %s executed successfully [%s]", scriptName, hash)
+		log.Printf("Script %s executed successfully [%s]", scriptName, hash)
 
 		// Update execution history
 		executionHistory := &models.ScriptExecutionHistory{
@@ -210,4 +223,10 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 	}
 
 	return nil
+}
+
+// fileExists reports whether path exists and is not a directory.
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }

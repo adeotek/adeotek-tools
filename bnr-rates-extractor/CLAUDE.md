@@ -12,9 +12,9 @@ dotnet build
 dotnet run --project src/BnrRatesExtractor -- <year> <currency-code>
 
 # Publish as Native AOT binary
-dotnet publish src/BnrRatesExtractor -c Release
+dotnet publish src/BnrRatesExtractor -c Release -r linux-x64
 
-# Run tests (none currently defined)
+# Run tests
 dotnet test
 ```
 
@@ -26,20 +26,25 @@ bnr-rates-extractor 2024 USD
 # Output: USD_2024_rates.csv in the current directory
 ```
 
-CSV format: `Currency,Date,Rate` — one row per published rate day, sorted ascending, rate to 4 decimal places.
+CSV format: `Currency,Date,Rate,Multiplier` — one row per published rate day, sorted ascending, rate to 4 decimal places, `Multiplier` is 1 unless BNR quotes the currency per 100 units (HUF, JPY, KRW, ISK, IDR).
 
 ## Architecture
 
-Single-file implementation (`src/BnrRatesExtractor/Program.cs`) using C# top-level statements. No external dependencies beyond the .NET runtime.
+- `src/BnrRatesExtractor/Program.cs` — CLI entry point (top-level statements): argument validation, orchestration, exit codes.
+- `src/BnrRatesExtractor/BnrRatesParser.cs` — URL construction, HTTP fetch, XML parsing, CSV rendering. Pure/static, covered by tests.
+- `tests/BnrRatesExtractor.Tests/` — xUnit v3 tests (no network access; HTTP is stubbed via `HttpMessageHandler`).
 
-Data flow: CLI args → fetch `https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml` → parse XML → filter by currency → sort by date → write CSV.
+Data flow: CLI args → fetch `https://curs.bnr.ro/files/xml/years/nbrfxrates{year}.xml` → parse XML → filter by currency → sort by date → write CSV.
 
 ## Key Notes / Gotchas
 
+- **XML host**: BNR moved the XML files to `https://curs.bnr.ro` (the old `www.bnr.ro/files/xml/...` paths redirect to the homepage and return HTML). Use `BnrRatesParser.BuildYearUrl`.
+- **Multiplier**: `<Rate currency="HUF" multiplier="100">` means the quoted value is RON per 100 HUF. The parser preserves it; never drop the column.
 - **Native AOT**: `PublishAot=true` and `PublishTrimmed=true` are set — avoid reflection-based libraries; use source generators if serialization is added
-- **InvariantGlobalization**: `InvariantGlobalization=true` is set — culture-sensitive string operations will behave differently than on a standard runtime
-- **Year range**: hardcoded validation accepts 2000 to current year; BNR XML URLs follow the pattern `nbrfxrates{year}.xml`
-- **No local caching**: each run fetches fresh XML from BNR; 30-second HTTP timeout
+- **InvariantGlobalization**: `InvariantGlobalization=true` is set — culture-sensitive string operations will behave differently than on a standard runtime. Formatting/parsing is explicit `CultureInfo.InvariantCulture`.
+- **Year range**: BNR publishes XML for 2005 onward (`FirstSupportedYear`); later years are rejected.
+- **No local caching**: each run fetches fresh XML from BNR; 30-second HTTP timeout.
+- **Tests**: `dotnet test` uses the Microsoft.Testing.Platform runner (see `global.json`); .NET 10 SDK no longer supports the VSTest path.
 
 ## Code Style
 

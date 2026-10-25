@@ -17,14 +17,14 @@ import (
 
 // Version information
 const (
-	Version = "0.1.2"
+	Version = "0.2.0"
 )
 
-// Run executes the main application logic
-func Run() {
+// Run executes the main application logic and returns the process exit code.
+func Run() int {
 	// Define command-line flags
 	configPath := flag.String("config", "", "Path to configuration file (default: config.yaml)")
-	providerType := flag.String("provider", "", "Provider type (gitea or github)")
+	providerType := flag.String("provider", "", "Provider type (gitea, forgejo or github)")
 	serverURL := flag.String("server-url", "", "URL of the Git server (required for Gitea, optional for GitHub)")
 	accessToken := flag.String("token", "", "API token for authentication")
 	username := flag.String("username", "", "Username for basic authentication")
@@ -45,13 +45,13 @@ func Run() {
 	fmt.Printf("git-repos-backup version %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
 
 	if *showVersion {
-		return
+		return 0
 	}
 
 	// Show help if requested
 	if *showHelp {
 		PrintUsage()
-		return
+		return 0
 	}
 
 	var cfg *config.Config
@@ -114,22 +114,43 @@ func Run() {
 		}
 	}
 
+	if len(cfg.Providers) == 0 {
+		log.Fatalf("No providers configured")
+	}
+
 	// Process each provider
+	failures := 0
 	for i, provider := range cfg.Providers {
 		providerName := string(provider.Type)
 		if *verbose {
 			fmt.Printf("----> Processing provider %d: %s\n", i+1, providerName)
 		}
 
+		if !config.IsSupportedProvider(provider.Type) {
+			log.Printf("Provider %d has unsupported type %q (supported: %s), skipping",
+				i+1, providerName, config.SupportedProviderNames())
+			failures++
+			continue
+		}
+
+		if provider.TargetDir == "" {
+			log.Printf("Provider %d (%s) has no target_dir configured, skipping", i+1, providerName)
+			failures++
+			continue
+		}
+
 		// Create target directory if it doesn't exist
 		if err := os.MkdirAll(provider.TargetDir, 0755); err != nil {
-			log.Fatalf("Failed to create target directory: %v", err)
+			log.Printf("Failed to create target directory %s: %v", provider.TargetDir, err)
+			failures++
+			continue
 		}
 
 		// Get list of repositories
 		repos, err := repository.GetRepositories(&provider, *verbose)
 		if err != nil {
 			log.Printf("Failed to get repositories from %s: %v", providerName, err)
+			failures++
 			continue
 		} else if *verbose {
 			fmt.Printf("----> %d repos found from %s\n", len(repos), providerName)
@@ -142,7 +163,7 @@ func Run() {
 			fmt.Printf("----> %d repos filtered from %s\n", len(repos), providerName)
 		}
 
-		// Clone each repository
+		// Fetch each repository
 		for _, repo := range repos {
 			if *verbose {
 				fmt.Printf("----> Processing repo: %s\n", repo.FullName)
@@ -150,9 +171,17 @@ func Run() {
 
 			if err := git.FetchRepository(&provider, repo, *verbose); err != nil {
 				log.Printf("Failed to fetch repository %s: %v", repo.Name, err)
+				failures++
 			}
 		}
 	}
+
+	if failures > 0 {
+		log.Printf("Backup completed with %d error(s)", failures)
+		return 1
+	}
+
+	return 0
 }
 
 // splitCommaSeparatedList splits a comma-separated string into a slice of strings
@@ -185,7 +214,7 @@ func PrintUsage() {
 	fmt.Println("   git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups [-verbose]")
 	fmt.Println("\nConfiguration file (YAML):")
 	fmt.Println("  providers:")
-	fmt.Println("    - type: gitea|github")
+	fmt.Println("    - type: gitea|forgejo|github")
 	fmt.Println("      server_url: URL of the Git server (for GitHub Enterprise)")
 	fmt.Println("      access_token: API token for authentication (if use_basic_auth is false)")
 	fmt.Println("      username: Username for basic authentication (if use_basic_auth is true)")

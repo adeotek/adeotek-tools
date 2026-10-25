@@ -37,7 +37,9 @@ func TestVersionDisplay(t *testing.T) {
 	os.Stdout = w
 
 	// Run the app
-	Run()
+	if code := Run(); code != 0 {
+		t.Errorf("Run() = %d, want 0", code)
+	}
 
 	// Restore stdout
 	w.Close()
@@ -77,7 +79,9 @@ func TestHelpDisplay(t *testing.T) {
 	os.Stdout = w
 
 	// Run the app
-	Run()
+	if code := Run(); code != 0 {
+		t.Errorf("Run() = %d, want 0", code)
+	}
 
 	// Restore stdout
 	w.Close()
@@ -206,10 +210,9 @@ func TestArgsConfig(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	// Run the app with command-line args
-	// This will fail as we don't mock the API calls
-	// but we just want to test that it attempts to use command-line args
-	Run()
-
-	// No assertions needed - we're just making sure it doesn't panic
-	// when using command-line args
+	// This will fail as we don't mock the API calls, so a non-zero exit code is
+	// expected; it must not panic and must report the failure.
+	if code := Run(); code == 0 {
+		t.Error("Run() = 0, want non-zero when the API call fails")
+	}
 }

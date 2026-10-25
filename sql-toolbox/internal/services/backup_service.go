@@ -130,14 +130,27 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 		return "", nil
 	}
 
-	// Sort by modification time (most recent first)
-	sort.Slice(backupFiles, func(i, j int) bool {
-		infoI, _ := os.Stat(backupFiles[i])
-		infoJ, _ := os.Stat(backupFiles[j])
-		return infoI.ModTime().After(infoJ.ModTime())
+	// Sort by modification time (most recent first); skip files we cannot stat
+	type backupFileInfo struct {
+		path    string
+		modTime time.Time
+	}
+	infos := make([]backupFileInfo, 0, len(backupFiles))
+	for _, path := range backupFiles {
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		infos = append(infos, backupFileInfo{path: path, modTime: info.ModTime()})
+	}
+	if len(infos) == 0 {
+		return "", nil
+	}
+	sort.Slice(infos, func(i, j int) bool {
+		return infos[i].modTime.After(infos[j].modTime)
 	})
 
-	return backupFiles[0], nil
+	return infos[0].path, nil
 }
 
 func (bs *BackupService) createPostgresBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
@@ -187,12 +200,34 @@ func (bs *BackupService) createPostgresBackup(connectionParams *models.Connectio
 	}
 	defer file.Close()
 
-	if err := dumper.Dump(file); err != nil {
-		return "", fmt.Errorf("backup failed: %w", err)
+	if err := bs.dumpToFile(file, backupPath, dumper); err != nil {
+		return "", err
 	}
 
 	log.Printf("PostgreSQL backup created successfully: %s (method: %s)", backupPath, bs.backupMethod)
 	return backupPath, nil
+}
+
+// dumpToFile runs the dump into file and removes the partially written backup on failure,
+// so a failed dump never leaves a truncated .sql/.dump file behind that could later be
+// picked as "the last backup".
+func (bs *BackupService) dumpToFile(file *os.File, backupPath string, dumper DatabaseDumper) error {
+	dumpSucceeded := false
+	defer func() {
+		if !dumpSucceeded {
+			file.Close()
+			_ = os.Remove(backupPath)
+		}
+	}()
+
+	if err := dumper.Dump(file); err != nil {
+		return fmt.Errorf("backup failed: %w", err)
+	}
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("failed to close backup file: %w", err)
+	}
+	dumpSucceeded = true
+	return nil
 }
 
 func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionParameters, backupDir, backupFileName string) (string, error) {
@@ -221,9 +256,22 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 	}
 	defer destFile.Close()
 
+	// Remove a partially copied backup on failure (e.g. disk full mid-copy).
+	copySucceeded := false
+	defer func() {
+		if !copySucceeded {
+			destFile.Close()
+			_ = os.Remove(backupPath)
+		}
+	}()
+
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
 		return "", fmt.Errorf("failed to copy database file: %w", err)
 	}
+	if err := destFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close backup file: %w", err)
+	}
+	copySucceeded = true
 
 	log.Printf("SQLite backup created successfully: %s", backupPath)
 	return backupPath, nil
@@ -232,35 +280,50 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 func (bs *BackupService) restorePostgresBackup(connectionParams *models.ConnectionParameters, backupPath string) error {
 	log.Printf("Restoring PostgreSQL backup from: %s", backupPath)
 
+	// Build connection arguments; a raw connection string takes precedence and must be
+	// normalized (lib/pq format) because pg_restore/psql accept conninfo strings
+	var connArgs []string
+	if connectionParams.RawConnectionString != "" {
+		connStr, err := connectionParams.GetConnectionString()
+		if err != nil {
+			return fmt.Errorf("failed to build connection string: %w", err)
+		}
+		connArgs = []string{fmt.Sprintf("--dbname=%s", connStr)}
+	} else {
+		host := connectionParams.Host
+		port := connectionParams.Port
+		if activeTunnel := connectionParams.GetActiveTunnel(); activeTunnel != nil {
+			type localPortGetter interface {
+				GetLocalPort() int
+			}
+			if t, ok := activeTunnel.(localPortGetter); ok {
+				host = "127.0.0.1"
+				port = t.GetLocalPort()
+			}
+		}
+		connArgs = []string{
+			fmt.Sprintf("--host=%s", host),
+			fmt.Sprintf("--port=%d", port),
+			fmt.Sprintf("--username=%s", connectionParams.User),
+			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
+		}
+	}
+
 	var cmd *exec.Cmd
 	var cmdName string
 
 	// Use pg_restore for custom format (.dump), psql for plain format (.sql)
 	if strings.HasSuffix(backupPath, ".dump") {
 		cmdName = "pg_restore"
-		args := []string{
-			fmt.Sprintf("--host=%s", connectionParams.Host),
-			fmt.Sprintf("--port=%d", connectionParams.Port),
-			fmt.Sprintf("--username=%s", connectionParams.User),
-			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-			"--clean",
-			"--if-exists",
-			backupPath,
-		}
+		args := append(connArgs, "--clean", "--if-exists", backupPath)
 		cmd = exec.Command(cmdName, args...)
 	} else {
 		cmdName = "psql"
-		args := []string{
-			fmt.Sprintf("--host=%s", connectionParams.Host),
-			fmt.Sprintf("--port=%d", connectionParams.Port),
-			fmt.Sprintf("--username=%s", connectionParams.User),
-			fmt.Sprintf("--dbname=%s", connectionParams.DatabaseName),
-			fmt.Sprintf("--file=%s", backupPath),
-		}
+		args := append(connArgs, fmt.Sprintf("--file=%s", backupPath))
 		cmd = exec.Command(cmdName, args...)
 	}
 
-	if connectionParams.Password != "" {
+	if connectionParams.RawConnectionString == "" && connectionParams.Password != "" {
 		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", connectionParams.Password))
 	}
 
@@ -287,14 +350,32 @@ func (bs *BackupService) restoreSQLiteBackup(connectionParams *models.Connection
 	}
 	defer sourceFile.Close()
 
-	destFile, err := os.Create(targetPath)
+	// Copy to a temporary file in the target directory and rename it into place, so a
+	// failed restore never leaves a half-written (and therefore corrupt) database file.
+	tmpFile, err := os.CreateTemp(filepath.Dir(targetPath), ".restore-*.tmp")
 	if err != nil {
-		return fmt.Errorf("failed to create target database file: %w", err)
+		return fmt.Errorf("failed to create temporary restore file: %w", err)
 	}
-	defer destFile.Close()
+	tmpPath := tmpFile.Name()
+	defer func() {
+		tmpFile.Close()
+		_ = os.Remove(tmpPath)
+	}()
 
-	if _, err := io.Copy(destFile, sourceFile); err != nil {
+	if _, err := io.Copy(tmpFile, sourceFile); err != nil {
 		return fmt.Errorf("failed to copy backup file: %w", err)
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return fmt.Errorf("failed to flush restore file: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close restore file: %w", err)
+	}
+	if err := os.Chmod(tmpPath, 0644); err != nil {
+		return fmt.Errorf("failed to set restore file permissions: %w", err)
+	}
+	if err := os.Rename(tmpPath, targetPath); err != nil {
+		return fmt.Errorf("failed to replace database file: %w", err)
 	}
 
 	log.Printf("SQLite backup restored successfully")

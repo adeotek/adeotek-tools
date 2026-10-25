@@ -7,11 +7,23 @@ set -e
 echo "Running integration tests for sql-toolbox..."
 
 # Clean up any existing test artifacts
-rm -f test-integration.db test-integration2.db
+rm -f test-integration.db test-integration2.db test-integration-env.db
+
+# Number of SQL fixture scripts (kept dynamic so adding fixtures does not break the checks)
+SCRIPT_COUNT=$(find ./test-scripts -type f -name '*.sql' | wc -l | tr -d ' ')
+echo "Fixture scripts found: $SCRIPT_COUNT"
 
 # Test 1: Basic SQLite migration
 echo "Test 1: Basic SQLite migration"
-./build/sql-toolbox migration --target-path ./test-scripts --provider sqlite --database test-integration.db --verbose
+OUTPUT=$(./build/sql-toolbox migration --target-path ./test-scripts --provider sqlite --database test-integration.db --verbose 2>&1)
+echo "$OUTPUT"
+
+if echo "$OUTPUT" | grep -q "Errors: 0"; then
+    echo "✓ All scripts executed without errors"
+else
+    echo "✗ Migration reported errors"
+    exit 1
+fi
 
 # Verify database was created and has expected tables
 echo "Verifying database structure..."
@@ -29,11 +41,36 @@ else
     exit 1
 fi
 
+# Verify the view and the seeded data (data scripts must run after the table scripts)
+VIEWS=$(sqlite3 test-integration.db "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name;")
+if [ "$VIEWS" = "user_posts" ]; then
+    echo "✓ View created correctly"
+else
+    echo "✗ View not created correctly. Got: $VIEWS"
+    exit 1
+fi
+
+COUNTS=$(sqlite3 test-integration.db "SELECT (SELECT count(*) FROM users) || '/' || (SELECT count(*) FROM posts);")
+if [ "$COUNTS" = "3/5" ]; then
+    echo "✓ Seed data inserted correctly (3 users / 5 posts)"
+else
+    echo "✗ Seed data not inserted correctly. Got: $COUNTS"
+    exit 1
+fi
+
+SEMICOLONS=$(sqlite3 test-integration.db "SELECT content FROM posts WHERE title='Semicolons';")
+if [ "$SEMICOLONS" = "updated; still one statement" ]; then
+    echo "✓ Statements containing semicolons handled correctly"
+else
+    echo "✗ Semicolon handling broken. Got: $SEMICOLONS"
+    exit 1
+fi
+
 # Test 2: Re-run migration (should skip all scripts)
 echo "Test 2: Re-run migration (should skip all scripts)"
 OUTPUT=$(./build/sql-toolbox migration --target-path ./test-scripts --provider sqlite --database test-integration.db --verbose 2>&1)
 
-if echo "$OUTPUT" | grep -q "Skipped: 5"; then
+if echo "$OUTPUT" | grep -q "Skipped: $SCRIPT_COUNT"; then
     echo "✓ Scripts correctly skipped on re-run"
 else
     echo "✗ Scripts not skipped correctly"
@@ -81,7 +118,7 @@ export SQLTB_VERBOSE=true
 
 OUTPUT=$(./build/sql-toolbox migration -t ./test-scripts 2>&1)
 
-if echo "$OUTPUT" | grep -q "Success: 5"; then
+if echo "$OUTPUT" | grep -q "Success: $SCRIPT_COUNT"; then
     echo "✓ Environment variables working correctly"
 else
     echo "✗ Environment variables not working correctly"

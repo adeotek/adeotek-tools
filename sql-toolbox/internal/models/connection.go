@@ -288,10 +288,10 @@ func ParseConnectionParameters(provider, connectionString, host, portStr, databa
 	cp := &ConnectionParameters{
 		Provider:            provider,
 		RawConnectionString: connectionString,
-		Host:               host,
-		DatabaseName:       database,
-		User:               user,
-		Password:           password,
+		Host:                host,
+		DatabaseName:        database,
+		User:                user,
+		Password:            password,
 	}
 
 	if portStr != "" {
