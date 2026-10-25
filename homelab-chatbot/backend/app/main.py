@@ -42,7 +42,8 @@ def create_app(
         path = Path(config_path or os.environ.get("HLCB_CONFIG_PATH", "config.yaml"))
         cfg = load_config(path) if path.exists() else _minimal_default_config()
 
-    secrets = Secrets()
+    # Populated from environment variables by pydantic-settings.
+    secrets = Secrets()  # type: ignore[call-arg]
     chat_db = ChatDB(f"sqlite+aiosqlite:///{cfg.chat_db.path}")
     vector_store = VectorStore(Path(cfg.vector_store.path))
     embedder = Embedder(model_name=cfg.embeddings.model, cache_dir=cfg.embeddings.cache_dir)
@@ -104,7 +105,7 @@ def create_app(
     )
     app.state.sql_tool = SQLTool(db_path=Path(cfg.kb_db.path))
     app.state.orchestrator = None
-    app.state.sync_state: dict = {"last_sync_at": None, "is_syncing": False}
+    app.state.sync_state = {"last_sync_at": None, "is_syncing": False}
     app.state.excel_loader = excel_loader
     app.state.upload_log_db = upload_log_db
 

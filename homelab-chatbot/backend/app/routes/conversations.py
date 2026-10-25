@@ -1,11 +1,13 @@
 """Conversation CRUD endpoints."""
 
+from typing import Literal, cast
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.deps import require_session
 from app.models.chat import ConversationOut, MessageOut
-from app.storage.chat_db import ChatDB
+from app.storage.chat_db import ChatDB, Conversation
 
 router = APIRouter(
     prefix="/api/conv", tags=["conversations"], dependencies=[Depends(require_session)]
@@ -23,10 +25,10 @@ class RenameRequest(BaseModel):
 
 
 def _db(request: Request) -> ChatDB:
-    return request.app.state.chat_db
+    return cast(ChatDB, request.app.state.chat_db)
 
 
-def _to_out(c) -> ConversationOut:
+def _to_out(c: Conversation) -> ConversationOut:
     return ConversationOut(
         id=c.id,
         title=c.title,
@@ -65,7 +67,7 @@ async def list_messages(conv_id: str, request: Request) -> list[MessageOut]:
     return [
         MessageOut(
             id=m.id,
-            role=m.role,
+            role=cast(Literal["user", "assistant", "tool"], m.role),
             content=m.content,
             tool_name=m.tool_name,
             tool_calls=m.tool_calls,

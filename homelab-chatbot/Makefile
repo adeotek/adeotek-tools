@@ -56,7 +56,7 @@ test-integration:
 lint: lint-backend lint-frontend
 
 lint-backend:
-	cd $(BACKEND_DIR) && uv run ruff check .
+	cd $(BACKEND_DIR) && uv run ruff check . && uv run mypy app
 
 lint-frontend:
 	cd $(FRONTEND_DIR) && npm run lint

@@ -9,6 +9,7 @@ import tempfile
 from io import BytesIO
 from pathlib import Path
 
+from app.ingestion.excel import ExcelLoader
 from app.ingestion.markdown import (
     MAX_CHUNK_CHARS,
     OVERLAP_CHARS,
@@ -74,7 +75,7 @@ def parse_md(content: bytes, filename: str) -> list[Chunk]:
 
 
 def parse_docx(content: bytes, filename: str) -> list[Chunk]:
-    from docx import Document  # type: ignore[import-untyped]
+    from docx import Document
 
     doc = Document(BytesIO(content))
     text = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
@@ -82,7 +83,7 @@ def parse_docx(content: bytes, filename: str) -> list[Chunk]:
 
 
 def parse_pdf(content: bytes, filename: str) -> list[Chunk]:
-    from pypdf import PdfReader  # type: ignore[import-untyped]
+    from pypdf import PdfReader
 
     reader = PdfReader(BytesIO(content))
     pages = [page.extract_text() or "" for page in reader.pages]
@@ -91,7 +92,7 @@ def parse_pdf(content: bytes, filename: str) -> list[Chunk]:
 
 
 def parse_image(content: bytes, filename: str) -> list[Chunk]:
-    import pytesseract  # type: ignore[import-untyped]
+    import pytesseract
     from PIL import Image
 
     image = Image.open(BytesIO(content))
@@ -114,7 +115,9 @@ def parse_image(content: bytes, filename: str) -> list[Chunk]:
     ]
 
 
-def parse_xlsx(content: bytes, _filename: str, excel_loader) -> tuple[list[Chunk], dict]:
+def parse_xlsx(
+    content: bytes, _filename: str, excel_loader: ExcelLoader
+) -> tuple[list[Chunk], dict[str, str]]:
     """Load an Excel file into SQLite via ExcelLoader. Returns ([], sheet_map)."""
     with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
         tmp_name = tmp.name
@@ -130,8 +133,8 @@ def parse_xlsx(content: bytes, _filename: str, excel_loader) -> tuple[list[Chunk
 def parse_file(
     content: bytes,
     filename: str,
-    excel_loader,
-) -> tuple[list[Chunk], dict]:
+    excel_loader: ExcelLoader,
+) -> tuple[list[Chunk], dict[str, str]]:
     """Dispatch to the correct parser based on file extension.
 
     Returns (chunks, sheet_map). sheet_map is non-empty only for .xlsx files.

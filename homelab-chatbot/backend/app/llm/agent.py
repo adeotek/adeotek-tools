@@ -2,11 +2,12 @@
 
 import inspect
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable, Sequence
+from typing import Any, cast
 
 from llama_index.core.agent.workflow import AgentStream, ReActAgent, ToolCallResult
 from llama_index.core.llms import LLM, ChatMessage
-from llama_index.core.tools import FunctionTool
+from llama_index.core.tools import BaseTool, FunctionTool
 
 from app.llm.sse import AgentEvent
 from app.retrieval.vector_tool import VectorSearchTool
@@ -41,7 +42,7 @@ def build_messages(
 
 async def run_agent(
     llm: LLM,
-    tools: list[FunctionTool],
+    tools: Sequence[FunctionTool],
     history: list[tuple[str, str]],
     user_message: str,
     tools_enabled: bool,
@@ -58,13 +59,17 @@ async def run_agent(
         chat_history = [ChatMessage(role="system", content=_SYSTEM_PROMPT_WITH_TOOLS)]
         for role, content in history:
             chat_history.append(ChatMessage(role=role, content=content))
-        agent = ReActAgent(tools=tools, llm=llm, verbose=False)
+        agent = ReActAgent(
+            tools=cast("list[BaseTool | Callable[..., Any]]", list(tools)),
+            llm=llm,
+            verbose=False,
+        )
         handler = agent.run(user_msg=user_message, chat_history=chat_history)
         async for event in handler.stream_events():
             if isinstance(event, AgentStream) and event.delta:
                 yield AgentEvent("text-delta", {"text": event.delta})
             elif isinstance(event, ToolCallResult):
-                sources: list[dict] = []
+                sources: list[dict[str, Any]] = []
                 if event.tool_name == VectorSearchTool.TOOL_NAME and vector_tool:
                     sources = vector_tool.pop_sources()
                 yield AgentEvent(
@@ -88,7 +93,7 @@ async def _stream_chat(
     llm: LLM, history: list[tuple[str, str]], user_message: str, tools_enabled: bool = True
 ) -> AsyncIterator[str]:
     messages = build_messages(history, user_message, tools_enabled=tools_enabled)
-    result = llm.astream_chat(messages)
+    result: Any = llm.astream_chat(messages)
     # LlamaIndex LLMs return a coroutine from astream_chat;
     # test fakes return async generators directly.
     if inspect.isawaitable(result):

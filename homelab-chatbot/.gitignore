@@ -13,6 +13,7 @@ htmlcov/
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 
 # App data
 /data/

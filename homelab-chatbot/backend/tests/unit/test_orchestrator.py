@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -8,7 +8,7 @@ from app.config import (
     RepoConfig,
 )
 from app.ingestion.embed import Embedder
-from app.ingestion.git_sync import GitSync
+from app.ingestion.git_sync import ChangedFile, GitSync, SyncResult
 from app.ingestion.orchestrator import IngestionOrchestrator
 from app.storage.lance import VectorStore
 
@@ -80,3 +80,34 @@ def test_per_file_error_isolation(tmp_path: Path, repos: list[RepoConfig]):
 
     # A failed embed run must not corrupt the entries from the first run
     assert orch.vector_store.count() == count_before
+
+
+def test_rename_removes_chunks_for_old_path(tmp_path: Path):
+    """A renamed markdown file must drop chunks stored under its old path."""
+    store = MagicMock()
+    git_sync = MagicMock()
+    git_sync.repo_path.return_value = tmp_path
+    orch = IngestionOrchestrator(
+        git_sync=git_sync, embedder=MagicMock(), store=store
+    )
+    repo_cfg = RepoConfig(
+        name="r",
+        url="file:///unused",
+        branch="main",
+        token_env="UNUSED",
+        include_globs=["**/*.md"],
+    )
+    result = SyncResult(
+        repo="r",
+        cloned=False,
+        old_sha="a",
+        new_sha="b",
+        changed_files=[ChangedFile(path="new.md", status="R", old_path="old.md")],
+        matched_files=[ChangedFile(path="new.md", status="R", old_path="old.md")],
+    )
+
+    orch._apply(repo_cfg, result)
+
+    # The stale path is cleared before the new path is (re)indexed.
+    assert store.delete_by_file.call_args_list[0].args == ("r", "old.md")
+    store.delete_by_file.assert_any_call("r", "old.md")

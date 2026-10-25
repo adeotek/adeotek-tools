@@ -94,7 +94,7 @@ class VectorStore:
     def count(self) -> int:
         return self._table().count_rows()
 
-    def stats_by_repo(self) -> dict[str, dict]:
+    def stats_by_repo(self) -> dict[str, dict[str, int]]:
         """Return {repo: {chunks, files}} for all indexed repos."""
         tbl = self._table()
         if tbl.count_rows() == 0:

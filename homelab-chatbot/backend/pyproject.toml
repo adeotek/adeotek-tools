@@ -1,6 +1,6 @@
 [project]
 name = "homelab-chatbot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Self-hosted RAG chatbot for a home-lab knowledge base"
 requires-python = ">=3.13"
 dependencies = [

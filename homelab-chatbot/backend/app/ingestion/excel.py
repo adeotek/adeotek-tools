@@ -47,7 +47,7 @@ class ExcelLoader:
             )
 
             for sheet in xlsx.sheet_names:
-                df = xlsx.parse(sheet)
+                df = pd.read_excel(xlsx, sheet_name=sheet)
                 df.columns = [normalize_snake_case(str(c)) for c in df.columns]
                 table = normalize_snake_case(sheet)
                 df.to_sql(table, conn, if_exists="replace", index=False)

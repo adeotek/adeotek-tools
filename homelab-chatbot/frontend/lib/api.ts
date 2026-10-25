@@ -11,7 +11,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (resp.status === 401 && path !== "/api/auth/login") {
-    window.location.href = "/login";
+    window.location.replace("/login");
     throw new ApiError(401, "unauthenticated");
   }
   if (!resp.ok) {
@@ -62,7 +62,7 @@ export const api = {
       body: form,
     });
     if (resp.status === 401) {
-      window.location.href = "/login";
+      window.location.replace("/login");
       throw new ApiError(401, "unauthenticated");
     }
     if (!resp.ok) throw new ApiError(resp.status, await resp.text());

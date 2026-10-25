@@ -3,12 +3,13 @@
 import json
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class AgentEvent:
     kind: str  # 'text-delta' | 'tool-call' | 'tool-result' | 'error' | 'done'
-    data: dict
+    data: dict[str, Any]
 
 
 def format_sse(event: AgentEvent) -> bytes:
