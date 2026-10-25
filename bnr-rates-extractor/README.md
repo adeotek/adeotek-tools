@@ -4,9 +4,9 @@ A .NET 10 CLI tool to extract exchange rates from the National Bank of Romania (
 
 ## Features
 
-- Fetches exchange rates from BNR's official XML API
+- Fetches exchange rates from BNR's official XML API (`https://curs.bnr.ro`)
 - Extracts rates for a specific currency and year
-- Outputs data in CSV format with headers: Currency, Date, Rate
+- Outputs data in CSV format with headers: Currency, Date, Rate, Multiplier
 - Native AOT compilation for fast startup and low memory footprint
 - Modern C# 14 features with top-level statements
 
@@ -44,8 +44,8 @@ bnr-rates-extractor <year> <currency-code>
 
 ### Arguments
 
-- `<year>`: The year for which to extract rates (e.g., 2024)
-- `<currency-code>`: The currency code to extract (e.g., USD, EUR, GBP)
+- `<year>`: The year for which to extract rates, 2005 to the current year (e.g., 2024)
+- `<currency-code>`: The 3-letter currency code to extract (e.g., USD, EUR, GBP)
 
 ### Example
 
@@ -56,28 +56,38 @@ bnr-rates-extractor 2024 USD
 This will create a file named `USD_2024_rates.csv` in the current directory with the following format:
 
 ```csv
-Currency,Date,Rate
-USD,2024-01-02,4.4521
-USD,2024-01-03,4.4532
+Currency,Date,Rate,Multiplier
+USD,2024-01-03,4.5504,1
+USD,2024-01-04,4.5395,1
 ...
 ```
 
 ## Output Format
 
-The tool generates a CSV file named `{CURRENCY}_{YEAR}_rates.csv` with three columns:
+The tool generates a CSV file named `{CURRENCY}_{YEAR}_rates.csv` with four columns:
 
 - **Currency**: The currency code (e.g., USD)
 - **Date**: The date in YYYY-MM-DD format
-- **Rate**: The exchange rate formatted to 4 decimal places
+- **Rate**: The published rate in RON, formatted to 4 decimal places
+- **Multiplier**: The number of currency units the rate applies to (1, or 100 for currencies BNR quotes per 100 units — e.g. HUF, JPY, KRW, ISK, IDR)
+
+To get the value of one unit of the currency, divide **Rate** by **Multiplier** (e.g. 100 HUF = 1.3054 RON).
 
 ## Error Handling
 
-The tool validates inputs and provides meaningful error messages:
+The tool validates inputs and provides meaningful error messages (exit code `1`, message on stderr):
 
-- Year must be between 2000 and the current year
-- Currency code cannot be empty
-- Network errors when fetching data are reported
-- XML parsing errors are caught and reported
+- Year must be between 2005 (the first year BNR publishes XML for) and the current year
+- Currency code must be a 3-letter code (e.g. USD)
+- No published rates for the requested currency/year
+- Network errors (non-success HTTP status, timeout) when fetching data are reported
+- Unexpected responses (HTML pages, non-BNR XML) are reported instead of silently producing an empty file
+
+## Tests
+
+```bash
+dotnet test
+```
 
 ## License
 

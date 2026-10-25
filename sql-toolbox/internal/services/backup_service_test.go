@@ -1,8 +1,11 @@
 package services
 
 import (
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -262,5 +265,112 @@ func TestBackupService_GetDatabaseName(t *testing.T) {
 				t.Errorf("getDatabaseName(%s) = %s; want %s", tt.dbName, result, tt.expected)
 			}
 		})
+	}
+}
+
+// failingDumper simulates a dump that fails part-way through writing.
+type failingDumper struct{}
+
+func (failingDumper) Dump(w io.Writer) error {
+	if _, err := w.Write([]byte("partial dump that must not survive\n")); err != nil {
+		return err
+	}
+	return errors.New("simulated dump failure")
+}
+
+func TestDumpToFile_RemovesPartialFileOnFailure(t *testing.T) {
+	dir := t.TempDir()
+	backupPath := filepath.Join(dir, "db_backup_test.sql")
+
+	file, err := os.Create(backupPath)
+	if err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	bs := NewBackupService(false, false, BackupMethodGo)
+	if err := bs.dumpToFile(file, backupPath, failingDumper{}); err == nil {
+		t.Fatal("expected dump error")
+	}
+
+	if _, err := os.Stat(backupPath); !os.IsNotExist(err) {
+		t.Errorf("expected partial backup file to be removed, stat err: %v", err)
+	}
+}
+
+func TestDumpToFile_KeepsFileOnSuccess(t *testing.T) {
+	dir := t.TempDir()
+	backupPath := filepath.Join(dir, "db_backup_test.sql")
+
+	file, err := os.Create(backupPath)
+	if err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	bs := NewBackupService(false, false, BackupMethodGo)
+	if err := bs.dumpToFile(file, backupPath, staticDumper{}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got, err := os.ReadFile(backupPath)
+	if err != nil {
+		t.Fatalf("expected backup file to exist: %v", err)
+	}
+	if string(got) != "SELECT 1;\n" {
+		t.Errorf("unexpected file content: %q", string(got))
+	}
+}
+
+type staticDumper struct{}
+
+func (staticDumper) Dump(w io.Writer) error {
+	_, err := w.Write([]byte("SELECT 1;\n"))
+	return err
+}
+
+func TestRestoreSQLiteBackup_ReplacesAtomically(t *testing.T) {
+	dir := t.TempDir()
+	targetPath := filepath.Join(dir, "live.db")
+	backupPath := filepath.Join(dir, "backup.db")
+
+	if err := os.WriteFile(targetPath, []byte("stale content"), 0644); err != nil {
+		t.Fatalf("failed to write target: %v", err)
+	}
+	if err := os.WriteFile(backupPath, []byte("restored content"), 0600); err != nil {
+		t.Fatalf("failed to write backup: %v", err)
+	}
+
+	bs := NewBackupService(false, false, "")
+	connectionParams := &models.ConnectionParameters{
+		Provider:     "sqlite",
+		DatabaseName: targetPath,
+	}
+	if err := bs.restoreSQLiteBackup(connectionParams, backupPath); err != nil {
+		t.Fatalf("restoreSQLiteBackup failed: %v", err)
+	}
+
+	got, err := os.ReadFile(targetPath)
+	if err != nil {
+		t.Fatalf("failed to read restored file: %v", err)
+	}
+	if string(got) != "restored content" {
+		t.Errorf("expected 'restored content', got %q", string(got))
+	}
+
+	info, err := os.Stat(targetPath)
+	if err != nil {
+		t.Fatalf("failed to stat restored file: %v", err)
+	}
+	if info.Mode().Perm() != 0644 {
+		t.Errorf("expected permissions 0644, got %o", info.Mode().Perm())
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("failed to read dir: %v", err)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".restore-") {
+			t.Errorf("temporary restore file left behind: %s", e.Name())
+		}
 	}
 }

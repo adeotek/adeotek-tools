@@ -251,12 +251,18 @@ sql-toolbox migration \
 - Backups are only created if there are unapplied migration scripts
 - Backup files are stored in `.db-backups` directory in the current working directory
 - Backup filenames include a timestamp: `{database}_backup_{yyyyMMdd_HHmmss}.{ext}`
-- PostgreSQL backups use `pg_dump` and create `.sql` files
-- SQLite backups are simple file copies with `.db` extension
-- If backup fails, migrations will not be applied
+- The backup method is selected with `--backup-method` / `backup_method` (default: `pg_dump`):
+  - `pg_dump` (external binary) creates `.dump` files in PostgreSQL custom format
+  - `go` (pure Go dump) creates `.sql` files and needs no `pg_dump`/`psql` binary
+- `--restore` restores the most recent backup and skips migrations; `.dump` archives are
+  restored with `pg_restore`, `.sql` files with `psql`
+- SQLite backups are simple file copies with `.db` extension; an SQLite restore writes to a
+  temporary file and renames it into place, so a failed restore cannot corrupt the database
+- If backup fails, migrations will not be applied, and the incomplete backup file is removed
 
 **Prerequisites for PostgreSQL:**
-- `pg_dump` must be installed and accessible in PATH
+- `pg_dump` (for `--backup-method pg_dump`) and `psql`/`pg_restore` (for `--restore`) must be installed and accessible in PATH
+- The `go` backup method only needs the database connection
 - User must have sufficient privileges to dump the database
 
 ### Backup Only
@@ -560,7 +566,7 @@ backup:
 |---|---|---|
 | Database support | Single database | Multiple databases |
 | Configuration | CLI flags | YAML config file |
-| Dump method | `pg_dump` (external binary) | Pure Go or `pg_dump` (configurable) |
+| Dump method | `pg_dump` (external binary, or pure Go with `--backup-method go`) | Pure Go or `pg_dump` (configurable) |
 | Compression | No | Optional gzip for both methods |
 | S3 upload | No | Yes (AWS S3 / MinIO / RustFS) |
 | S3 customization | N/A | Per-database bucket/prefix overrides |

@@ -189,9 +189,10 @@ func formatInsertValue(value interface{}, colType string) string {
 	}
 }
 
-// escapeStringLiteral escapes a string for use in a PostgreSQL string literal
+// escapeStringLiteral escapes a string for use in a PostgreSQL string literal.
+// The dump header sets standard_conforming_strings = on, so backslashes are literal
+// characters in a quoted string and must NOT be doubled; only single quotes need
+// doubling (two adjacent quotes represent one quote character).
 func escapeStringLiteral(s string) string {
-	s = strings.ReplaceAll(s, "'", "''")
-	s = strings.ReplaceAll(s, "\\", "\\\\")
-	return s
+	return strings.ReplaceAll(s, "'", "''")
 }

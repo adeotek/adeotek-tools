@@ -32,29 +32,29 @@ type BackupDefaults struct {
 
 // DatabaseTarget represents a single database to back up
 type DatabaseTarget struct {
-	Name                    string           `yaml:"name"`
-	Host                    string           `yaml:"host"`
-	Port                    int              `yaml:"port"`
-	Database                string           `yaml:"database"`
-	User                    string           `yaml:"user"`
-	Password                string           `yaml:"password"`
-	SSLMode                 string           `yaml:"ssl_mode"`
-	ConnectionString        string           `yaml:"connection_string"`
-	OutputDir               string           `yaml:"output_dir"`
-	Compress                *bool            `yaml:"compress"`
-	UploadToS3              *bool            `yaml:"upload_to_s3"`
-	DeleteLocalAfterUpload  *bool            `yaml:"delete_local_after_upload"`
-	Schemas                 []string         `yaml:"schemas"`
-	ExcludeTables           []string         `yaml:"exclude_tables"`
-	ExcludeDb               []string         `yaml:"exclude_db"`
-	NoOwner                 *bool            `yaml:"no_owner"`
-	Clean                   *bool            `yaml:"clean"`
-	BackupMethod            *string          `yaml:"backup_method"`
-	SSHTunnel               *SSHTunnelConfig `yaml:"ssh_tunnel"`
-	S3Prefix                string           `yaml:"s3_prefix"`
-	S3Bucket                string           `yaml:"s3_bucket"`
-	S3AccessKeyID           string           `yaml:"s3_access_key_id"`
-	S3SecretAccessKey       string           `yaml:"s3_secret_access_key"`
+	Name                   string           `yaml:"name"`
+	Host                   string           `yaml:"host"`
+	Port                   int              `yaml:"port"`
+	Database               string           `yaml:"database"`
+	User                   string           `yaml:"user"`
+	Password               string           `yaml:"password"`
+	SSLMode                string           `yaml:"ssl_mode"`
+	ConnectionString       string           `yaml:"connection_string"`
+	OutputDir              string           `yaml:"output_dir"`
+	Compress               *bool            `yaml:"compress"`
+	UploadToS3             *bool            `yaml:"upload_to_s3"`
+	DeleteLocalAfterUpload *bool            `yaml:"delete_local_after_upload"`
+	Schemas                []string         `yaml:"schemas"`
+	ExcludeTables          []string         `yaml:"exclude_tables"`
+	ExcludeDb              []string         `yaml:"exclude_db"`
+	NoOwner                *bool            `yaml:"no_owner"`
+	Clean                  *bool            `yaml:"clean"`
+	BackupMethod           *string          `yaml:"backup_method"`
+	SSHTunnel              *SSHTunnelConfig `yaml:"ssh_tunnel"`
+	S3Prefix               string           `yaml:"s3_prefix"`
+	S3Bucket               string           `yaml:"s3_bucket"`
+	S3AccessKeyID          string           `yaml:"s3_access_key_id"`
+	S3SecretAccessKey      string           `yaml:"s3_secret_access_key"`
 
 	// Reference to parent config defaults and S3 config for effective value resolution
 	defaults *BackupDefaults
@@ -68,7 +68,7 @@ type S3Config struct {
 	Region                 string `yaml:"region"`
 	Prefix                 string `yaml:"prefix"`
 	AccessKeyID            string `yaml:"access_key_id"`
-	SecretAccessKey         string `yaml:"secret_access_key"`
+	SecretAccessKey        string `yaml:"secret_access_key"`
 	Endpoint               string `yaml:"endpoint"`
 	DeleteLocalAfterUpload *bool  `yaml:"delete_local_after_upload"`
 }
@@ -85,7 +85,7 @@ func LoadBackupConfig(path string) (*BackupConfig, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	if err := config.validate(); err != nil {
+	if err := config.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -97,7 +97,8 @@ func LoadBackupConfig(path string) (*BackupConfig, error) {
 	return &config, nil
 }
 
-func (c *BackupConfig) validate() error {
+// Validate checks the backup configuration for required fields
+func (c *BackupConfig) Validate() error {
 	if len(c.Databases) == 0 {
 		return fmt.Errorf("at least one database must be configured")
 	}
@@ -271,6 +272,14 @@ func (dt *DatabaseTarget) GetEffectiveS3SecretAccessKey() string {
 	return ""
 }
 
+// GetEffectivePort returns the PostgreSQL port for this database, defaulting to 5432
+func (dt *DatabaseTarget) GetEffectivePort() int {
+	if dt.Port > 0 {
+		return dt.Port
+	}
+	return 5432
+}
+
 // ToConnectionString builds a lib/pq connection string from individual parameters
 func (dt *DatabaseTarget) ToConnectionString() string {
 	if dt.ConnectionString != "" {
@@ -286,15 +295,9 @@ func (dt *DatabaseTarget) ToConnectionString() string {
 
 	parts := []string{
 		fmt.Sprintf("host=%s", dt.Host),
+		fmt.Sprintf("port=%d", dt.GetEffectivePort()),
+		fmt.Sprintf("dbname=%s", dt.Database),
 	}
-
-	port := dt.Port
-	if port == 0 {
-		port = 5432
-	}
-	parts = append(parts, fmt.Sprintf("port=%d", port))
-
-	parts = append(parts, fmt.Sprintf("dbname=%s", dt.Database))
 
 	if dt.User != "" {
 		parts = append(parts, fmt.Sprintf("user=%s", dt.User))
@@ -416,7 +419,7 @@ func ExpandWildcardDatabasesWithConnStr(template DatabaseTarget, verbose bool, c
 		target := template
 		target.Database = dbName
 		target.Name = template.Name + "_" + dbName // Modify name to include database
-		target.ExcludeDb = nil // Clear exclude_db from expanded entries
+		target.ExcludeDb = nil                     // Clear exclude_db from expanded entries
 		expanded = append(expanded, target)
 	}
 

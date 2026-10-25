@@ -4,8 +4,9 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // ProviderType defines the type of git provider
@@ -14,9 +15,35 @@ type ProviderType string
 const (
 	// ProviderGitea is for Gitea servers
 	ProviderGitea ProviderType = "gitea"
+	// ProviderForgejo is for Forgejo servers. Forgejo is a Gitea fork and
+	// keeps the same API, so it is handled by the Gitea implementation.
+	ProviderForgejo ProviderType = "forgejo"
 	// ProviderGitHub is for GitHub
 	ProviderGitHub ProviderType = "github"
 )
+
+// SupportedProviders lists the provider types accepted in the configuration.
+var SupportedProviders = []ProviderType{ProviderGitea, ProviderForgejo, ProviderGitHub}
+
+// IsSupportedProvider reports whether providerType is a known provider.
+func IsSupportedProvider(providerType ProviderType) bool {
+	for _, supported := range SupportedProviders {
+		if providerType == supported {
+			return true
+		}
+	}
+	return false
+}
+
+// SupportedProviderNames returns the supported provider types as a
+// comma-separated string for use in messages.
+func SupportedProviderNames() string {
+	names := make([]string, 0, len(SupportedProviders))
+	for _, provider := range SupportedProviders {
+		names = append(names, string(provider))
+	}
+	return strings.Join(names, ", ")
+}
 
 // ProviderConfig contains configuration for a git provider
 type ProviderConfig struct {
@@ -54,9 +81,9 @@ func Load(filename string) (*Config, error) {
 
 // CreateFromArgs creates a config from command line arguments
 func CreateFromArgs(
-	providerType string, 
-	serverURL string, 
-	accessToken string, 
+	providerType string,
+	serverURL string,
+	accessToken string,
 	username string,
 	password string,
 	useBasicAuth bool,

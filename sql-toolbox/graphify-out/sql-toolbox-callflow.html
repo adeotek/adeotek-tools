@@ -60,13 +60,25 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>sql-toolbox — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 308 nodes, 468 edges, 19 communities. Commit: 5a8fc38</p>
+<p class="subtitle">Generated from graphify knowledge graph: 408 nodes, 1095 edges, 23 communities. Commit: 3a89ce3</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
     <a href="#extract-pipeline">Extraction Pipeline</a>
+    <a href="#build-graph">Graph Build</a>
     <a href="#cli-skills">CLI &amp; Skill Installers</a>
+    <a href="#serve-api">Serving API</a>
     <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#readmemd-usage-connection">Readmemd Usage Connection</a>
+    <a href="#readmemd-example-directory">Readmemd Example Directory</a>
+    <a href="#readmemd-backup-subcommand">Readmemd Backup Subcommand</a>
+    <a href="#readmemd-backup-restore">Readmemd Backup Restore</a>
+    <a href="#readmemd-example-environment">Readmemd Example Environment</a>
+    <a href="#readmemd-new-important">Readmemd New Important</a>
+    <a href="#readmemd-backupdatabases-backupdefaults">Readmemd Backupdatabases Backupdefaults</a>
+    <a href="#agentsmd-agents-sql">Agentsmd Agents Sql</a>
+    <a href="#backup-workersh-script">Backup Workersh Script</a>
+    <a href="#other">Other</a>
 </div>
 
 <!-- ====== Architecture Overview ====== -->
@@ -76,14 +88,45 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>266 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>327 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
-    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>4 nodes</small>")
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>7 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>7 nodes</small>")
     class CLI_SKILLS_9964CBB8 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>38 nodes</small>")
+    SERVE_API_35EC8E86("Serving API<br/><small>7 nodes</small>")
+    class SERVE_API_35EC8E86 module;
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>5 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
-    EXTRACT_PIPELINE_5F350230 -.-> CLI_SKILLS_9964CBB8
-    CLI_SKILLS_9964CBB8 -.-> TESTS_FIXTURES_B84B1DCC
+    READMEMD_USAGE_CONNECTION_6B40804A("Readmemd Usage Connection<br/><small>12 nodes</small>")
+    class READMEMD_USAGE_CONNECTION_6B40804A module;
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47("Readmemd Example Directory<br/><small>10 nodes</small>")
+    class READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 module;
+    READMEMD_BACKUP_SUBCOMMAND_7AD05B8B("Readmemd Backup Subcommand<br/><small>8 nodes</small>")
+    class READMEMD_BACKUP_SUBCOMMAND_7AD05B8B module;
+    READMEMD_BACKUP_RESTORE_7C37A05D("Readmemd Backup Restore<br/><small>5 nodes</small>")
+    class READMEMD_BACKUP_RESTORE_7C37A05D module;
+    READMEMD_EXAMPLE_ENVIRONMENT_C6528A50("Readmemd Example Environment<br/><small>5 nodes</small>")
+    class READMEMD_EXAMPLE_ENVIRONMENT_C6528A50 module;
+    READMEMD_NEW_IMPORTANT_8C52FA9A("Readmemd New Important<br/><small>5 nodes</small>")
+    class READMEMD_NEW_IMPORTANT_8C52FA9A module;
+    READMEMD_BACKUPDATABASES_BACKUPDEFAULTS_CE55D193("Readmemd Backupdatabases Backupdefaults<br/><small>4 nodes</small>")
+    class READMEMD_BACKUPDATABASES_BACKUPDEFAULTS_CE55D193 module;
+    AGENTSMD_AGENTS_SQL_D36430F1("Agentsmd Agents Sql<br/><small>3 nodes</small>")
+    class AGENTSMD_AGENTS_SQL_D36430F1 module;
+    BACKUP_WORKERSH_SCRIPT_CABC4A48("Backup Workersh Script<br/><small>2 nodes</small>")
+    class BACKUP_WORKERSH_SCRIPT_CABC4A48 module;
+    OTHER_D0941E68("Other<br/><small>1 nodes</small>")
+    class OTHER_D0941E68 module;
+    EXTRACT_PIPELINE_5F350230 -->|imports x4| SERVE_API_35EC8E86
+    SERVE_API_35EC8E86 -->|references x3| EXTRACT_PIPELINE_5F350230
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| READMEMD_BACKUP_RESTORE_7C37A05D
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| READMEMD_BACKUP_SUBCOMMAND_7AD05B8B
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| READMEMD_USAGE_CONNECTION_6B40804A
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| READMEMD_EXAMPLE_ENVIRONMENT_C6528A50
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| BUILD_GRAPH_321CBB04
+    READMEMD_EXAMPLE_DIRECTORY_7EBAAA47 -->|contains| READMEMD_NEW_IMPORTANT_8C52FA9A
+    READMEMD_BACKUP_SUBCOMMAND_7AD05B8B -->|contains| READMEMD_BACKUPDATABASES_BACKUPDEFAULTS_CE55D193
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -100,89 +143,91 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>266</td><td><code>1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>4</td><td><code>16, 17</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>38</td><td><code>0</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>327</td><td><code>0, 1, 10, 13, 7, 4, 12, 2</code></td></tr><tr><td>Graph Build</td><td>7</td><td><code>15, 21</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>7</td><td><code>9</code></td></tr><tr><td>Serving API</td><td>7</td><td><code>3</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>5</td><td><code>11</code></td></tr><tr><td>Readmemd Usage Connection</td><td>12</td><td><code>5</code></td></tr><tr><td>Readmemd Example Directory</td><td>10</td><td><code>6</code></td></tr><tr><td>Readmemd Backup Subcommand</td><td>8</td><td><code>8</code></td></tr><tr><td>Readmemd Backup Restore</td><td>5</td><td><code>14</code></td></tr><tr><td>Readmemd Example Environment</td><td>5</td><td><code>16</code></td></tr><tr><td>Readmemd New Important</td><td>5</td><td><code>17</code></td></tr><tr><td>Readmemd Backupdatabases Backupdefaults</td><td>4</td><td><code>18</code></td></tr><tr><td>Agentsmd Agents Sql</td><td>3</td><td><code>19</code></td></tr><tr><td>Backup Workersh Script</td><td>2</td><td><code>20</code></td></tr><tr><td>Other</td><td>1</td><td><code>22</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Extraction Pipeline -&gt; CLI &amp; Skill Installers -&gt; Tests &amp; Fixtures</div>
+    <div class="arrow-chain">CLI &amp; Skill Installers -&gt; Extraction Pipeline -&gt; Serving API -&gt; Graph Build -&gt; Tests &amp; Fixtures -&gt; Readmemd Usage Connection -&gt; Readmemd Example Directory</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>308 nodes · 468 edges · 19 communities (13 shown, 6 thin omitted)</li>
-      <li>Extraction: 75% EXTRACTED · 25% INFERRED · 0% AMBIGUOUS · INFERRED: 117 edges (avg confidence: 0.81)</li>
+      <li>408 nodes · 1095 edges · 23 communities (18 shown, 5 thin omitted)</li>
+      <li>Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 151 edges (avg confidence: 0.85)</li>
       <li>Token cost: 0 input · 0 output</li>
-      <li>1. `DatabaseTarget` - 16 edges</li>
-      <li>2. `backup subcommand` - 15 edges</li>
-      <li>3. `writeTempConfig()` - 14 edges</li>
+      <li>1. `DatabaseTarget` - 25 edges</li>
+      <li>2. `PgDumpService` - 25 edges</li>
+      <li>3. `ConnectionParameters` - 23 edges</li>
     </ul>
   </div>
 </div>
 <hr>
 <!-- ====== 2. Extraction Pipeline ====== -->
 <h2 id="extract-pipeline">2. Extraction Pipeline</h2>
-<p>Extraction Pipeline groups implementation around internal, services, backup, testgo, mostly in internal/models/backup_config_test.go, internal/models/backup_config.go, internal/services/pg_dump_schema.go. This section covers 266 nodes and 402 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Extraction Pipeline groups implementation around internal, services, backup, testgo, mostly in internal/models/backup_config_test.go, internal/models/backup_config.go, internal/services/backup_service_test.go. This section covers 327 nodes and 1013 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (266 nodes, 402 edges)
+    %% Section: Extraction Pipeline (327 nodes, 1013 edges)
     subgraph extract_pipeline_internal_models_backup_config_g_beb92305["internal/models/backup_config.go"]
-        models_databasetarget_7bb7f6ef("DatabaseTarget<br/><small>internal/models/backup_config.go</small>")
-        models_backupconfig_241e7601("BackupConfig<br/><small>internal/models/backup_config.go</small>")
-        models_backupconfig_validate_36b88109("validate()<br/><small>internal/models/backup_config.go</small>")
+        internal_models_backup_config_go_models_database_1927a789("DatabaseTarget<br/><small>internal/models/backup_config.go</small>")
+        internal_models_backup_config_go_models_backupco_e0e60eae("BackupConfig<br/><small>internal/models/backup_config.go</small>")
+        models_backupconfig_validate_36b88109("Validate()<br/><small>internal/models/backup_config.go</small>")
         models_backupconfig_expandwildcards_c7998df6("ExpandWildcards()<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_setdefaults_34786a98("SetDefaults()<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_geteffectiveoutputdir_5add7e29("GetEffectiveOutputDir()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectivecompress_0e925944("GetEffectiveCompress()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectiveuploadtos3_8ac44656("GetEffectiveUploadToS3()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectivedeletelocalaft_c3033596("GetEffectiveDeleteLocalAfterUpload()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectivenoowner_02b495f2("GetEffectiveNoOwner()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectiveclean_c22c671c("GetEffectiveClean()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectivebackupmethod_184fbbe0("GetEffectiveBackupMethod()<br/><small>internal/models/backup_config.go</small>")
+        models_databasetarget_geteffectiveschemas_10d6e506("GetEffectiveSchemas()<br/><small>internal/models/backup_config.go</small>")
     end
-    subgraph extract_pipeline_internal_app_migration_cmd_go_71a6fdd7["internal/app/migration_cmd.go"]
-        app_migration_cmd_runmigration_91992c26("runMigration()<br/><small>internal/app/migration_cmd.go</small>")
-        app_migration_cmd_resolvestring_4d4033ce("resolveString()<br/><small>internal/app/migration_cmd.go</small>")
-        app_migration_cmd_resolveint_63683ded("resolveInt()<br/><small>internal/app/migration_cmd.go</small>")
-        app_migration_cmd_resolvebool_633a68bb("resolveBool()<br/><small>internal/app/migration_cmd.go</small>")
-    end
-    subgraph extract_pipeline_internal_database_factory_go_2dd5ed88["internal/database/factory.go"]
-        database_factory_1b9aa630("Factory<br/><small>internal/database/factory.go</small>")
-        database_factory_createconnection_03eae0d1("CreateConnection()<br/><small>internal/database/factory.go</small>")
-        database_factory_getprovider_ddaf1be6("GetProvider()<br/><small>internal/database/factory.go</small>")
-    end
-    models_connectionparameters_7e4fd19f("ConnectionParameters<br/><small>internal/models/connection.go</small>")
-    services_backupservice_1e37ae0a("BackupService<br/><small>internal/services/backup_service.go</small>")
-    internal_services_pg_dump_schema_go_services_pgd_a8cb716f("PgDumpService<br/><small>internal/services/pg_dump_schema.go</small>")
-    internal_services_pg_dump_service_go_services_pg_b644e6f0("PgDumpService<br/><small>internal/services/pg_dump_service.go</small>")
-    tunnel_sshtunnel_218da3ec("SSHTunnel<br/><small>internal/tunnel/tunnel.go</small>")
-    app_migration_cmd_runmigration_91992c26 -->|calls| app_migration_cmd_resolvestring_4d4033ce
-    app_migration_cmd_runmigration_91992c26 -->|calls| app_migration_cmd_resolveint_63683ded
-    app_migration_cmd_runmigration_91992c26 -->|calls| app_migration_cmd_resolvebool_633a68bb
-    database_factory_1b9aa630 -->|method| database_factory_createconnection_03eae0d1
-    database_factory_1b9aa630 -->|method| database_factory_getprovider_ddaf1be6
-    models_backupconfig_241e7601 -->|method| models_backupconfig_validate_36b88109
-    models_backupconfig_241e7601 -->|method| models_backupconfig_expandwildcards_c7998df6
-    models_databasetarget_7bb7f6ef -->|method| models_databasetarget_setdefaults_34786a98
-    models_databasetarget_7bb7f6ef -->|method| models_databasetarget_geteffectiveoutputdir_5add7e29
-    models_databasetarget_setdefaults_34786a98 -->|calls| models_backupconfig_expandwildcards_c7998df6
-    %% Omitted for readability: 248 nodes, 0 edges
-    class models_databasetarget_7bb7f6ef klass;
-    class models_backupconfig_241e7601 klass;
+    internal_app_backup_cmd_004e12aa("backup_cmd.go")
+    internal_app_migration_cmd_98600ca7("migration_cmd.go")
+    internal_services_backup_only_orchestrator_149a681d("backup_only_orchestrator.go")
+    internal_services_backup_service_375e4b2f("backup_service.go")
+    services_pgdumpservice_27091f26("PgDumpService<br/><small>internal/services/pg_dump_service.go</small>")
+    internal_models_backup_config_go_models_backupco_e0e60eae -->|method| models_backupconfig_validate_36b88109
+    internal_models_backup_config_go_models_backupco_e0e60eae -->|method| models_backupconfig_expandwildcards_c7998df6
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_setdefaults_34786a98
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveoutputdir_5add7e29
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivecompress_0e925944
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveuploadtos3_8ac44656
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivedeletelocalaft_c3033596
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivenoowner_02b495f2
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveclean_c22c671c
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivebackupmethod_184fbbe0
+    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveschemas_10d6e506
+    models_backupconfig_expandwildcards_c7998df6 -->|calls| models_databasetarget_setdefaults_34786a98
+    internal_app_backup_cmd_004e12aa -->|imports| internal_services_backup_only_orchestrator_149a681d
+    internal_app_backup_cmd_004e12aa -->|imports| internal_services_backup_service_375e4b2f
+    internal_app_migration_cmd_98600ca7 -->|imports| internal_services_backup_only_orchestrator_149a681d
+    internal_app_migration_cmd_98600ca7 -->|imports| internal_services_backup_service_375e4b2f
+    %% Omitted for readability: 309 nodes, 0 edges
+    class internal_models_backup_config_go_models_database_1927a789 klass;
+    class internal_models_backup_config_go_models_backupco_e0e60eae klass;
     class models_backupconfig_validate_36b88109 function;
     class models_backupconfig_expandwildcards_c7998df6 function;
     class models_databasetarget_setdefaults_34786a98 function;
     class models_databasetarget_geteffectiveoutputdir_5add7e29 function;
-    class app_migration_cmd_runmigration_91992c26 function;
-    class app_migration_cmd_resolvestring_4d4033ce function;
-    class app_migration_cmd_resolveint_63683ded function;
-    class app_migration_cmd_resolvebool_633a68bb function;
-    class database_factory_1b9aa630 klass;
-    class database_factory_createconnection_03eae0d1 function;
-    class database_factory_getprovider_ddaf1be6 function;
-    class models_connectionparameters_7e4fd19f klass;
-    class services_backupservice_1e37ae0a klass;
-    class internal_services_pg_dump_schema_go_services_pgd_a8cb716f klass;
-    class internal_services_pg_dump_service_go_services_pg_b644e6f0 klass;
-    class tunnel_sshtunnel_218da3ec klass;
+    class models_databasetarget_geteffectivecompress_0e925944 function;
+    class models_databasetarget_geteffectiveuploadtos3_8ac44656 function;
+    class models_databasetarget_geteffectivedeletelocalaft_c3033596 function;
+    class models_databasetarget_geteffectivenoowner_02b495f2 function;
+    class models_databasetarget_geteffectiveclean_c22c671c function;
+    class models_databasetarget_geteffectivebackupmethod_184fbbe0 function;
+    class models_databasetarget_geteffectiveschemas_10d6e506 function;
+    class internal_app_backup_cmd_004e12aa module;
+    class internal_app_migration_cmd_98600ca7 module;
+    class internal_services_backup_only_orchestrator_149a681d module;
+    class internal_services_backup_service_375e4b2f module;
+    class services_pgdumpservice_27091f26 klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -206,158 +251,62 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>backup_config.go</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+4 more</td>
+  <td><code>SetDefaults()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>Validate()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>BackupConfig</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>validate()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>BackupDefaults</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>BackupDefaults node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>S3Config</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>SetDefaults()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+6 more</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>.validate()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>BackupConfig</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>.validate() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>.SetDefaults()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>DatabaseTarget</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>.SetDefaults() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>.ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>DatabaseTarget</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>normalizeConnectionString()</code><br><small style="color:var(--muted)">internal/models/connection.go</small><br><code>QueryDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>.ToConnectionString() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>QueryDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>QueryDatabases() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>QueryDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>ExpandWildcardDatabasesWithTunnel()</code><br><small style="color:var(--muted)">internal/services/wildcard_helper.go</small><br><code>ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>TestExpandWildcardDatabases EmptyExclud...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+1 more</td>
-  <td>ExpandWildcardDatabasesWithConnStr() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>.ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>BackupConfig</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>SetDefaults()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>.ExpandWildcards() node in internal/models/backup_config.go.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>backup_config_test.go</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>13</td>
   <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
   <td><code>TestDatabaseTarget GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestDatabaseTarget GetEffectiveDeleteLo...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestDatabaseTarget GetEffectiveUploadTo...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>No direct outbound edge</td>
   <td>boolPtr() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>14</td>
-  <td><code>TestLoadBackupConfig_ValidConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>3</td>
+  <td><code>containsAny()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
+  <td><code>TestExpandWildcardDatabases EmptyExclud...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>containsAny() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>15</td>
-  <td><code>TestLoadBackupConfig_NoDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>4</td>
+  <td><code>strPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
+  <td><code>TestDatabaseTarget GetEffectiveBackupMe...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>strPtr() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>16</td>
-  <td><code>TestLoadBackupConfig_MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>5</td>
+  <td><code>TestDatabaseTarget_GetEffectiveBackupMethod()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
+  <td>External entry / no inbound edge</td>
+  <td><code>strPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>17</td>
-  <td><code>TestLoadBackupConfig_MissingHostAndConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>6</td>
+  <td><code>TestDatabaseTarget_GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
+  <td>External entry / no inbound edge</td>
+  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>18</td>
-  <td><code>TestLoadBackupConfig_ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>7</td>
+  <td><code>TestDatabaseTarget_GetEffectiveDeleteLocalAfterUpload()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
+  <td>External entry / no inbound edge</td>
+  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>19</td>
-  <td><code>TestLoadBackupConfig_S3EnabledNoBucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>20</td>
+  <td>8</td>
   <td><code>TestDatabaseTarget_GetEffectiveOutputDir()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -365,71 +314,23 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>21</td>
-  <td><code>TestDatabaseTarget_GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>TestDatabaseTarget_GetEffectiveUploadToS3()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>TestDatabaseTarget_GetEffectiveDeleteLocalAfterUpload()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>TestDatabaseTarget_GetEffectiveSchemas()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>9</td>
+  <td><code>TestDatabaseTarget_GetEffectivePort()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>25</td>
-  <td><code>TestDatabaseTarget_ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>10</td>
+  <td><code>TestDatabaseTarget_GetEffectiveS3AccessKeyID()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>26</td>
-  <td><code>strPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>TestDatabaseTarget GetEffectiveBackupMe...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>strPtr() node in internal/models/backup_config_test.go.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>TestDatabaseTarget_GetEffectiveBackupMethod()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>strPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>TestDatabaseTarget_GetEffectiveS3Prefix()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>29</td>
+  <td>11</td>
   <td><code>TestDatabaseTarget_GetEffectiveS3Bucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -437,12 +338,156 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>30</td>
-  <td><code>TestDatabaseTarget_GetEffectiveS3AccessKeyID()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>12</td>
+  <td><code>TestDatabaseTarget_GetEffectiveS3Prefix()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>TestDatabaseTarget_GetEffectiveS3SecretAccessKey()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>TestDatabaseTarget_GetEffectiveSchemas()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>TestDatabaseTarget_GetEffectiveUploadToS3()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>TestDatabaseTarget_ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>TestExpandWildcardDatabases_EmptyExcludeDb()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>containsAny()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>TestLoadBackupConfig_ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>TestLoadBackupConfig_MissingHostAndConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>TestLoadBackupConfig_MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>TestLoadBackupConfig_NoDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>TestLoadBackupConfig_S3EnabledNoBucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>TestLoadBackupConfig_ValidConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>TestLoadBackupConfig_WildcardDatabase()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+10 more</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>runBackup()</code><br><small style="color:var(--muted)">internal/app/backup_cmd.go</small><br><code>runMigration()</code><br><small style="color:var(--muted)">internal/app/migration_cmd.go</small><br><code>TestLoadConfig FileNotFound()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>TestLoadConfig_BackupOnly()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>TestLoadConfig_EmptyFile()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>TestLoadConfig_FileNotFound()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>TestLoadConfig_InvalidYAML()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 </table>
 
@@ -451,45 +496,54 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>internal/models/backup_config_test.go</code></td><td>26 nodes</td></tr>
-<tr><td><code>internal/models/backup_config.go</code></td><td>25 nodes</td></tr>
+      <tr><td><code>internal/models/backup_config_test.go</code></td><td>29 nodes</td></tr>
+<tr><td><code>internal/models/backup_config.go</code></td><td>26 nodes</td></tr>
+<tr><td><code>internal/services/backup_service_test.go</code></td><td>15 nodes</td></tr>
 <tr><td><code>internal/models/connection.go</code></td><td>14 nodes</td></tr>
-<tr><td><code>internal/services/pg_dump_schema.go</code></td><td>14 nodes</td></tr>
+<tr><td><code>internal/services/backup_service.go</code></td><td>13 nodes</td></tr>
+<tr><td><code>internal/services/pg_dump_schema.go</code></td><td>13 nodes</td></tr>
 <tr><td><code>internal/services/pg_dump_service.go</code></td><td>13 nodes</td></tr>
 <tr><td><code>internal/tunnel/tunnel.go</code></td><td>13 nodes</td></tr>
-<tr><td><code>internal/services/backup_service.go</code></td><td>12 nodes</td></tr>
-<tr><td><code>internal/services/sql_scripts_helpers_test.go</code></td><td>11 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x147, method x83, calls x62. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x346, calls x229, references x196, contains x154. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
-<!-- ====== 3. CLI & Skill Installers ====== -->
-<h2 id="cli-skills">3. CLI &amp; Skill Installers</h2>
-<p>CLI &amp; Skill Installers groups implementation around maingo, cmd, sql, toolbox, mostly in cmd/sql-toolbox/main.go, main.go. This section covers 4 nodes and 2 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<!-- ====== 3. Graph Build ====== -->
+<h2 id="build-graph">3. Graph Build</h2>
+<p>Graph Build groups implementation around readmemd, buildsh, build, all, mostly in README.md, build.sh. This section covers 7 nodes and 5 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: CLI &amp; Skill Installers (4 nodes, 2 edges)
-    subgraph cli_skills_cmd_sql_toolbox_main_go_252e8c9a["cmd/sql-toolbox/main.go"]
-        cmd_sql_toolbox_main_go_82ec051c("main.go")
-        cmd_sql_toolbox_main_go_sql_toolbox_main_main_c3827376("main()<br/><small>cmd/sql-toolbox/main.go</small>")
+    %% Section: Graph Build (7 nodes, 5 edges)
+    subgraph build_graph_README_md_df5bf028["README.md"]
+        readme_building_da2c60ac("Building<br/><small>README.md</small>")
+        readme_build_for_current_platform_0a19c7cc("Build for Current Platform<br/><small>README.md</small>")
+        readme_build_for_all_platforms_033f044b("Build for All Platforms<br/><small>README.md</small>")
+        readme_run_tests_36f8a778("Run Tests<br/><small>README.md</small>")
+        readme_clean_build_artifacts_0ca4e9e3("Clean Build Artifacts<br/><small>README.md</small>")
     end
-    subgraph cli_skills_main_go_d2f25aca["main.go"]
-        main_go_b48cc956("main.go")
-        main_go_sql_toolbox_main_main_32001e70("main()<br/><small>main.go</small>")
+    subgraph build_graph_build_sh_4d78c334["build.sh"]
+        build_80754af9("build.sh")
+        build_sh_entry_ed350c5c("build.sh script<br/><small>build.sh</small>")
     end
-    main_go_b48cc956 -->|contains| main_go_sql_toolbox_main_main_32001e70
-    cmd_sql_toolbox_main_go_82ec051c -->|contains| cmd_sql_toolbox_main_go_sql_toolbox_main_main_c3827376
-    class cmd_sql_toolbox_main_go_82ec051c module;
-    class cmd_sql_toolbox_main_go_sql_toolbox_main_main_c3827376 function;
-    class main_go_b48cc956 module;
-    class main_go_sql_toolbox_main_main_32001e70 function;
+    readme_building_da2c60ac -->|contains| readme_build_for_current_platform_0a19c7cc
+    readme_building_da2c60ac -->|contains| readme_build_for_all_platforms_033f044b
+    readme_building_da2c60ac -->|contains| readme_run_tests_36f8a778
+    readme_building_da2c60ac -->|contains| readme_clean_build_artifacts_0ca4e9e3
+    build_80754af9 -->|contains| build_sh_entry_ed350c5c
+    class readme_building_da2c60ac concept;
+    class readme_build_for_current_platform_0a19c7cc concept;
+    class readme_build_for_all_platforms_033f044b concept;
+    class readme_run_tests_36f8a778 concept;
+    class readme_clean_build_artifacts_0ca4e9e3 concept;
+    class build_80754af9 function;
+    class build_sh_entry_ed350c5c function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -513,35 +567,59 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>main.go</code><br><small style="color:var(--muted)">cmd/sql-toolbox/main.go</small></td>
-  <td><span class="tag tag-class">Module</span></td>
+  <td><code>Build for All Platforms</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>main.go node in cmd/sql-toolbox/main.go.</td>
+  <td>Documentation node describing Build for All Platforms.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>main()</code><br><small style="color:var(--muted)">cmd/sql-toolbox/main.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Build for Current Platform</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>main() node in cmd/sql-toolbox/main.go.</td>
+  <td>Documentation node describing Build for Current Platform.</td>
 </tr>
 <tr>
   <td>3</td>
-  <td><code>main.go</code><br><small style="color:var(--muted)">main.go</small></td>
-  <td><span class="tag tag-class">Module</span></td>
+  <td><code>Building</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>main.go node in main.go.</td>
+  <td>Documentation node describing Building.</td>
 </tr>
 <tr>
   <td>4</td>
-  <td><code>main()</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><code>Clean Build Artifacts</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Clean Build Artifacts.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Run Tests</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Run Tests.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>build.sh</code><br><small style="color:var(--muted)">build.sh</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>main() node in main.go.</td>
+  <td>build.sh node in build.sh.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>build.sh script</code><br><small style="color:var(--muted)">build.sh</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build.sh script node in build.sh.</td>
 </tr>
 </table>
 
@@ -550,8 +628,1284 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>cmd/sql-toolbox/main.go</code></td><td>2 nodes</td></tr>
-<tr><td><code>main.go</code></td><td>2 nodes</td></tr>
+      <tr><td><code>README.md</code></td><td>5 nodes</td></tr>
+<tr><td><code>build.sh</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. CLI & Skill Installers ====== -->
+<h2 id="cli-skills">4. CLI &amp; Skill Installers</h2>
+<p>CLI &amp; Skill Installers groups implementation around claudemd, architecture, build, test, mostly in CLAUDE.md. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: CLI &amp; Skill Installers (7 nodes, 6 edges)
+    claude_claude_md_sql_toolbox_aecbfbaf("CLAUDE.md — sql-toolbox<br/><small>CLAUDE.md</small>")
+    claude_f1dda22f("CLAUDE.md")
+    claude_architecture_7297293e("Architecture<br/><small>CLAUDE.md</small>")
+    claude_key_features_gotchas_368f6a41("Key Features / Gotchas<br/><small>CLAUDE.md</small>")
+    claude_code_style_f079bfa1("Code Style<br/><small>CLAUDE.md</small>")
+    claude_graphify_a0b0e4f3("graphify<br/><small>CLAUDE.md</small>")
+    claude_build_test_commands_20b4db5a("Build / Test Commands<br/><small>CLAUDE.md</small>")
+    claude_f1dda22f -->|contains| claude_claude_md_sql_toolbox_aecbfbaf
+    claude_claude_md_sql_toolbox_aecbfbaf -->|contains| claude_architecture_7297293e
+    claude_claude_md_sql_toolbox_aecbfbaf -->|contains| claude_key_features_gotchas_368f6a41
+    claude_claude_md_sql_toolbox_aecbfbaf -->|contains| claude_code_style_f079bfa1
+    claude_claude_md_sql_toolbox_aecbfbaf -->|contains| claude_graphify_a0b0e4f3
+    claude_claude_md_sql_toolbox_aecbfbaf -->|contains| claude_build_test_commands_20b4db5a
+    class claude_claude_md_sql_toolbox_aecbfbaf concept;
+    class claude_f1dda22f concept;
+    class claude_architecture_7297293e concept;
+    class claude_key_features_gotchas_368f6a41 concept;
+    class claude_code_style_f079bfa1 concept;
+    class claude_graphify_a0b0e4f3 concept;
+    class claude_build_test_commands_20b4db5a concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>CLAUDE.md</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing CLAUDE.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Architecture</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Architecture.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Build / Test Commands</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Build / Test Commands.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>CLAUDE.md — sql-toolbox</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing CLAUDE.md — sql-toolbox.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Code Style</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Code Style.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>graphify</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing graphify.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Key Features / Gotchas</code><br><small style="color:var(--muted)">CLAUDE.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Key Features / Gotchas.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>CLAUDE.md</code></td><td>7 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Serving API ====== -->
+<h2 id="serve-api">5. Serving API</h2>
+<p>Serving API groups implementation around upload, internal, services, service, mostly in internal/services/s3_upload_service_test.go, internal/services/s3_upload_service.go. This section covers 7 nodes and 8 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Serving API (7 nodes, 8 edges)
+    subgraph serve_api_internal_services_s3_upload_service_te_f88df315["internal/services/s3_upload_service_test.go"]
+        internal_services_s3_upload_service_test_testbui_3f0ff934("TestBuildS3Key()<br/><small>internal/services/s3_upload_service_test.go</small>")
+        internal_services_s3_upload_service_test_testmoc_ca3a30df("TestMockS3Uploader()<br/><small>internal/services/s3_upload_service_test.go</small>")
+        services_mocks3uploader_902ca802("MockS3Uploader<br/><small>internal/services/s3_upload_service_test.go</small>")
+        services_mocks3uploader_upload_4651cea6("Upload()<br/><small>internal/services/s3_upload_service_test.go</small>")
+        services_mockuploadcall_22f84799("mockUploadCall<br/><small>internal/services/s3_upload_service_test.go</small>")
+        internal_services_s3_upload_service_test_b5688a06("s3_upload_service_test.go")
+    end
+    internal_services_s3_upload_service_builds3key_a696b267("BuildS3Key()<br/><small>internal/services/s3_upload_service.go</small>")
+    services_mocks3uploader_902ca802 -->|method| services_mocks3uploader_upload_4651cea6
+    internal_services_s3_upload_service_test_testmoc_ca3a30df -->|calls| services_mocks3uploader_upload_4651cea6
+    internal_services_s3_upload_service_test_testbui_3f0ff934 -->|calls| internal_services_s3_upload_service_builds3key_a696b267
+    class internal_services_s3_upload_service_test_testbui_3f0ff934 test;
+    class internal_services_s3_upload_service_test_testmoc_ca3a30df test;
+    class services_mocks3uploader_902ca802 test;
+    class services_mocks3uploader_upload_4651cea6 test;
+    class services_mockuploadcall_22f84799 test;
+    class internal_services_s3_upload_service_test_b5688a06 test;
+    class internal_services_s3_upload_service_builds3key_a696b267 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>MockS3Uploader</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Upload()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td>MockS3Uploader node in internal/services/s3_upload_service_test.go.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>mockUploadCall</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>mockUploadCall node in internal/services/s3_upload_service_test.go.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>BuildS3Key()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>backupDatabase()</code><br><small style="color:var(--muted)">internal/services/backup_only_orchestrator.go</small><br><code>TestBuildS3Key()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>BuildS3Key() node in internal/services/s3_upload_service.go.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>TestBuildS3Key()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>BuildS3Key()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>TestMockS3Uploader()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Upload()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.Upload()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>MockS3Uploader</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small><br><code>TestMockS3Uploader()</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>.Upload() node in internal/services/s3_upload_service_test.go.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>s3_upload_service_test.go</code><br><small style="color:var(--muted)">internal/services/s3_upload_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>backup_cmd.go</code><br><small style="color:var(--muted)">internal/app/backup_cmd.go</small><br><code>migration_cmd.go</code><br><small style="color:var(--muted)">internal/app/migration_cmd.go</small></td>
+  <td><code>go_pkg_testing</code></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>internal/services/s3_upload_service_test.go</code></td><td>6 nodes</td></tr>
+<tr><td><code>internal/services/s3_upload_service.go</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4, calls x2, references x1, method x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. Tests & Fixtures ====== -->
+<h2 id="tests-fixtures">6. Tests &amp; Fixtures</h2>
+<p>Tests &amp; Fixtures groups implementation around integration, testsh, sqltb, script, mostly in integration-test.sh. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tests &amp; Fixtures (5 nodes, 4 edges)
+    integration_test_8b866f38("integration-test.sh")
+    integration_test_sqltb_provider_83ad1f76("SQLTB_PROVIDER<br/><small>integration-test.sh</small>")
+    integration_test_sqltb_database_3222de26("SQLTB_DATABASE<br/><small>integration-test.sh</small>")
+    integration_test_sqltb_verbose_27da6f3d("SQLTB_VERBOSE<br/><small>integration-test.sh</small>")
+    integration_test_sh_entry_2d8a1732("integration-test.sh script<br/><small>integration-test.sh</small>")
+    integration_test_8b866f38 -->|defines| integration_test_sqltb_provider_83ad1f76
+    integration_test_8b866f38 -->|defines| integration_test_sqltb_database_3222de26
+    integration_test_8b866f38 -->|defines| integration_test_sqltb_verbose_27da6f3d
+    integration_test_8b866f38 -->|contains| integration_test_sh_entry_2d8a1732
+    class integration_test_8b866f38 test;
+    class integration_test_sqltb_provider_83ad1f76 test;
+    class integration_test_sqltb_database_3222de26 test;
+    class integration_test_sqltb_verbose_27da6f3d test;
+    class integration_test_sh_entry_2d8a1732 test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>integration-test.sh</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>integration-test.sh script</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>SQLTB_DATABASE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SQLTB_DATABASE node in integration-test.sh.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>SQLTB_PROVIDER</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SQLTB_PROVIDER node in integration-test.sh.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>SQLTB_VERBOSE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SQLTB_VERBOSE node in integration-test.sh.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>integration-test.sh</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: defines x3, contains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. Readmemd Usage Connection ====== -->
+<h2 id="readmemd-usage-connection">7. Readmemd Usage Connection</h2>
+<p>Readmemd Usage Connection groups implementation around readmemd, usage, connection, string, mostly in README.md. This section covers 12 nodes and 11 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Usage Connection (12 nodes, 11 edges)
+    readme_migration_183e9b9e("Migration<br/><small>README.md</small>")
+    readme_usage_dda4020c("Usage<br/><small>README.md</small>")
+    readme_dry_run_mode_84e2e6fe("Dry Run Mode<br/><small>README.md</small>")
+    readme_verbose_output_bbc1f83a("Verbose Output<br/><small>README.md</small>")
+    readme_basic_usage_fcee972e("Basic Usage<br/><small>README.md</small>")
+    readme_using_connection_string_326027ec("Using Connection String<br/><small>README.md</small>")
+    readme_connection_string_formats_df72625c("Connection String Formats<br/><small>README.md</small>")
+    readme_environment_variables_995aef74("Environment Variables<br/><small>README.md</small>")
+    readme_migration_command_line_options_1b8296f6("Migration Command Line Options<br/><small>README.md</small>")
+    readme_sqlite_usage_6d43506a("SQLite Usage<br/><small>README.md</small>")
+    readme_ssh_tunnel_support_afdb9ac3("SSH Tunnel Support<br/><small>README.md</small>")
+    readme_using_yaml_config_b7054b34("Using YAML Config<br/><small>README.md</small>")
+    readme_migration_183e9b9e -->|contains| readme_dry_run_mode_84e2e6fe
+    readme_migration_183e9b9e -->|contains| readme_verbose_output_bbc1f83a
+    readme_migration_183e9b9e -->|contains| readme_basic_usage_fcee972e
+    readme_migration_183e9b9e -->|contains| readme_using_connection_string_326027ec
+    readme_migration_183e9b9e -->|contains| readme_sqlite_usage_6d43506a
+    readme_migration_183e9b9e -->|contains| readme_using_yaml_config_b7054b34
+    readme_migration_183e9b9e -->|contains| readme_connection_string_formats_df72625c
+    readme_migration_183e9b9e -->|contains| readme_ssh_tunnel_support_afdb9ac3
+    readme_usage_dda4020c -->|contains| readme_migration_command_line_options_1b8296f6
+    readme_usage_dda4020c -->|contains| readme_environment_variables_995aef74
+    readme_usage_dda4020c -->|contains| readme_migration_183e9b9e
+    class readme_migration_183e9b9e concept;
+    class readme_usage_dda4020c concept;
+    class readme_dry_run_mode_84e2e6fe concept;
+    class readme_verbose_output_bbc1f83a concept;
+    class readme_basic_usage_fcee972e concept;
+    class readme_using_connection_string_326027ec concept;
+    class readme_connection_string_formats_df72625c concept;
+    class readme_environment_variables_995aef74 concept;
+    class readme_migration_command_line_options_1b8296f6 concept;
+    class readme_sqlite_usage_6d43506a concept;
+    class readme_ssh_tunnel_support_afdb9ac3 concept;
+    class readme_using_yaml_config_b7054b34 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Basic Usage</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Basic Usage.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Connection String Formats</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Connection String Formats.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Dry Run Mode</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Dry Run Mode.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Environment Variables</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Environment Variables.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Migration</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Migration.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Migration Command Line Options</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Migration Command Line Options.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>SQLite Usage</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing SQLite Usage.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>SSH Tunnel Support</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing SSH Tunnel Support.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Usage</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Usage.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Using Connection String</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Using Connection String.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Using YAML Config</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Using YAML Config.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Verbose Output</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Verbose Output.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>12 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x11. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. Readmemd Example Directory ====== -->
+<h2 id="readmemd-example-directory">8. Readmemd Example Directory</h2>
+<p>Readmemd Example Directory groups implementation around readmemd, example, directory, structure, mostly in README.md. This section covers 10 nodes and 9 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Example Directory (10 nodes, 9 edges)
+    readme_sql_toolbox_a2b06bc8("SQL Toolbox<br/><small>README.md</small>")
+    readme_installation_230d4506("Installation<br/><small>README.md</small>")
+    readme_f78a71af("README.md")
+    readme_script_organization_0c6ee783("Script Organization<br/><small>README.md</small>")
+    readme_from_source_616b6067("From Source<br/><small>README.md</small>")
+    readme_using_go_install_6a0be651("Using Go Install<br/><small>README.md</small>")
+    readme_example_directory_structure_311891de("Example Directory Structure<br/><small>README.md</small>")
+    readme_features_e6f786b1("Features<br/><small>README.md</small>")
+    readme_license_edbe4ad9("License<br/><small>README.md</small>")
+    readme_migration_history_68286e14("Migration History<br/><small>README.md</small>")
+    readme_f78a71af -->|contains| readme_sql_toolbox_a2b06bc8
+    readme_installation_230d4506 -->|contains| readme_from_source_616b6067
+    readme_installation_230d4506 -->|contains| readme_using_go_install_6a0be651
+    readme_script_organization_0c6ee783 -->|contains| readme_example_directory_structure_311891de
+    readme_sql_toolbox_a2b06bc8 -->|contains| readme_script_organization_0c6ee783
+    readme_sql_toolbox_a2b06bc8 -->|contains| readme_migration_history_68286e14
+    readme_sql_toolbox_a2b06bc8 -->|contains| readme_installation_230d4506
+    readme_sql_toolbox_a2b06bc8 -->|contains| readme_features_e6f786b1
+    readme_sql_toolbox_a2b06bc8 -->|contains| readme_license_edbe4ad9
+    class readme_sql_toolbox_a2b06bc8 concept;
+    class readme_installation_230d4506 concept;
+    class readme_f78a71af concept;
+    class readme_script_organization_0c6ee783 concept;
+    class readme_from_source_616b6067 concept;
+    class readme_using_go_install_6a0be651 concept;
+    class readme_example_directory_structure_311891de concept;
+    class readme_features_e6f786b1 concept;
+    class readme_license_edbe4ad9 concept;
+    class readme_migration_history_68286e14 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing README.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Example Directory Structure</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Example Directory Structure.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Features</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Features.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>From Source</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing From Source.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Installation</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Installation.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>License</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing License.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Migration History</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Migration History.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Script Organization</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Script Organization.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>SQL Toolbox</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing SQL Toolbox.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Using Go Install</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Using Go Install.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>10 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x9. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 9. Readmemd Backup Subcommand ====== -->
+<h2 id="readmemd-backup-subcommand">9. Readmemd Backup Subcommand</h2>
+<p>Readmemd Backup Subcommand groups implementation around readmemd, backup, subcommand, database, mostly in README.md. This section covers 8 nodes and 7 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Backup Subcommand (8 nodes, 7 edges)
+    readme_multi_database_backup_backup_subcommand_4a4ede90("Multi-Database Backup (backup Subcomm...<br/><small>README.md</small>")
+    readme_quick_start_bb6875fc("Quick Start<br/><small>README.md</small>")
+    readme_backup_subcommand_flags_4aa3bb99("Backup Subcommand Flags<br/><small>README.md</small>")
+    readme_unified_yaml_configuration_6b51ecb8("Unified YAML Configuration<br/><small>README.md</small>")
+    readme_what_gets_dumped_24120317("What Gets Dumped<br/><small>README.md</small>")
+    readme_wildcard_database_backup_41019500("Wildcard Database Backup<br/><small>README.md</small>")
+    readme_backup_output_865c9a92("Backup Output<br/><small>README.md</small>")
+    readme_differences_from_backup_only_flag_90399f9b("Differences from --backup-only Flag<br/><small>README.md</small>")
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_quick_start_bb6875fc
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_backup_subcommand_flags_4aa3bb99
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_unified_yaml_configuration_6b51ecb8
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_what_gets_dumped_24120317
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_wildcard_database_backup_41019500
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_backup_output_865c9a92
+    readme_multi_database_backup_backup_subcommand_4a4ede90 -->|contains| readme_differences_from_backup_only_flag_90399f9b
+    class readme_multi_database_backup_backup_subcommand_4a4ede90 concept;
+    class readme_quick_start_bb6875fc concept;
+    class readme_backup_subcommand_flags_4aa3bb99 concept;
+    class readme_unified_yaml_configuration_6b51ecb8 concept;
+    class readme_what_gets_dumped_24120317 concept;
+    class readme_wildcard_database_backup_41019500 concept;
+    class readme_backup_output_865c9a92 concept;
+    class readme_differences_from_backup_only_flag_90399f9b concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Backup Output</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Backup Output.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Backup Subcommand Flags</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Backup Subcommand Flags.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Differences from `--backup-only` Flag</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Differences from `--backup-only` Flag.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Multi-Database Backup (`backup` Subcommand)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Multi-Database Backup (`backup` Subcommand).</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Quick Start</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Quick Start.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Unified YAML Configuration</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Unified YAML Configuration.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>What Gets Dumped</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing What Gets Dumped.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Wildcard Database Backup</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Wildcard Database Backup.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 10. Readmemd Backup Restore ====== -->
+<h2 id="readmemd-backup-restore">10. Readmemd Backup Restore</h2>
+<p>Readmemd Backup Restore groups implementation around readmemd, backup, restore, only, mostly in README.md. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Backup Restore (5 nodes, 4 edges)
+    readme_backup_and_restore_dda22c05("Backup and Restore<br/><small>README.md</small>")
+    readme_backup_ecc27387("Backup<br/><small>README.md</small>")
+    readme_backup_only_fc6467bc("Backup Only<br/><small>README.md</small>")
+    readme_restore_fcc0eb1b("Restore<br/><small>README.md</small>")
+    readme_dry_run_mode_312_9c430a30("Dry-run Mode<br/><small>README.md</small>")
+    readme_backup_and_restore_dda22c05 -->|contains| readme_backup_ecc27387
+    readme_backup_and_restore_dda22c05 -->|contains| readme_backup_only_fc6467bc
+    readme_backup_and_restore_dda22c05 -->|contains| readme_restore_fcc0eb1b
+    readme_backup_and_restore_dda22c05 -->|contains| readme_dry_run_mode_312_9c430a30
+    class readme_backup_and_restore_dda22c05 concept;
+    class readme_backup_ecc27387 concept;
+    class readme_backup_only_fc6467bc concept;
+    class readme_restore_fcc0eb1b concept;
+    class readme_dry_run_mode_312_9c430a30 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Backup</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Backup.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Backup and Restore</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Backup and Restore.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Backup Only</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Backup Only.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Dry-run Mode</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Dry-run Mode.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Restore</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Restore.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 11. Readmemd Example Environment ====== -->
+<h2 id="readmemd-example-environment">11. Readmemd Example Environment</h2>
+<p>Readmemd Example Environment groups implementation around readmemd, example, environment, variables, mostly in README.md. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Example Environment (5 nodes, 4 edges)
+    readme_examples_669c9291("Examples<br/><small>README.md</small>")
+    readme_postgresql_example_c900ca98("PostgreSQL Example<br/><small>README.md</small>")
+    readme_sqlite_example_a1c78b76("SQLite Example<br/><small>README.md</small>")
+    readme_using_environment_variables_bc3b04f5("Using Environment Variables<br/><small>README.md</small>")
+    readme_set_environment_variables_from_env_file_4cc0274f("Set environment variables from .env file<br/><small>README.md</small>")
+    readme_examples_669c9291 -->|contains| readme_postgresql_example_c900ca98
+    readme_examples_669c9291 -->|contains| readme_sqlite_example_a1c78b76
+    readme_examples_669c9291 -->|contains| readme_using_environment_variables_bc3b04f5
+    readme_examples_669c9291 -->|contains| readme_set_environment_variables_from_env_file_4cc0274f
+    class readme_examples_669c9291 concept;
+    class readme_postgresql_example_c900ca98 concept;
+    class readme_sqlite_example_a1c78b76 concept;
+    class readme_using_environment_variables_bc3b04f5 concept;
+    class readme_set_environment_variables_from_env_file_4cc0274f concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Examples</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Examples.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>PostgreSQL Example</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing PostgreSQL Example.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Set environment variables from .env file</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Set environment variables from .env file.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>SQLite Example</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing SQLite Example.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Using Environment Variables</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Using Environment Variables.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 12. Readmemd New Important ====== -->
+<h2 id="readmemd-new-important">12. Readmemd New Important</h2>
+<p>Readmemd New Important groups implementation around readmemd, new, important, notes, mostly in README.md. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd New Important (5 nodes, 4 edges)
+    readme_publishing_a_new_version_6428fd1c("Publishing a New Version<br/><small>README.md</small>")
+    readme_steps_to_publish_d6fb43a1("Steps to Publish<br/><small>README.md</small>")
+    readme_installing_specific_versions_c6dd4890("Installing Specific Versions<br/><small>README.md</small>")
+    readme_updating_after_a_new_release_90a9b7bb("Updating After a New Release<br/><small>README.md</small>")
+    readme_important_notes_c6c72605("Important Notes<br/><small>README.md</small>")
+    readme_publishing_a_new_version_6428fd1c -->|contains| readme_steps_to_publish_d6fb43a1
+    readme_publishing_a_new_version_6428fd1c -->|contains| readme_installing_specific_versions_c6dd4890
+    readme_publishing_a_new_version_6428fd1c -->|contains| readme_updating_after_a_new_release_90a9b7bb
+    readme_publishing_a_new_version_6428fd1c -->|contains| readme_important_notes_c6c72605
+    class readme_publishing_a_new_version_6428fd1c concept;
+    class readme_steps_to_publish_d6fb43a1 concept;
+    class readme_installing_specific_versions_c6dd4890 concept;
+    class readme_updating_after_a_new_release_90a9b7bb concept;
+    class readme_important_notes_c6c72605 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Important Notes</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Important Notes.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Installing Specific Versions</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Installing Specific Versions.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Publishing a New Version</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Publishing a New Version.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Steps to Publish</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Steps to Publish.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Updating After a New Release</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Updating After a New Release.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 13. Readmemd Backupdatabases Backupdefaults ====== -->
+<h2 id="readmemd-backupdatabases-backupdefaults">13. Readmemd Backupdatabases Backupdefaults</h2>
+<p>Readmemd Backupdatabases Backupdefaults groups implementation around readmemd, backupdatabases, backupdefaults, backups3, mostly in README.md. This section covers 4 nodes and 3 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Readmemd Backupdatabases Backupdefaults (4 nodes, 3 edges)
+    readme_configuration_reference_d46b48f7("Configuration Reference<br/><small>README.md</small>")
+    readme_backup_defaults_3b41bc4a("backup.defaults<br/><small>README.md</small>")
+    readme_backup_databases_a82ce10d("backup.databases[]<br/><small>README.md</small>")
+    readme_backup_s3_7d4717da("backup.s3<br/><small>README.md</small>")
+    readme_configuration_reference_d46b48f7 -->|contains| readme_backup_defaults_3b41bc4a
+    readme_configuration_reference_d46b48f7 -->|contains| readme_backup_databases_a82ce10d
+    readme_configuration_reference_d46b48f7 -->|contains| readme_backup_s3_7d4717da
+    class readme_configuration_reference_d46b48f7 concept;
+    class readme_backup_defaults_3b41bc4a concept;
+    class readme_backup_databases_a82ce10d concept;
+    class readme_backup_s3_7d4717da concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>`backup.databases[]`</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing `backup.databases[]`.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>`backup.defaults`</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing `backup.defaults`.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>`backup.s3`</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing `backup.s3`.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Configuration Reference</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Configuration Reference.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>4 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 14. Agentsmd Agents Sql ====== -->
+<h2 id="agentsmd-agents-sql">14. Agentsmd Agents Sql</h2>
+<p>Agentsmd Agents Sql groups implementation around agentsmd, agents, sql, toolbox, mostly in AGENTS.md. This section covers 3 nodes and 2 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Agentsmd Agents Sql (3 nodes, 2 edges)
+    agents_e7052aeb("AGENTS.md")
+    agents_agents_sql_toolbox_66a5cb60("AGENTS: sql-toolbox<br/><small>AGENTS.md</small>")
+    agents_graphify_933e8fd9("graphify<br/><small>AGENTS.md</small>")
+    agents_e7052aeb -->|contains| agents_agents_sql_toolbox_66a5cb60
+    agents_agents_sql_toolbox_66a5cb60 -->|contains| agents_graphify_933e8fd9
+    class agents_e7052aeb concept;
+    class agents_agents_sql_toolbox_66a5cb60 concept;
+    class agents_graphify_933e8fd9 concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>AGENTS.md</code><br><small style="color:var(--muted)">AGENTS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing AGENTS.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>AGENTS: sql-toolbox</code><br><small style="color:var(--muted)">AGENTS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing AGENTS: sql-toolbox.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>graphify</code><br><small style="color:var(--muted)">AGENTS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing graphify.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>AGENTS.md</code></td><td>3 nodes</td></tr>
     </table>
   </div>
   <div class="card">
@@ -561,61 +1915,19 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 4. Tests & Fixtures ====== -->
-<h2 id="tests-fixtures">4. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around sql, toolbox, readmemd, 001, mostly in sql-toolbox/README.md, integration-test.sh, backup_worker.sh. This section covers 38 nodes and 64 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<!-- ====== 15. Backup Workersh Script ====== -->
+<h2 id="backup-workersh-script">15. Backup Workersh Script</h2>
+<p>Backup Workersh Script groups implementation around backup, workersh, script, mostly in backup_worker.sh. This section covers 2 nodes and 1 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (38 nodes, 64 edges)
-    subgraph tests_fixtures_sql_toolbox_README_md_f35e3a78["sql-toolbox/README.md"]
-        sql_toolbox_backup_subcommand_5facb83f("backup subcommand<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_migration_subcommand_3dfdd5e2("migration subcommand<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_connection_string_formats_a974742b("Connection String Formats (lib/pq, .NET...<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_dry_run_588a737e("Dry-Run Mode<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_env_vars_21031868("Environment Variable Support (SQLTB_ pr...<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_pg_dump_binary_3ddace5d("External pg_dump Binary Support<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_migration_history_c316f659("Migration History Tracking (__migration...<br/><small>sql-toolbox/README.md</small>")
-        sql_toolbox_gzip_compression_863b13ba("Optional Gzip Compression for Backups<br/><small>sql-toolbox/README.md</small>")
-    end
-    subgraph tests_fixtures_integration_test_sh_f1d77fe6["integration-test.sh"]
-        integration_test_sh_b781b67d("integration-test.sh")
-        sql_toolbox_integration_test_sqltb_database_1658d566("SQLTB_DATABASE<br/><small>integration-test.sh</small>")
-        sql_toolbox_integration_test_sqltb_provider_29fa689d("SQLTB_PROVIDER<br/><small>integration-test.sh</small>")
-        sql_toolbox_integration_test_sqltb_verbose_52c8df83("SQLTB_VERBOSE<br/><small>integration-test.sh</small>")
-        home_georg_projects_adeotek_tools_sql_toolbox_in_30bf385a("integration-test.sh script<br/><small>integration-test.sh</small>")
-    end
-    subgraph tests_fixtures_backup_worker_sh_571920ae["backup_worker.sh"]
-        backup_worker_sh_9d6f002c("backup_worker.sh")
-        home_georg_projects_adeotek_tools_sql_toolbox_ba_aea36afb("backup_worker.sh script<br/><small>backup_worker.sh</small>")
-    end
-    subgraph tests_fixtures_build_sh_8a3c86f9["build.sh"]
-        build_sh_6766f3b5("build.sh")
-        home_georg_projects_adeotek_tools_sql_toolbox_bu_468fbd77("build.sh script<br/><small>build.sh</small>")
-    end
-    level3_001_deeply_nested_be0d054a("001_deeply_nested.sql - Deeply nested d...<br/><small>level2/level3/001_deeply_nested.sql</small>")
-    backup_worker_sh_9d6f002c -->|calls| sql_toolbox_backup_subcommand_5facb83f
-    integration_test_sh_b781b67d -->|calls| sql_toolbox_migration_subcommand_3dfdd5e2
-    %% Omitted for readability: 20 nodes, 0 edges
-    class sql_toolbox_backup_subcommand_5facb83f entry;
-    class sql_toolbox_migration_subcommand_3dfdd5e2 entry;
-    class sql_toolbox_connection_string_formats_a974742b klass;
-    class sql_toolbox_dry_run_588a737e klass;
-    class sql_toolbox_env_vars_21031868 klass;
-    class sql_toolbox_pg_dump_binary_3ddace5d klass;
-    class sql_toolbox_migration_history_c316f659 klass;
-    class sql_toolbox_gzip_compression_863b13ba klass;
-    class integration_test_sh_b781b67d test;
-    class sql_toolbox_integration_test_sqltb_database_1658d566 test;
-    class sql_toolbox_integration_test_sqltb_provider_29fa689d test;
-    class sql_toolbox_integration_test_sqltb_verbose_52c8df83 test;
-    class home_georg_projects_adeotek_tools_sql_toolbox_in_30bf385a test;
-    class backup_worker_sh_9d6f002c function;
-    class home_georg_projects_adeotek_tools_sql_toolbox_ba_aea36afb function;
-    class build_sh_6766f3b5 function;
-    class home_georg_projects_adeotek_tools_sql_toolbox_bu_468fbd77 function;
-    class level3_001_deeply_nested_be0d054a test;
+    %% Section: Backup Workersh Script (2 nodes, 1 edges)
+    backup_worker_6fd72ca2("backup_worker.sh")
+    backup_worker_sh_entry_00e14833("backup_worker.sh script<br/><small>backup_worker.sh</small>")
+    backup_worker_6fd72ca2 -->|contains| backup_worker_sh_entry_00e14833
+    class backup_worker_6fd72ca2 function;
+    class backup_worker_sh_entry_00e14833 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -642,7 +1954,7 @@ flowchart LR
   <td><code>backup_worker.sh</code><br><small style="color:var(--muted)">backup_worker.sh</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>backup subcommand</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
+  <td>No direct outbound edge</td>
   <td>backup_worker.sh node in backup_worker.sh.</td>
 </tr>
 <tr>
@@ -653,229 +1965,61 @@ flowchart LR
   <td>No direct outbound edge</td>
   <td>backup_worker.sh script node in backup_worker.sh.</td>
 </tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>backup_worker.sh</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 16. Other ====== -->
+<h2 id="other">16. Other</h2>
+<p>Other groups implementation around adeotek, githubcom, tools, sql, mostly in go.mod. This section covers 1 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Other (1 nodes, 0 edges)
+    pkg_github_com_adeotek_adeotek_tools_sql_toolbox_0af56c20("github.com/adeotek/adeotek-tools/sql-to...<br/><small>go.mod</small>")
+    class pkg_github_com_adeotek_adeotek_tools_sql_toolbox_0af56c20 module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
 <tr>
-  <td>3</td>
-  <td><code>build.sh</code><br><small style="color:var(--muted)">build.sh</small></td>
-  <td><span class="tag tag-func">Function</span></td>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>github.com/adeotek/adeotek-tools/sql-toolbox</code><br><small style="color:var(--muted)">go.mod</small></td>
+  <td><span class="tag tag-class">Module</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>build.sh node in build.sh.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>build.sh script</code><br><small style="color:var(--muted)">build.sh</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>build.sh script node in build.sh.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>integration-test.sh</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>migration subcommand</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>integration-test.sh script</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>SQLTB_PROVIDER</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>SQLTB_PROVIDER node in integration-test.sh.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>SQLTB_DATABASE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>SQLTB_DATABASE node in integration-test.sh.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>SQLTB_VERBOSE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>SQLTB_VERBOSE node in integration-test.sh.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>SQL Toolbox README</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Documentation node describing SQL Toolbox README.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>SQL Toolbox CLAUDE.md</code><br><small style="color:var(--muted)">sql-toolbox/CLAUDE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Documentation node describing SQL Toolbox CLAUDE.md.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>migration subcommand</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-cmd">Entry</span></td>
-  <td><code>integration-test.sh</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
-  <td>No direct outbound edge</td>
-  <td>migration subcommand node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>backup subcommand</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-cmd">Entry</span></td>
-  <td><code>backup_worker.sh</code><br><small style="color:var(--muted)">backup_worker.sh</small></td>
-  <td>No direct outbound edge</td>
-  <td>backup subcommand node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>14</td>
-  <td><code>SSH Tunnel Support</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>SSH Tunnel Support node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>Connection String Formats (lib/pq, .NET, PostgreSQL URL)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Connection String Formats (lib/pq, .NET, PostgreSQL URL) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>16</td>
-  <td><code>Migration History Tracking (__migrations_history table)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Migration History Tracking (__migrations_history table) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>SHA256 Hash Verification for Script Changes</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Caches analysis results or computes cache keys.</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>Wildcard Database Backup (database: *)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Wildcard Database Backup (database: *) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>S3 Upload Support (AWS S3, MinIO, RustFS)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>S3 Upload Support (AWS S3, MinIO, RustFS) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>Per-Database S3 Overrides</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Per-Database S3 Overrides node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>Pure Go PostgreSQL Dump (no pg_dump binary)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Pure Go PostgreSQL Dump (no pg_dump binary) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>External pg_dump Binary Support</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>External pg_dump Binary Support node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>Dry-Run Mode</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Dry-Run Mode node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>Unified YAML Configuration (migration + backup sections)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>Ordered Script Execution (alphabetical + recursive subdirs)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Ordered Script Execution (alphabetical + recursive subdirs) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>Environment Variable Support (SQLTB_ prefix)</code><br><small style="color:var(--muted)">sql-toolbox/README.md</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Environment Variable Support (SQLTB_ prefix) node in sql-toolbox/README.md.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>001_create_users.sql - Create users table</code><br><small style="color:var(--muted)">test-scripts/tables/001_create_users.sql</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>001_create_users.sql - Create users table node in test-scripts/tables/001_create_users.sql.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>002_create_posts.sql - Create posts table</code><br><small style="color:var(--muted)">test-scripts/tables/002_create_posts.sql</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>002_create_posts.sql - Create posts table node in test-scripts/tables/002_create_posts.sql.</td>
-</tr>
-<tr>
-  <td>29</td>
-  <td><code>001_user_posts_view.sql - user_posts view joining users and posts</code><br><small style="color:var(--muted)">test-scripts/views/001_user_posts_view.sql</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>001_user_posts_view.sql - user_posts view joining users and posts node in test-scripts/views/001_user_posts_view.sql.</td>
-</tr>
-<tr>
-  <td>30</td>
-  <td><code>001_seed_users.sql - Seed users data</code><br><small style="color:var(--muted)">test-scripts/data/001_seed_users.sql</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>001_seed_users.sql - Seed users data node in test-scripts/data/001_seed_users.sql.</td>
+  <td>Turns a local path or remote repository into analysis context.</td>
 </tr>
 </table>
 
@@ -884,85 +2028,34 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>sql-toolbox/README.md</code></td><td>19 nodes</td></tr>
-<tr><td><code>integration-test.sh</code></td><td>5 nodes</td></tr>
-<tr><td><code>backup_worker.sh</code></td><td>2 nodes</td></tr>
-<tr><td><code>build.sh</code></td><td>2 nodes</td></tr>
-<tr><td><code>test-scripts/stored_procedures/001_complex_procedure.sql</code></td><td>2 nodes</td></tr>
-<tr><td><code>sql-toolbox/CLAUDE.md</code></td><td>1 nodes</td></tr>
-<tr><td><code>sql-toolbox/test-scripts/complex_dollar_test.sql</code></td><td>1 nodes</td></tr>
-<tr><td><code>test-scripts/data/001_seed_users.sql</code></td><td>1 nodes</td></tr>
+      <tr><td><code>go.mod</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x53, contains x3, defines x3, calls x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: No high-confidence call edges detected. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
-<h2 id="hyperedges">Group Relationships (Hyperedges)</h2>
-<div class="grid">
-
-  <div class="card">
-    <h4>Test Script Execution Order (tables → views → stored_procedures → data)</h4>
-    <p><code>participate_in</code> — 6 participants</p>
-    <ul>
-      <li><code>test_scripts_tables_001_create_users</code></li>
-      <li><code>test_scripts_tables_002_create_posts</code></li>
-      <li><code>test_scripts_views_001_user_posts_view</code></li>
-      <li><code>test_scripts_stored_procedures_001_complex_procedure</code></li>
-      <li><code>test_scripts_data_001_seed_users</code></li>
-      <li>... and 1 more</li>
-    </ul>
-  </div>
-  <div class="card">
-    <h4>Dual Backup Methods: Pure Go vs pg_dump</h4>
-    <p><code>implement</code> — 3 participants</p>
-    <ul>
-      <li><code>sql_toolbox_pure_go_dump</code></li>
-      <li><code>sql_toolbox_pg_dump_binary</code></li>
-      <li><code>sql_toolbox_backup_subcommand</code></li>
-    </ul>
-  </div>
-  <div class="card">
-    <h4>S3-Compatible Storage Backends (AWS S3, MinIO, RustFS)</h4>
-    <p><code>participate_in</code> — 3 participants</p>
-    <ul>
-      <li><code>sql_toolbox_s3_upload</code></li>
-      <li><code>sql_toolbox_s3_per_db_overrides</code></li>
-      <li><code>sql_toolbox_backup_subcommand</code></li>
-    </ul>
-  </div>
-  <div class="card">
-    <h4>Dollar-Quoting Edge Case Test Coverage</h4>
-    <p><code>implement</code> — 3 participants</p>
-    <ul>
-      <li><code>test_scripts_stored_procedures_001_complex_procedure</code></li>
-      <li><code>test_scripts_complex_dollar_test</code></li>
-      <li><code>sql_toolbox_dollar_quoting</code></li>
-    </ul>
-  </div>
-</div>
-<hr>
 <h2 id="stats">Project Statistics</h2>
 
 <div class="grid">
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>308</td></tr>
-      <tr><td>Edges</td><td>468</td></tr>
-      <tr><td>Hyperedges</td><td>4</td></tr>
-      <tr><td>Communities</td><td>19</td></tr>
-      <tr><td>Documented Sections</td><td>3</td></tr>
+      <tr><td>Nodes</td><td>408</td></tr>
+      <tr><td>Edges</td><td>1095</td></tr>
+      <tr><td>Hyperedges</td><td>0</td></tr>
+      <tr><td>Communities</td><td>23</td></tr>
+      <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>351</td></tr>
-      <tr><td>INFERRED</td><td>117</td></tr>
+      <tr><td>EXTRACTED</td><td>944</td></tr>
+      <tr><td>INFERRED</td><td>151</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
   </div>
@@ -970,7 +2063,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>sql-toolbox — Architecture Documentation</p>
-  <p>Generated: 2026-05-26 18:12 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-10-22 17:15 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

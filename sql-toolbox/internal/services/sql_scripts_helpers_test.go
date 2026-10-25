@@ -229,10 +229,10 @@ func TestSqlScriptsHelpers_ScanForSqlFiles_NestedDirectories(t *testing.T) {
 	// 2. Subdirectories in alphabetical order (01_tables, 02_views, 03_stored_procedures, 04_data)
 	//    For each: files directly under it first, then subdirectories recursively
 	expected := []string{
-		"01_tables/001_create_users.sql",              // 01_tables/ files first
+		"01_tables/001_create_users.sql", // 01_tables/ files first
 		"01_tables/002_create_posts.sql",
-		"01_tables/01_audit/002_create_audit.sql",     // then 01_tables/01_audit
-		"01_tables/02_custom/001_create_custom1.sql",  // then 01_tables/02_custom
+		"01_tables/01_audit/002_create_audit.sql",    // then 01_tables/01_audit
+		"01_tables/02_custom/001_create_custom1.sql", // then 01_tables/02_custom
 		"01_tables/02_custom/002_create_custom2.sql",
 		"02_views/001_user_posts_view.sql",            // 02_views/ files
 		"03_stored_procedures/001_get_user_posts.sql", // 03_stored_procedures/ files

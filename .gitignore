@@ -18,6 +18,7 @@ test-backup-config.yml
 **/.playwright-cli/
 **/.worktree/
 **/docs/superpowers/
+.moca/config.jsonc.lock
 
 # graphify
 **/graphify-out/*

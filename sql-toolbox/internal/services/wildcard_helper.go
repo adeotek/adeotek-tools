@@ -18,7 +18,7 @@ func ExpandWildcardDatabasesWithTunnel(template models.DatabaseTarget, verbose b
 	sshConfig := template.GetEffectiveSSHTunnel()
 	if sshConfig != nil && sshConfig.Enabled {
 		var err error
-		sshTunnel, err = tunnel.EstablishIfNeeded(sshConfig, template.Host, template.Port)
+		sshTunnel, err = tunnel.EstablishIfNeeded(sshConfig, template.Host, template.GetEffectivePort())
 		if err != nil {
 			return nil, fmt.Errorf("failed to establish SSH tunnel for wildcard expansion: %w", err)
 		}
