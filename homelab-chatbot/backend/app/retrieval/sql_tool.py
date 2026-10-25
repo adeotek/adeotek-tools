@@ -1,15 +1,22 @@
 """Read-only SQL tool over kb.db (Excel-sourced tables)."""
 
+from __future__ import annotations
+
 import re
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from llama_index.core.llms import LLM
+    from llama_index.core.tools import FunctionTool
 
 
 @dataclass
 class QueryResult:
     sql: str
-    rows: list[dict]
+    rows: list[dict[str, Any]]
 
 
 class SQLTool:
@@ -49,7 +56,7 @@ class SQLTool:
 
     _SYSTEM_TABLES = frozenset({"_kb_meta", "upload_log"})
 
-    def table_stats(self) -> list[dict]:
+    def table_stats(self) -> list[dict[str, Any]]:
         """Return [{table, rows}] for every user inventory table in kb.db."""
         if not self._db_path.exists():
             return []
@@ -94,11 +101,11 @@ class SQLTool:
                         lines.append(f"    {dict(row)}")
             return "\n".join(lines)
 
-    def as_llama_tool(self, llm):
+    def as_llama_tool(self, llm: LLM) -> FunctionTool:
         """Return a LlamaIndex FunctionTool that uses `llm` to generate SQL."""
         from llama_index.core.tools import FunctionTool
 
-        async def _run(question: str) -> dict:
+        async def _run(question: str) -> dict[str, Any]:
             """Answer an inventory question by generating and executing a SELECT."""
             schema = self.schema_summary()
             if not schema:

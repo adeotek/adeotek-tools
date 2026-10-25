@@ -42,6 +42,8 @@ class IngestionOrchestrator:
         repo_path = self._git.repo_path(repo_cfg)
         for cf in result.matched_files:
             try:
+                if cf.old_path and cf.old_path.endswith(".md"):
+                    self.vector_store.delete_by_file(repo_cfg.name, cf.old_path)
                 self._apply_file(repo_cfg, repo_path, cf, result.new_sha)
             except Exception:
                 logger.exception("failed to process %s in %s", cf.path, repo_cfg.name)

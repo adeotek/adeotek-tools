@@ -1,7 +1,14 @@
 """Vector-search tool exposed to the LLM agent."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from app.ingestion.embed import Embedder
 from app.storage.lance import SearchHit, VectorStore
+
+if TYPE_CHECKING:
+    from llama_index.core.tools import FunctionTool
 
 
 class VectorSearchTool:
@@ -18,9 +25,9 @@ class VectorSearchTool:
         self._store = store
         self._embedder = embedder
         self._default_top_k = top_k
-        self._pending_sources: list[dict] = []
+        self._pending_sources: list[dict[str, Any]] = []
 
-    def pop_sources(self) -> list[dict]:
+    def pop_sources(self) -> list[dict[str, Any]]:
         """Return sources collected since the last call and clear the buffer."""
         sources, self._pending_sources = self._pending_sources, []
         return sources
@@ -38,11 +45,11 @@ class VectorSearchTool:
             repo=repo,
         )
 
-    def as_llama_tool(self):
+    def as_llama_tool(self) -> FunctionTool:
         """Return a LlamaIndex FunctionTool wrapping this tool."""
         from llama_index.core.tools import FunctionTool
 
-        def _run(query: str, repo: str | None = None) -> list[dict]:
+        def _run(query: str, repo: str | None = None) -> list[dict[str, Any]]:
             """Search the home lab documentation for information."""
             hits = self.search(query, repo=repo)
             self._pending_sources.extend(

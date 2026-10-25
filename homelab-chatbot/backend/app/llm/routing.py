@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from app.config import AppConfig
 
 
@@ -19,9 +21,9 @@ def get_available_tools(
     provider: str,
     model: str,
     config: AppConfig,
-    vector_tool,
-    sql_tool,
-) -> list:
+    vector_tool: Any,
+    sql_tool: Any,
+) -> list[Any]:
     """Return the list of LlamaIndex tools appropriate for this provider+model."""
     if supports_tools(provider, model, config):
         return [vector_tool, sql_tool]

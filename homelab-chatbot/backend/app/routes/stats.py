@@ -2,6 +2,7 @@
 
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -64,7 +65,7 @@ async def get_stats(request: Request) -> StatsOut:
     vector_tool: VectorSearchTool = request.app.state.vector_tool
     sql_tool: SQLTool = request.app.state.sql_tool
     chat_db: ChatDB = request.app.state.chat_db
-    sync_state: dict = getattr(request.app.state, "sync_state", {})
+    sync_state: dict[str, Any] = getattr(request.app.state, "sync_state", {})
 
     by_repo = vector_tool._store.stats_by_repo()
     total_chunks = sum(v["chunks"] for v in by_repo.values())
@@ -103,7 +104,7 @@ async def get_stats(request: Request) -> StatsOut:
 
 
 def _do_sync(
-    sync_state: dict,
+    sync_state: dict[str, Any],
     orchestrator: IngestionOrchestrator,
     repos: list[RepoConfig],
 ) -> None:
@@ -118,8 +119,10 @@ def _do_sync(
 
 
 @router.post("/sync", status_code=202)
-async def trigger_sync(request: Request, background_tasks: BackgroundTasks) -> dict:
-    sync_state: dict = getattr(request.app.state, "sync_state", {})
+async def trigger_sync(
+    request: Request, background_tasks: BackgroundTasks
+) -> dict[str, bool]:
+    sync_state: dict[str, Any] = getattr(request.app.state, "sync_state", {})
     if sync_state.get("is_syncing"):
         raise HTTPException(status_code=409, detail="sync already in progress")
 

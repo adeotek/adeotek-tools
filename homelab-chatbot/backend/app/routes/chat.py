@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -67,7 +68,7 @@ async def chat(body: ChatRequest, request: Request) -> StreamingResponse:
 
     async def _event_stream() -> AsyncIterator[bytes]:
         buffer: list[str] = []
-        tool_events: list[dict] = []
+        tool_events: list[dict[str, Any]] = []
         yield format_sse(AgentEvent("conversation", {"id": conv.id}))
         try:
             async for event in run_agent(
