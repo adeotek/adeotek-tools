@@ -17,7 +17,7 @@ import (
 
 // Version information
 const (
-	Version = "0.2.1"
+	Version = "0.3.0"
 )
 
 // Run executes the main application logic and returns the process exit code.
