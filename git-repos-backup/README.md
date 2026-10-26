@@ -187,9 +187,9 @@ Flags:
   -skip-ssl
         Whether to skip SSL validation
   -include string
-        Comma-separated list of repository full names to include
+        Comma-separated list of repository full names to include (supports `*` wildcards, e.g. owner/*)
   -exclude string
-        Comma-separated list of repository full names to exclude
+        Comma-separated list of repository full names to exclude (supports `*` wildcards, e.g. owner/*)
   -target-dir string
         Directory to clone repositories into
   -help
@@ -227,7 +227,7 @@ Flags:
 
 5. With repository filtering:
    ```bash
-   ./git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups -include "owner/repo1,owner/repo2" -verbose
+   ./git-repos-backup -provider github -token your_github_token -target-dir /path/to/backups -include "owner/repo1,owner/prefix-*" -verbose
    ```
 
 ## Configuration
@@ -300,8 +300,13 @@ Authentication options:
 
 Additional options:
 - `skip_ssl_validation`: Set to `true` to skip SSL certificate validation (useful for self-signed certificates)
-- `include`: List of repository full names to include (optional)
-- `exclude`: List of repository full names to exclude (optional, ignored if include is specified)
+- `include`: List of repository full names to include (optional, supports `*` wildcards such as `owner/*` or `owner/prefix-*`)
+- `exclude`: List of repository full names to exclude (optional, supports `*` wildcards, ignored if include is specified)
+
+A `*` in an include/exclude entry matches any sequence of characters except the
+`/` separator, so `owner/*` matches every repository of `owner`, while
+`owner/prefix-*` matches only names starting with `prefix-`. Entries without a
+wildcard must match the repository full name exactly.
 
 ## Repository Structure
 

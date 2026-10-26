@@ -111,3 +111,98 @@ func TestFilterRepositories(t *testing.T) {
 	}
 	FilterRepositories(testRepos, provider, true)
 }
+
+func TestFilterRepositoriesWildcards(t *testing.T) {
+	testRepos := []repository.Repository{
+		{Id: 1, Login: "owner1", Name: "repo1", FullName: "owner1/repo1"},
+		{Id: 2, Login: "owner1", Name: "repo2", FullName: "owner1/repo2"},
+		{Id: 3, Login: "owner1", Name: "prefix-one", FullName: "owner1/prefix-one"},
+		{Id: 4, Login: "owner1", Name: "prefix-two", FullName: "owner1/prefix-two"},
+		{Id: 5, Login: "owner2", Name: "repo3", FullName: "owner2/repo3"},
+		{Id: 6, Login: "owner2", Name: "prefix-three", FullName: "owner2/prefix-three"},
+	}
+
+	tests := []struct {
+		name        string
+		include     []string
+		exclude     []string
+		expectedIDs []int
+	}{
+		{
+			name:        "Include owner wildcard",
+			include:     []string{"owner1/*"},
+			expectedIDs: []int{1, 2, 3, 4},
+		},
+		{
+			name:        "Include prefix wildcard",
+			include:     []string{"owner1/prefix-*"},
+			expectedIDs: []int{3, 4},
+		},
+		{
+			name:        "Include wildcard in owner segment",
+			include:     []string{"owner*/repo1"},
+			expectedIDs: []int{1},
+		},
+		{
+			name:        "Include wildcard combined with exact match",
+			include:     []string{"owner2/repo3", "owner1/prefix-*"},
+			expectedIDs: []int{3, 4, 5},
+		},
+		{
+			name:        "Include wildcard matching nothing",
+			include:     []string{"owner3/*"},
+			expectedIDs: []int{},
+		},
+		{
+			name:        "Exclude owner wildcard",
+			exclude:     []string{"owner1/*"},
+			expectedIDs: []int{5, 6},
+		},
+		{
+			name:        "Exclude prefix wildcard",
+			exclude:     []string{"owner*/prefix-*"},
+			expectedIDs: []int{1, 2, 5},
+		},
+		{
+			name:        "Exclude wildcard combined with exact match",
+			exclude:     []string{"owner1/repo2", "owner2/prefix-*"},
+			expectedIDs: []int{1, 3, 4, 5},
+		},
+		{
+			name:        "Wildcard does not cross path separator",
+			include:     []string{"*"},
+			expectedIDs: []int{},
+		},
+		{
+			name:        "Include takes precedence over wildcard exclude",
+			include:     []string{"owner1/*"},
+			exclude:     []string{"owner1/prefix-*"},
+			expectedIDs: []int{1, 2, 3, 4},
+		},
+		{
+			name:        "Invalid pattern is treated literally",
+			include:     []string{"owner1/["},
+			expectedIDs: []int{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			provider := &config.ProviderConfig{
+				Include: tt.include,
+				Exclude: tt.exclude,
+			}
+
+			filtered := FilterRepositories(testRepos, provider, false)
+
+			filteredIDs := make([]int, 0, len(filtered))
+			for _, repo := range filtered {
+				filteredIDs = append(filteredIDs, repo.Id)
+			}
+
+			if !reflect.DeepEqual(filteredIDs, tt.expectedIDs) {
+				t.Errorf("FilterRepositories() got = %v, want %v", filteredIDs, tt.expectedIDs)
+			}
+		})
+	}
+}

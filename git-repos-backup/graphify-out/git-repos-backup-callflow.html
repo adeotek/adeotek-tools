@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>git-repos-backup — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 156 nodes, 411 edges, 11 communities. Commit: ee3d85f</p>
+<p class="subtitle">Generated from graphify knowledge graph: 160 nodes, 419 edges, 11 communities. Commit: 5dabe00</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -79,11 +79,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>95 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>98 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
     CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>32 nodes</small>")
     class CLI_SKILLS_9964CBB8 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>23 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>24 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     AGENTSMD_AGENTS_GIT_A3EED7AA("Agentsmd Agents Git<br/><small>3 nodes</small>")
     class AGENTSMD_AGENTS_GIT_A3EED7AA module;
@@ -91,8 +91,8 @@ flowchart LR
     class BACKUP_WORKERSH_SCRIPT_CABC4A48 module;
     ADEOTEK_GITHUBCOM_TOOLS_33C83CBC("Adeotek Githubcom Tools<br/><small>1 nodes</small>")
     class ADEOTEK_GITHUBCOM_TOOLS_33C83CBC module;
-    EXTRACT_PIPELINE_5F350230 -->|references x48| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|references x9| EXTRACT_PIPELINE_5F350230
+    EXTRACT_PIPELINE_5F350230 -->|references x49| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|calls x11| EXTRACT_PIPELINE_5F350230
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -109,7 +109,7 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>95</td><td><code>1, 4, 2, 5, 6</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>32</td><td><code>0, 7</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>23</td><td><code>3</code></td></tr><tr><td>Agentsmd Agents Git</td><td>3</td><td><code>8</code></td></tr><tr><td>Backup Workersh Script</td><td>2</td><td><code>9</code></td></tr><tr><td>Adeotek Githubcom Tools</td><td>1</td><td><code>10</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>98</td><td><code>4, 2, 1, 6, 5</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>32</td><td><code>0, 7</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>24</td><td><code>3</code></td></tr><tr><td>Agentsmd Agents Git</td><td>3</td><td><code>8</code></td></tr><tr><td>Backup Workersh Script</td><td>2</td><td><code>9</code></td></tr><tr><td>Adeotek Githubcom Tools</td><td>1</td><td><code>10</code></td></tr>
     </table>
   </div>
   <div class="card">
@@ -121,8 +121,8 @@ flowchart LR
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>156 nodes · 411 edges · 11 communities (7 shown, 4 thin omitted)</li>
-      <li>Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 33 edges (avg confidence: 0.85)</li>
+      <li>160 nodes · 419 edges · 11 communities (7 shown, 4 thin omitted)</li>
+      <li>Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 34 edges (avg confidence: 0.85)</li>
       <li>Token cost: 0 input · 0 output</li>
       <li>1. `Run()` - 16 edges</li>
       <li>2. `ProviderConfig` - 16 edges</li>
@@ -133,12 +133,12 @@ flowchart LR
 <hr>
 <!-- ====== 2. Extraction Pipeline ====== -->
 <h2 id="extract-pipeline">2. Extraction Pipeline</h2>
-<p>Extraction Pipeline groups implementation around internal, git, testgo, repository, mostly in internal/git/git_cli_test.go, internal/git/git_cli.go, internal/config/config.go. This section covers 95 nodes and 285 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Extraction Pipeline groups implementation around internal, git, testgo, repository, mostly in internal/git/git_cli_test.go, internal/git/git_cli.go, internal/config/config.go. This section covers 98 nodes and 288 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (95 nodes, 285 edges)
+    %% Section: Extraction Pipeline (98 nodes, 288 edges)
     subgraph extract_pipeline_internal_git_git_cli_go_f1089ae8["internal/git/git_cli.go"]
         internal_git_git_cli_a2b68157("git_cli.go")
         internal_git_git_cli_ensurehead_7b0fe904("EnsureHead()<br/><small>internal/git/git_cli.go</small>")
@@ -180,7 +180,7 @@ flowchart LR
     tests_integration_test_51092172 -->|imports| internal_git_git_cli_a2b68157
     tests_integration_test_51092172 -->|imports| internal_git_git_cli_test_f0aa4801
     tests_integration_test_51092172 -->|imports| pkg_filter_filter_c55bff67
-    %% Omitted for readability: 77 nodes, 0 edges
+    %% Omitted for readability: 80 nodes, 0 edges
     class internal_git_git_cli_a2b68157 entry;
     class internal_git_git_cli_ensurehead_7b0fe904 function;
     class internal_git_git_cli_getgitcommand_c5df352c entry;
@@ -222,222 +222,6 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>ProviderConfig</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>EnsureHead()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>remoteHeadRef()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>EnsureHead() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestFetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small><br><code>TestFetchRepositoryRealGit()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small><br>+2 more</td>
-  <td><code>EnsureHead()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br>+3 more</td>
-  <td>FetchRepository() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-cmd">Entry</span></td>
-  <td><code>EnsureHead()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestGetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-cmd">Entry</span></td>
-  <td><code>assertCredentialHelper()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small><br><code>remoteHeadRef()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>RunGitFetch()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br>+1 more</td>
-  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>remoteCredentials()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestBasicWorkflow()</code><br><small style="color:var(--muted)">tests/integration_test.go</small><br><code>TestGetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>GetRepoPath() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestGetRepoUrl StripsCredentials()</code><br><small style="color:var(--muted)">internal/git/redact_test.go</small><br><code>TestGetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><code>isScpLikeUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>GetRepoUrl() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>isScpLikeUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>isScpLikeUrl() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>RedactUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>RunGitFetch()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestRedactUrl()</code><br><small style="color:var(--muted)">internal/git/redact_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>RedactUrl() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>remoteCredentials()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>remoteCredentials() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>remoteHeadRef()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>EnsureHead()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>remoteHeadRef() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>RepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestBasicWorkflow()</code><br><small style="color:var(--muted)">tests/integration_test.go</small><br><code>TestRepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>RepoExists() node in internal/git/git_cli.go.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>RunGitFetch()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>TestRunGitFetchUsesCredentialHelper()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>RedactUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>14</td>
-  <td><code>RunGitInit()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>assertCredentialHelper()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>TestCredentialHelperAppliesToAllProvide...</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><code>envValue()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small><br><code>GetGitCommandForRemote()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>assertCredentialHelper() node in internal/git/git_cli_test.go.</td>
-</tr>
-<tr>
-  <td>16</td>
-  <td><code>TestCredentialHelperAppliesToAllProviders()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>assertCredentialHelper()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>TestFetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>TestGetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>GetGitCommand()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>TestGetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>TestGetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>TestRepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>RepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>TestGetRepoUrl_StripsCredentials()</code><br><small style="color:var(--muted)">internal/git/redact_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>GetRepoUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>TestRedactUrl()</code><br><small style="color:var(--muted)">internal/git/redact_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>RedactUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>TestBasicWorkflow()</code><br><small style="color:var(--muted)">tests/integration_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>GetRepoPath()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>RepoExists()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>Verifies imports, entry points, or version behavior.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>git_cli.go</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td><span class="tag tag-cmd">Entry</span></td>
-  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>fetch_integration_test.go</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small><br><code>integration_test.go</code><br><small style="color:var(--muted)">tests/integration_test.go</small></td>
-  <td><code>config.go</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>config_test.go</code><br><small style="color:var(--muted)">internal/config/config_test.go</small><br><code>forgejo_test.go</code><br><small style="color:var(--muted)">internal/repository/forgejo_test.go</small><br>+10 more</td>
-  <td>Turns a local path or remote repository into analysis context.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>go_pkg_log</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>git_cli.go</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>go_pkg_log node in project.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>go_pkg_net_url</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>git_cli.go</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
-  <td>No direct outbound edge</td>
-  <td>go_pkg_net_url node in project.</td>
-</tr>
-<tr>
-  <td>28</td>
   <td><code>Config</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -445,7 +229,7 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>2</td>
   <td><code>ProviderType</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td><code>CreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
@@ -453,12 +237,228 @@ flowchart LR
   <td>ProviderType node in internal/config/config.go.</td>
 </tr>
 <tr>
-  <td>30</td>
+  <td>3</td>
   <td><code>main()</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
   <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
   <td>main() node in cmd/git-repos-backup/main.go.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>PrintUsage()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestPrintUsage()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>PrintUsage() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small><br><code>main()</code><br><small style="color:var(--muted)">main.go</small><br><code>TestArgsConfig()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small><br>+3 more</td>
+  <td><code>CreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>FetchRepository()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small><br><code>FilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small><br>+6 more</td>
+  <td>Run() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>splitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestSplitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>splitCommaSeparatedList() node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>TestArgsConfig()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>TestConfigLoad()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>TestHelpDisplay()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>TestPrintUsage()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>PrintUsage()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>TestSplitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>splitCommaSeparatedList()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>TestVersionDisplay()</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>CreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestCreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td><code>ProviderType</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td>CreateFromArgs() node in internal/config/config.go.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>IsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestForgejoProviderConfig()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small><br><code>TestIsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>IsSupportedProvider() node in internal/config/config.go.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>Load()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestForgejoProviderConfig()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small><br><code>TestLoad()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>Load() node in internal/config/config.go.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>SupportedProviderNames()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>TestIsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>SupportedProviderNames() node in internal/config/config.go.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>TestCreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>CreateFromArgs()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>TestForgejoProviderConfig()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>IsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>Load()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>TestIsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>IsSupportedProvider()</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>SupportedProviderNames()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>TestLoad()</code><br><small style="color:var(--muted)">internal/config/config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Load()</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>main()</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td>main() node in main.go.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>git-repos-backup/main.go</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small><br><code>go_pkg_os</code></td>
+  <td>Turns a local path or remote repository into analysis context.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>main.go</code><br><small style="color:var(--muted)">main.go</small><br><code>main.go</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><code>go_pkg_flag</code><br><code>go_pkg_io</code><br><code>go_pkg_os</code><br>+2 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>main.go</code><br><small style="color:var(--muted)">main.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td>main.go node in main.go.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>go_pkg_flag</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>go_pkg_flag node in project.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>go_pkg_io</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>app_test.go</code><br><small style="color:var(--muted)">internal/app/app_test.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>go_pkg_io node in project.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>matchesAny()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>FilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td><code>matchesPattern()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td>matchesAny() node in pkg/filter/filter.go.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>matchesPattern()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>matchesAny()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td>No direct outbound edge</td>
+  <td>matchesPattern() node in pkg/filter/filter.go.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>main.go</code><br><small style="color:var(--muted)">main.go</small><br><code>main.go</code><br><small style="color:var(--muted)">cmd/git-repos-backup/main.go</small></td>
+  <td><code>config.go</code><br><small style="color:var(--muted)">internal/config/config.go</small><br><code>config_test.go</code><br><small style="color:var(--muted)">internal/config/config_test.go</small><br><code>filter.go</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small><br>+14 more</td>
+  <td>app.go node in internal/app/app.go.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>config.go</code><br><small style="color:var(--muted)">internal/config/config.go</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>app.go</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>fetch_integration_test.go</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small><br><code>filter.go</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small><br>+8 more</td>
+  <td><code>go_pkg_fmt</code><br><code>go_pkg_go_yaml_in_yaml_v3</code><br><code>go_pkg_os</code><br>+1 more</td>
+  <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 </table>
 
@@ -467,19 +467,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>internal/git/git_cli_test.go</code></td><td>15 nodes</td></tr>
+      <tr><td><code>internal/git/git_cli_test.go</code></td><td>16 nodes</td></tr>
 <tr><td><code>internal/git/git_cli.go</code></td><td>14 nodes</td></tr>
 <tr><td><code>internal/config/config.go</code></td><td>8 nodes</td></tr>
 <tr><td><code>internal/repository/repository.go</code></td><td>8 nodes</td></tr>
 <tr><td><code>internal/app/app_test.go</code></td><td>7 nodes</td></tr>
 <tr><td><code>internal/config/config_test.go</code></td><td>5 nodes</td></tr>
 <tr><td><code>internal/app/app.go</code></td><td>4 nodes</td></tr>
-<tr><td><code>internal/git/redact_test.go</code></td><td>3 nodes</td></tr>
+<tr><td><code>internal/repository/repository_pagination_test.go</code></td><td>3 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x132, calls x63, contains x62, references x28. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x133, contains x64, calls x63, references x28. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -830,12 +830,12 @@ flowchart LR
 
 <!-- ====== 4. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">4. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around repository, testgo, internal, forgejo, mostly in internal/repository/forgejo_test.go, internal/repository/repository_pagination_test.go, internal/repository/repository_test.go. This section covers 23 nodes and 36 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around repository, testgo, internal, forgejo, mostly in internal/repository/forgejo_test.go, internal/repository/repository_pagination_test.go, internal/repository/repository_test.go. This section covers 24 nodes and 38 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (23 nodes, 36 edges)
+    %% Section: Tests &amp; Fixtures (24 nodes, 38 edges)
     subgraph tests_fixtures_internal_repository_forgejo_test_b585fe01["internal/repository/forgejo_test.go"]
         internal_repository_forgejo_test_testgetreposito_6b60fabe("TestGetRepositories ForgejoIsSupported()<br/><small>internal/repository/forgejo_test.go</small>")
         internal_repository_forgejo_test_testruncurl_git_1535beb0("TestRunCurl GitHubUsesBearer()<br/><small>internal/repository/forgejo_test.go</small>")
@@ -880,7 +880,7 @@ flowchart LR
     internal_repository_repository_test_testgetrepos_92f72a66 -->|calls| internal_repository_repository_getrepositories_feb377c9
     internal_repository_repository_test_testgetrepos_a1c028c7 -->|calls| internal_repository_repository_getrepositories_feb377c9
     pkg_filter_filter_test_testfilterrepositories_759d0952 -->|calls| pkg_filter_filter_filterrepositories_d8e1805e
-    %% Omitted for readability: 5 nodes, 0 edges
+    %% Omitted for readability: 6 nodes, 0 edges
     class internal_repository_forgejo_test_testgetreposito_6b60fabe test;
     class internal_repository_forgejo_test_testruncurl_git_1535beb0 test;
     class internal_repository_forgejo_test_recordingexecco_b4a7dea3 test;
@@ -922,10 +922,10 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>TestHelperProcess()</code><br><small style="color:var(--muted)">internal/git/git_cli_test.go</small></td>
+  <td><code>TestRedactUrl()</code><br><small style="color:var(--muted)">internal/git/redact_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
+  <td><code>RedactUrl()</code><br><small style="color:var(--muted)">internal/git/git_cli.go</small></td>
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
@@ -1044,8 +1044,8 @@ flowchart LR
   <td>16</td>
   <td><code>FilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>testFilterIntegration()</code><br><small style="color:var(--muted)">tests/integration_test.go</small><br><code>TestFilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter_test.go</small></td>
-  <td>No direct outbound edge</td>
+  <td><code>Run()</code><br><small style="color:var(--muted)">internal/app/app.go</small><br><code>testFilterIntegration()</code><br><small style="color:var(--muted)">tests/integration_test.go</small><br><code>TestFilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter_test.go</small><br>+1 more</td>
+  <td><code>matchesAny()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
   <td>FilterRepositories() node in pkg/filter/filter.go.</td>
 </tr>
 <tr>
@@ -1058,6 +1058,14 @@ flowchart LR
 </tr>
 <tr>
   <td>18</td>
+  <td><code>TestFilterRepositoriesWildcards()</code><br><small style="color:var(--muted)">pkg/filter/filter_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>FilterRepositories()</code><br><small style="color:var(--muted)">pkg/filter/filter.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>19</td>
   <td><code>runGit()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td><code>TestFetchRepositoryRealGit()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small><br><code>TestFetchRepositoryRepeated()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small></td>
@@ -1065,7 +1073,7 @@ flowchart LR
   <td>Turns a local path or remote repository into analysis context.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>20</td>
   <td><code>TestFetchRepositoryRealGit()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -1073,7 +1081,7 @@ flowchart LR
   <td>Turns a local path or remote repository into analysis context.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>21</td>
   <td><code>TestFetchRepositoryRepeated()</code><br><small style="color:var(--muted)">tests/fetch_integration_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -1081,7 +1089,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>22</td>
   <td><code>testFilterIntegration()</code><br><small style="color:var(--muted)">tests/integration_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td><code>TestIntegration()</code><br><small style="color:var(--muted)">tests/integration_test.go</small></td>
@@ -1089,7 +1097,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>23</td>
   <td><code>TestIntegration()</code><br><small style="color:var(--muted)">tests/integration_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -1097,7 +1105,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>24</td>
   <td><code>testing.T</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
@@ -1115,15 +1123,15 @@ flowchart LR
 <tr><td><code>internal/repository/repository_pagination_test.go</code></td><td>4 nodes</td></tr>
 <tr><td><code>internal/repository/repository_test.go</code></td><td>4 nodes</td></tr>
 <tr><td><code>tests/fetch_integration_test.go</code></td><td>3 nodes</td></tr>
+<tr><td><code>pkg/filter/filter_test.go</code></td><td>2 nodes</td></tr>
 <tr><td><code>tests/integration_test.go</code></td><td>2 nodes</td></tr>
-<tr><td><code>internal/git/git_cli_test.go</code></td><td>1 nodes</td></tr>
+<tr><td><code>internal/git/redact_test.go</code></td><td>1 nodes</td></tr>
 <tr><td><code>internal/repository/repository.go</code></td><td>1 nodes</td></tr>
-<tr><td><code>pkg/filter/filter.go</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x20, calls x16. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: references x21, calls x17. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1335,8 +1343,8 @@ flowchart LR
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>156</td></tr>
-      <tr><td>Edges</td><td>411</td></tr>
+      <tr><td>Nodes</td><td>160</td></tr>
+      <tr><td>Edges</td><td>419</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
       <tr><td>Communities</td><td>11</td></tr>
       <tr><td>Documented Sections</td><td>6</td></tr>
@@ -1345,8 +1353,8 @@ flowchart LR
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>378</td></tr>
-      <tr><td>INFERRED</td><td>33</td></tr>
+      <tr><td>EXTRACTED</td><td>385</td></tr>
+      <tr><td>INFERRED</td><td>34</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
   </div>
@@ -1354,7 +1362,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>git-repos-backup — Architecture Documentation</p>
-  <p>Generated: 2026-10-26 14:37 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-10-26 16:04 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->
