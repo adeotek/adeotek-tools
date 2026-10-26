@@ -2,6 +2,24 @@
 
 # Providers configuration
 providers:
+
+  # GitHub provider
+  - type: github
+    # For GitHub Enterprise, specify the server URL
+    # server_url: https://github.example.com
+    # GitHub authentication (use personal access token)
+    access_token: your_github_access_token
+    # Optional repository filtering (supports `*` wildcards, e.g. owner/*)
+    # include:
+    #   - owner1/repo1
+    #   - owner2/*
+    #   - owner3/prefix-*
+    # exclude:
+    #   - owner1/repo3
+    #   - owner4/*
+    # Target directory for repositories backup
+    target_dir: /path/to/github/backups
+
   # Gitea provider
   - type: gitea
     server_url: https://gitea.example.com
@@ -12,32 +30,34 @@ providers:
     # use_basic_auth: false
     # Set to true to skip the SSL validation (e.g., when Gitea is using a self-signed certificate)
     # skip_ssl_validation: true
-    # Optional repository filtering
+    # Optional repository filtering (supports `*` wildcards, e.g. owner/*)
     # include:
-    #   - owner/repo1
-    #   - owner/repo2
+    #   - owner1/repo1
+    #   - owner2/*
+    #   - owner3/prefix-*
     # exclude:
-    #   - owner/repo3
+    #   - owner1/repo3
+    #   - owner4/*
     # Target directory for repositories backup
     target_dir: /path/to/gitea/backups
 
   # Forgejo provider (Forgejo is a Gitea fork and uses the same API)
   - type: forgejo
     server_url: https://forgejo.example.com
+    # Authentication (use either token or username/password)
     access_token: your_forgejo_access_token
-    target_dir: /path/to/forgejo/backups
-
-  # GitHub provider
-  - type: github
-    # For GitHub Enterprise, specify the server URL
-    # server_url: https://github.example.com
-    # GitHub authentication (use personal access token)
-    access_token: your_github_access_token
-    # Optional repository filtering
+    # username: your_username
+    # password: your_password
+    # use_basic_auth: false
+    # Set to true to skip the SSL validation (e.g., when Gitea is using a self-signed certificate)
+    # skip_ssl_validation: true
+    # Optional repository filtering (supports `*` wildcards, e.g. owner/*)
     # include:
-    #   - owner/repo1
-    #   - owner/repo2
+    #   - owner1/repo1
+    #   - owner2/*
+    #   - owner3/prefix-*
     # exclude:
-    #   - owner/repo3
+    #   - owner1/repo3
+    #   - owner4/*
     # Target directory for repositories backup
-    target_dir: /path/to/github/backups
+    target_dir: /path/to/forgejo/backups

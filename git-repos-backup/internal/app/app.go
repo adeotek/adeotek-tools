@@ -17,7 +17,7 @@ import (
 
 // Version information
 const (
-	Version = "0.3.0"
+	Version = "0.4.0"
 )
 
 // Run executes the main application logic and returns the process exit code.
@@ -31,8 +31,8 @@ func Run() int {
 	password := flag.String("password", "", "Password for basic authentication")
 	useBasicAuth := flag.Bool("use-basic-auth", false, "Whether to use basic authentication")
 	skipSSLValidation := flag.Bool("skip-ssl", false, "Whether to skip SSL validation")
-	includeRepos := flag.String("include", "", "Comma-separated list of repository full names to include")
-	excludeRepos := flag.String("exclude", "", "Comma-separated list of repository full names to exclude")
+	includeRepos := flag.String("include", "", "Comma-separated list of repository full names to include (supports `*` wildcards, e.g. owner/*)")
+	excludeRepos := flag.String("exclude", "", "Comma-separated list of repository full names to exclude (supports `*` wildcards, e.g. owner/*)")
 	targetDir := flag.String("target-dir", "", "Directory to clone repositories into")
 	showVersion := flag.Bool("version", false, "Show version information and exit")
 	verbose := flag.Bool("verbose", false, "Show all messages")
@@ -221,7 +221,7 @@ func PrintUsage() {
 	fmt.Println("      password: Password for basic authentication (if use_basic_auth is true)")
 	fmt.Println("      use_basic_auth: Whether to use basic authentication (default: false)")
 	fmt.Println("      skip_ssl_validation: Whether to skip SSL validation (default: false)")
-	fmt.Println("      include: List of repository full names to include (optional)")
-	fmt.Println("      exclude: List of repository full names to exclude (optional, ignored if include is specified)")
+	fmt.Println("      include: List of repository full names to include (optional, supports `*` wildcards)")
+	fmt.Println("      exclude: List of repository full names to exclude (optional, supports `*` wildcards, ignored if include is specified)")
 	fmt.Println("      target_dir: Directory to clone repositories into")
 }
