@@ -26,8 +26,9 @@ func FetchRepository(provider *config.ProviderConfig, repo repository.Repository
 		return fmt.Errorf("failed to create repo directory: %w", err)
 	}
 
-	// Prepare clone URL with authentication if needed
-	repoUrl, err := GetRepoUrl(provider, repo.URL)
+	// Prepare clone URL without credentials; HTTP(S) authentication is
+	// supplied by GetGitCommandForRemote.
+	repoUrl, err := GetRepoUrl(repo.URL)
 	if err != nil {
 		return fmt.Errorf("failed to create clone URL: %w", err)
 	}
@@ -55,7 +56,7 @@ func FetchRepository(provider *config.ProviderConfig, repo repository.Repository
 // RunGitFetch fetches all branches and tags from repoUrl into the bare repository at repoDir.
 func RunGitFetch(provider *config.ProviderConfig, repoDir string, repoUrl string, repoName string, verbose bool) error {
 	log.Printf("Fetching repository: %s", repoName)
-	cmd := GetGitCommand(provider, "-C", repoDir, "fetch", "--force", "--prune",
+	cmd := GetGitCommandForRemote(provider, repoUrl, "-C", repoDir, "fetch", "--force", "--prune",
 		repoUrl, "+refs/heads/*:refs/heads/*", "+refs/tags/*:refs/tags/*")
 	if verbose {
 		fmt.Printf("----> git -C %s fetch --force --prune %s +refs/heads/*:refs/heads/* +refs/tags/*:refs/tags/*\n",
@@ -117,7 +118,7 @@ func EnsureHead(provider *config.ProviderConfig, repoDir string, repoUrl string,
 // remoteHeadRef returns the branch ref the remote's HEAD points to, or an empty
 // string when it cannot be determined.
 func remoteHeadRef(provider *config.ProviderConfig, repoUrl string, verbose bool) (string, error) {
-	cmd := GetGitCommand(provider, "ls-remote", "--symref", repoUrl, "HEAD")
+	cmd := GetGitCommandForRemote(provider, repoUrl, "ls-remote", "--symref", repoUrl, "HEAD")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve remote HEAD: %w", err)
@@ -146,11 +147,65 @@ func GetGitCommand(provider *config.ProviderConfig, elems ...string) *exec.Cmd {
 	return cmd
 }
 
-// GetRepoUrl returns the URL to fetch the repository from, embedding the
-// configured credentials when HTTP(S) is used.
-func GetRepoUrl(provider *config.ProviderConfig, rawUrl string) (string, error) {
-	// SCP-style syntax (git@host:owner/repo.git) is not a valid URL and cannot
-	// carry an embedded password, so leave it untouched.
+// GetGitCommandForRemote builds a command for an HTTP(S) remote and passes the
+// configured credentials through a credential helper instead of embedding them
+// in the URL. This keeps credentials out of process arguments and lets Git ask
+// the helper again for the redirected URL when a redirect occurs.
+func GetGitCommandForRemote(provider *config.ProviderConfig, repoUrl string, elems ...string) *exec.Cmd {
+	username, password, hasCredentials := remoteCredentials(provider, repoUrl)
+
+	args := make([]string, 0, len(elems)+2)
+	if hasCredentials {
+		args = append(args, "-c", "credential.helper="+credentialHelper)
+	}
+	args = append(args, elems...)
+
+	cmd := GetGitCommand(provider, args...)
+	if hasCredentials {
+		if cmd.Env == nil {
+			cmd.Env = os.Environ()
+		}
+		cmd.Env = append(cmd.Env,
+			credentialEnvUsername+"="+username,
+			credentialEnvPassword+"="+password,
+		)
+	}
+	return cmd
+}
+
+// credentialHelper is a Git credential helper that reads the credentials from
+// the environment. Passing them this way keeps them out of the command line and
+// lets Git request them again after following a redirect.
+const credentialHelper = `!f() { if [ "$1" = get ]; then echo "username=$` + credentialEnvUsername + `"; echo "password=$` + credentialEnvPassword + `"; fi; }; f`
+
+const (
+	credentialEnvUsername = "GIT_REPOS_BACKUP_USERNAME"
+	credentialEnvPassword = "GIT_REPOS_BACKUP_PASSWORD"
+)
+
+// remoteCredentials returns the credentials used for an HTTP(S) remote.
+func remoteCredentials(provider *config.ProviderConfig, repoUrl string) (string, string, bool) {
+	parsed, err := url.Parse(repoUrl)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return "", "", false
+	}
+
+	if provider.UseBasicAuth && provider.Username != "" {
+		return provider.Username, provider.Password, true
+	}
+	if provider.AccessToken != "" {
+		// Gitea, Forgejo and GitHub accept the token in the username field.
+		return provider.AccessToken, "", true
+	}
+	return "", "", false
+}
+
+// GetRepoUrl validates a repository URL and removes any credentials embedded
+// in HTTP(S) URLs. Git commands receive the clean URL and obtain authentication
+// from the credential helper configured by GetGitCommandForRemote.
+func GetRepoUrl(rawUrl string) (string, error) {
+	// SCP-style syntax (git@host:owner/repo.git) is not a valid URL. It uses a
+	// non-HTTP transport, so leave it untouched.
 	if !strings.Contains(rawUrl, "://") {
 		if isScpLikeUrl(rawUrl) {
 			return rawUrl, nil
@@ -176,11 +231,10 @@ func GetRepoUrl(provider *config.ProviderConfig, rawUrl string) (string, error) 
 		return "", fmt.Errorf("invalid URL: %s", rawUrl)
 	}
 
-	if provider.UseBasicAuth && provider.Username != "" {
-		parsed.User = url.UserPassword(provider.Username, provider.Password)
-	} else if provider.AccessToken != "" {
-		parsed.User = url.User(provider.AccessToken)
-	}
+	// Credentials never belong in the URL: Git drops them on redirects and
+	// curl may strip them from the effective URL. The credential helper
+	// supplies authentication for every HTTP(S) provider instead.
+	parsed.User = nil
 
 	return parsed.String(), nil
 }

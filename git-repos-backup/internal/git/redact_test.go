@@ -3,8 +3,6 @@ package git
 import (
 	"strings"
 	"testing"
-
-	"github.com/adeotek/adeotek-tools/git-repos-backup/internal/config"
 )
 
 func TestRedactUrl(t *testing.T) {
@@ -42,48 +40,42 @@ func TestRedactUrl(t *testing.T) {
 	}
 }
 
-func TestGetRepoUrl_Credentials(t *testing.T) {
+func TestGetRepoUrl_StripsCredentials(t *testing.T) {
 	tests := []struct {
-		name     string
-		provider *config.ProviderConfig
-		rawUrl   string
-		want     string
+		name   string
+		rawUrl string
+		want   string
 	}{
 		{
-			name:     "token auth",
-			provider: &config.ProviderConfig{AccessToken: "token123"},
-			rawUrl:   "https://example.com/owner/repo.git",
-			want:     "https://token123@example.com/owner/repo.git",
+			name:   "token auth",
+			rawUrl: "https://token123@example.com/owner/repo.git",
+			want:   "https://example.com/owner/repo.git",
 		},
 		{
-			name:     "basic auth with special characters",
-			provider: &config.ProviderConfig{UseBasicAuth: true, Username: "user@corp", Password: "p@ss:word"},
-			rawUrl:   "https://example.com/owner/repo.git",
-			want:     "https://user%40corp:p%40ss%3Aword@example.com/owner/repo.git",
+			name:   "basic auth with special characters",
+			rawUrl: "https://user%40corp:p%40ss%3Aword@example.com/owner/repo.git",
+			want:   "https://example.com/owner/repo.git",
 		},
 		{
-			name:     "basic auth without username falls back to URL",
-			provider: &config.ProviderConfig{UseBasicAuth: true, Password: "pass", AccessToken: "tok"},
-			rawUrl:   "https://example.com/owner/repo.git",
-			want:     "https://tok@example.com/owner/repo.git",
+			name:   "no credentials unchanged",
+			rawUrl: "https://example.com/owner/repo.git",
+			want:   "https://example.com/owner/repo.git",
 		},
 		{
-			name:     "SSH scheme is left alone",
-			provider: &config.ProviderConfig{AccessToken: "token123"},
-			rawUrl:   "ssh://git@example.com/owner/repo.git",
-			want:     "ssh://git@example.com/owner/repo.git",
+			name:   "SSH user is not a credential",
+			rawUrl: "ssh://git@example.com/owner/repo.git",
+			want:   "ssh://git@example.com/owner/repo.git",
 		},
 		{
-			name:     "scp-like URL is left alone",
-			provider: &config.ProviderConfig{AccessToken: "token123"},
-			rawUrl:   "git@example.com:owner/repo.git",
-			want:     "git@example.com:owner/repo.git",
+			name:   "scp-like URL unchanged",
+			rawUrl: "git@example.com:owner/repo.git",
+			want:   "git@example.com:owner/repo.git",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetRepoUrl(tt.provider, tt.rawUrl)
+			got, err := GetRepoUrl(tt.rawUrl)
 			if err != nil {
 				t.Fatalf("GetRepoUrl() error = %v", err)
 			}
