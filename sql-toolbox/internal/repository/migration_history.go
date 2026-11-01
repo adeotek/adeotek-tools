@@ -36,7 +36,7 @@ func (r *MigrationHistoryRepository) IsHistoryTableCreated() (bool, error) {
 
 	switch provider {
 	case models.PostgreSQL:
-		query = fmt.Sprintf("SELECT count(*) FROM information_schema.tables WHERE table_name = '%s'", tableName)
+		query = fmt.Sprintf("SELECT count(*) FROM information_schema.tables WHERE table_name = '%s' AND table_schema = current_schema()", tableName)
 	case models.SQLite:
 		query = fmt.Sprintf("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='%s'", tableName)
 	default:
@@ -113,8 +113,17 @@ func (r *MigrationHistoryRepository) GetExecutedScripts() ([]models.ScriptExecut
 		}
 		scripts = append(scripts, script)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating script execution history: %w", err)
+	}
 
 	return scripts, nil
+}
+
+// upsertQuerier is implemented by both *sql.DB and *sql.Tx.
+type upsertQuerier interface {
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
 // UpsertExecutedScript inserts or updates a script execution record
@@ -125,10 +134,20 @@ func (r *MigrationHistoryRepository) UpsertExecutedScript(script *models.ScriptE
 	}
 	defer db.Close()
 
+	return upsertExecutedScript(db, script)
+}
+
+// UpsertExecutedScriptTx inserts or updates a script execution record inside an
+// existing transaction, so the script and its history entry commit atomically.
+func (r *MigrationHistoryRepository) UpsertExecutedScriptTx(tx *sql.Tx, script *models.ScriptExecutionHistory) error {
+	return upsertExecutedScript(tx, script)
+}
+
+func upsertExecutedScript(db upsertQuerier, script *models.ScriptExecutionHistory) error {
 	// Check if script already exists
 	selectQuery := fmt.Sprintf(`SELECT "ScriptFile" FROM "%s" WHERE "ScriptFile" = $1`, tableName)
 	var existingScript string
-	err = db.QueryRow(selectQuery, script.ScriptFile).Scan(&existingScript)
+	err := db.QueryRow(selectQuery, script.ScriptFile).Scan(&existingScript)
 
 	if err == sql.ErrNoRows {
 		// Insert new record

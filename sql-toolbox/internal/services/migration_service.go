@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"hash/fnv"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,6 +47,13 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 	// Create database factory and migration history repository
 	dbFactory := database.NewFactory(connectionParams)
 	migrationRepo := repository.NewMigrationHistoryRepository(dbFactory)
+
+	// Prevent two migration runs from applying the same scripts concurrently.
+	unlock, lockErr := acquireMigrationLock(dbFactory, connectionParams, scriptsPath)
+	if lockErr != nil {
+		return lockErr
+	}
+	defer unlock()
 
 	// In dry-run mode against a SQLite database that does not exist yet, skip history
 	// lookups entirely: opening the connection would create the database file, which a
@@ -130,12 +138,16 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 
 	// Create backup if there are unapplied scripts and backup service is provided
 	if hasUnappliedScripts && ms.backupService != nil {
-		log.Println("Creating database backup before applying migrations...")
-		backupPath, err := ms.backupService.CreateBackup(connectionParams)
-		if err != nil {
-			return fmt.Errorf("failed to create database backup. Migrations will not be applied: %w", err)
+		if connectionParams.GetDbProvider() == models.SQLite && !fileExists(connectionParams.DatabaseName) {
+			log.Println("Skipping pre-migration backup: SQLite database does not exist yet")
+		} else {
+			log.Println("Creating database backup before applying migrations...")
+			backupPath, err := ms.backupService.CreateBackup(connectionParams)
+			if err != nil {
+				return fmt.Errorf("failed to create database backup. Migrations will not be applied: %w", err)
+			}
+			log.Printf("Backup created successfully: %s", backupPath)
 		}
-		log.Printf("Backup created successfully: %s", backupPath)
 	}
 
 	// Process each script
@@ -188,29 +200,47 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 			continue
 		}
 
-		// Execute the script
-		err = ms.scriptsHelpers.ExecuteScript(string(scriptContent), connectionParams)
-		if err != nil {
-			log.Printf("Error executing script %s [%s]: %v", scriptName, hash, err)
+		// Execute the script and record its history in one transaction, so a
+		// failure cannot leave partially applied changes behind.
+		db, dbErr := dbFactory.CreateConnection()
+		if dbErr != nil {
+			log.Printf("Error connecting to database for script %s: %v", scriptName, dbErr)
+			errorsCount++
+			continue
+		}
+		tx, txErr := db.Begin()
+		if txErr != nil {
+			db.Close()
+			log.Printf("Error starting transaction for script %s: %v", scriptName, txErr)
 			errorsCount++
 			continue
 		}
 
-		log.Printf("Script %s executed successfully [%s]", scriptName, hash)
-
-		// Update execution history
 		executionHistory := &models.ScriptExecutionHistory{
 			ScriptFile: scriptName,
 			ScriptHash: hash,
 			ExecutedAt: time.Now().UTC(),
 		}
-
-		err = migrationRepo.UpsertExecutedScript(executionHistory)
-		if err != nil {
-			log.Printf("Error updating execution history for script %s: %v", scriptName, err)
-			// Don't increment error count as the script executed successfully
+		scriptErr := ms.scriptsHelpers.ExecuteScriptTx(tx, string(scriptContent))
+		if scriptErr == nil {
+			scriptErr = migrationRepo.UpsertExecutedScriptTx(tx, executionHistory)
 		}
+		if scriptErr != nil {
+			_ = tx.Rollback()
+			db.Close()
+			log.Printf("Error executing script %s [%s]: %v", scriptName, hash, scriptErr)
+			errorsCount++
+			continue
+		}
+		if commitErr := tx.Commit(); commitErr != nil {
+			db.Close()
+			log.Printf("Error committing script %s [%s]: %v", scriptName, hash, commitErr)
+			errorsCount++
+			continue
+		}
+		db.Close()
 
+		log.Printf("Script %s executed successfully [%s]", scriptName, hash)
 		successCount++
 	}
 
@@ -223,6 +253,63 @@ func (ms *MigrationService) Run(scriptsPath string, connectionParams *models.Con
 	}
 
 	return nil
+}
+
+// acquireMigrationLock takes a PostgreSQL advisory lock or a SQLite lock file
+// for the duration of the migration.
+func acquireMigrationLock(dbFactory *database.Factory, connectionParams *models.ConnectionParameters, scriptsPath string) (func(), error) {
+	noop := func() {}
+
+	absPath, err := filepath.Abs(scriptsPath)
+	if err != nil {
+		absPath = scriptsPath
+	}
+	hasher := fnv.New64a()
+	_, _ = hasher.Write([]byte(connectionParams.DatabaseName + "|" + absPath))
+	lockKey := int64(hasher.Sum64())
+
+	switch connectionParams.GetDbProvider() {
+	case models.PostgreSQL:
+		db, err := dbFactory.CreateConnection()
+		if err != nil {
+			return noop, fmt.Errorf("failed to connect for migration lock: %w", err)
+		}
+		var acquired bool
+		if err := db.QueryRow("SELECT pg_try_advisory_lock($1)", lockKey).Scan(&acquired); err != nil {
+			db.Close()
+			return noop, fmt.Errorf("failed to acquire migration lock: %w", err)
+		}
+		if !acquired {
+			db.Close()
+			return noop, fmt.Errorf("another migration is already running for this database and scripts directory")
+		}
+		return func() {
+			_, _ = db.Exec("SELECT pg_advisory_unlock($1)", lockKey)
+			_ = db.Close()
+		}, nil
+	case models.SQLite:
+		lockPath := filepath.Join(os.TempDir(), fmt.Sprintf("sql-toolbox-migration-%d.lock", lockKey))
+		lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if err != nil && os.IsExist(err) {
+			// Recover from a lock left behind by a crashed process.
+			if info, statErr := os.Stat(lockPath); statErr == nil && time.Since(info.ModTime()) > 24*time.Hour {
+				if removeErr := os.Remove(lockPath); removeErr == nil {
+					lockFile, err = os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+				}
+			}
+		}
+		if err != nil {
+			if os.IsExist(err) {
+				return noop, fmt.Errorf("another migration is already running for this database and scripts directory")
+			}
+			return noop, fmt.Errorf("failed to create migration lock file: %w", err)
+		}
+		_, _ = fmt.Fprintf(lockFile, "%d\n", os.Getpid())
+		_ = lockFile.Close()
+		return func() { _ = os.Remove(lockPath) }, nil
+	default:
+		return noop, nil
+	}
 }
 
 // fileExists reports whether path exists and is not a directory.

@@ -22,6 +22,7 @@ type MigrationConfig struct {
 	Database         string           `yaml:"database"`
 	User             string           `yaml:"user"`
 	Password         string           `yaml:"password"`
+	SSLMode          string           `yaml:"ssl_mode"`
 	ConnectionString string           `yaml:"connection_string"`
 	Backup           bool             `yaml:"backup"`
 	BackupOnly       bool             `yaml:"backup_only"`

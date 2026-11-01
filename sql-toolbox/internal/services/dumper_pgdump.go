@@ -27,12 +27,18 @@ func NewPgDumpBinaryDumper(connParams *models.ConnectionParameters, options PgDu
 func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 	var args []string
 
+	password := d.connParams.Password
 	// pg_dump accepts a conninfo string as the --dbname argument; normalize it so the
 	// .NET and URL formats accepted elsewhere also work with the external binary
 	if d.connParams.RawConnectionString != "" {
 		connStr, err := d.connParams.GetConnectionString()
 		if err != nil {
 			return fmt.Errorf("failed to build connection string: %w", err)
+		}
+		// Keep the password out of the process arguments.
+		connStr, extractedPassword := models.RemovePasswordFromConnInfo(connStr)
+		if extractedPassword != "" {
+			password = extractedPassword
 		}
 		args = []string{
 			fmt.Sprintf("--dbname=%s", connStr),
@@ -79,8 +85,12 @@ func (d *PgDumpBinaryDumper) Dump(w io.Writer) error {
 	cmd := exec.Command("pg_dump", args...)
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
-	if d.connParams.RawConnectionString == "" && d.connParams.Password != "" {
-		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", d.connParams.Password))
+	cmd.Env = os.Environ()
+	if password != "" {
+		cmd.Env = append(cmd.Env, "PGPASSWORD="+password)
+	}
+	if d.connParams.RawConnectionString == "" && d.connParams.SSLMode != "" {
+		cmd.Env = append(cmd.Env, "PGSSLMODE="+d.connParams.SSLMode)
 	}
 
 	if err := cmd.Run(); err != nil {

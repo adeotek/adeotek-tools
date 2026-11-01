@@ -14,7 +14,10 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o sql-toolbox ./cmd/sql-toolbox
+ARG VERSION=dev
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
+    -ldflags "-X github.com/adeotek/adeotek-tools/sql-toolbox/internal/app.Version=${VERSION}" \
+    -o sql-toolbox ./cmd/sql-toolbox
 
 
 FROM alpine:latest
@@ -28,7 +31,11 @@ COPY --from=builder /build/sql-toolbox /usr/local/bin/
 COPY --from=builder /build/backup_worker.sh /app/
 COPY --from=builder /build/config.yaml.example /app/config.yaml.example
 
-RUN chmod +x /app/backup_worker.sh
+RUN chmod +x /app/backup_worker.sh \
+    && addgroup -S app \
+    && adduser -S -G app app \
+    && mkdir -p /data \
+    && chown app:app /data
 
 # Data volume
 VOLUME /data
@@ -38,6 +45,7 @@ ENV DBB_CONFIG=""
 ENV DBB_BACKUP_INTERVAL="86400"
 ENV DBB_VERBOSE="false"
 
-# USER 99:98
+USER app
+
 # Default to worker script which can handle both config modes
 ENTRYPOINT ["/app/backup_worker.sh"]

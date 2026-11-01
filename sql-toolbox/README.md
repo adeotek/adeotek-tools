@@ -7,9 +7,10 @@ A command-line tool for executing SQL migration scripts and performing database 
 - Support for PostgreSQL and SQLite databases
 - **SSH tunnel support** for secure connections through bastion hosts (migration and backup)
 - **Multiple connection string formats**: lib/pq, .NET, and PostgreSQL URL formats
+- Transactional migration scripts (each script and its history entry commit atomically)
 - Migration history tracking to avoid re-running scripts
 - Automatic database backup before applying migrations
-- Database restore from backup
+- Database restore from backup (only backups belonging to the selected database)
 - Multi-database backup via YAML config (`backup` subcommand) with optional gzip compression and S3 upload
 - **Wildcard database backup** for backing up all databases on a PostgreSQL server with exclude list support
 - **Per-database S3 overrides** (bucket, prefix, credentials) for flexible backup organization
@@ -121,9 +122,15 @@ migration:
     auth_method: "key"
     key_file: "~/.ssh/id_rsa"
     local_port: 0  # 0 = auto-assign
+    # Host key verification (defaults to ~/.ssh/known_hosts)
+    # known_hosts_file: "~/.ssh/known_hosts"
+    # host_key_fingerprint: "SHA256:..."
+    # insecure_ignore_host_key: false  # only for throwaway environments
 ```
 
-The tunnel is automatically established before database operations and cleaned up afterward. Works with both `migration` and `backup` commands.
+The tunnel is automatically established before database operations and cleaned up afterward. Works with both `migration` and `backup` commands, including `connection_string` configurations (host/port are rewritten to the tunnel endpoint).
+
+Host keys are verified against `known_hosts_file` (or `~/.ssh/known_hosts`) by default. Set `host_key_fingerprint` to pin a single key, or `insecure_ignore_host_key: true` to explicitly disable verification.
 
 #### Dry Run Mode
 
@@ -145,10 +152,11 @@ sql-toolbox migration --target-path /path/to/sql/scripts --provider postgresql -
 | `--provider` | `-r` | Database provider (postgresql/sqlite) | No (default: postgresql) |
 | `--connection-string` | `-c` | Database connection string | No |
 | `--host` | `-o` | Database host | No |
-| `--port` | `-p` | Database port | No |
+| `--port` | `-p` | Database port | No (default: 5432) |
 | `--database` | `-b` | Database name | No |
 | `--user` | `-u` | Database user | No |
 | `--password` | `-s` | Database password | No |
+| `--ssl-mode` | | PostgreSQL SSL mode (`disable`, `require`, `verify-ca`, `verify-full`) | No (default: `disable`) |
 | `--dry-run` | `-d` | Run in dry-run mode | No |
 | `--verbose` | `-v` | Enable verbose output | No |
 | `--backup` | | Backup database before applying migrations | No |
@@ -160,6 +168,8 @@ sql-toolbox migration --target-path /path/to/sql/scripts --provider postgresql -
 
 You can use environment variables instead of command-line flags. Prefix them with `SQLTB_`:
 
+- `SQLTB_TARGET_PATH`
+- `SQLTB_CONFIG`
 - `SQLTB_PROVIDER`
 - `SQLTB_CONNECTION_STRING`
 - `SQLTB_HOST`
@@ -167,8 +177,18 @@ You can use environment variables instead of command-line flags. Prefix them wit
 - `SQLTB_DATABASE`
 - `SQLTB_USER`
 - `SQLTB_PASSWORD`
+- `SQLTB_SSL_MODE`
+- `SQLTB_BACKUP`
+- `SQLTB_BACKUP_ONLY`
+- `SQLTB_RESTORE`
+- `SQLTB_BACKUP_METHOD`
 - `SQLTB_DRY_RUN`
 - `SQLTB_VERBOSE`
+
+These environment variables apply to the `migration` subcommand; `backup` reads its settings from YAML only.
+
+The `backup` subcommand also rejects conflicting S3 settings: `upload_to_s3: true` requires
+`s3.enabled: true`, and static credentials must set both `access_key_id` and `secret_access_key`.
 
 ## Script Organization
 
@@ -254,11 +274,18 @@ sql-toolbox migration \
 - The backup method is selected with `--backup-method` / `backup_method` (default: `pg_dump`):
   - `pg_dump` (external binary) creates `.dump` files in PostgreSQL custom format
   - `go` (pure Go dump) creates `.sql` files and needs no `pg_dump`/`psql` binary
-- `--restore` restores the most recent backup and skips migrations; `.dump` archives are
-  restored with `pg_restore`, `.sql` files with `psql`
-- SQLite backups are simple file copies with `.db` extension; an SQLite restore writes to a
-  temporary file and renames it into place, so a failed restore cannot corrupt the database
+- `--restore` restores the most recent backup **for the selected database** and skips migrations;
+  `.dump`/`.sql` files (including `.gz`) are restored with `pg_restore`/`psql`
+- Plain-SQL restores run with `ON_ERROR_STOP` in a single transaction and fail loudly instead of
+  continuing after an SQL error
+- SQLite backups are consistent snapshots (`VACUUM INTO`, WAL-safe) with `.db` extension; an
+  SQLite restore writes to a temporary file, removes stale `-wal`/`-shm` files, and renames it
+  into place, so a failed restore cannot corrupt the database
 - If backup fails, migrations will not be applied, and the incomplete backup file is removed
+- Each migration script and its history entry are applied in one transaction; a failing script
+  leaves no partial changes and is not recorded as applied. Statements that cannot run inside a
+  transaction (e.g. `CREATE INDEX CONCURRENTLY`, `VACUUM`) are not supported in migration scripts.
+- A PostgreSQL advisory lock (or lock file for SQLite) prevents concurrent migration runs
 
 **Prerequisites for PostgreSQL:**
 - `pg_dump` (for `--backup-method pg_dump`) and `psql`/`pg_restore` (for `--restore`) must be installed and accessible in PATH
@@ -330,7 +357,7 @@ sql-toolbox migration \
 
 ## Multi-Database Backup (`backup` Subcommand)
 
-The `backup` subcommand provides a YAML-driven multi-database backup workflow for PostgreSQL databases. Unlike the `--backup-only` flag on the migration subcommand (which uses `pg_dump`), this subcommand uses a pure Go implementation and supports backing up multiple databases, gzip compression, and S3/S3-compatible storage upload.
+The `backup` subcommand provides a YAML-driven multi-database backup workflow for PostgreSQL databases. Unlike the `--backup-only` flag on the migration subcommand, it supports multiple databases, gzip compression, S3/S3-compatible storage upload, and both the pure-Go and `pg_dump` backup methods.
 
 ### Quick Start
 
@@ -372,6 +399,7 @@ migration:
   database: "myapp"
   user: "admin"
   password: "secret"
+  ssl_mode: "disable"
   connection_string: ""
   backup: false
   backup_only: false
@@ -419,17 +447,17 @@ backup:
 | `no_owner` | bool | `true` | Exclude ownership statements |
 | `clean` | bool | `true` | Include `DROP IF EXISTS` before `CREATE` |
 | `schemas` | []string | (all) | Schemas to include; empty means all non-system schemas |
-| `backup_method` | string | `go` | Backup method: `go` (pure Go, .sql files) or `pg_dump` (external binary, .dump files) |
+| `backup_method` | string | `go` | Backup method: `go` (pure Go, .sql files) or `pg_dump` (external binary, .dump files); other values are rejected |
 | `ssh_tunnel` | object | | Default SSH tunnel configuration for all databases |
 
 #### `backup.databases[]`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Identifier for this database configuration (used in logs; file names and S3 keys use the actual database name) |
+| `name` | string | Yes | Identifier for this database configuration (used in logs and as the backup file name prefix; S3 key paths use the actual database name) |
 | `host` | string | Yes* | Database host |
 | `port` | int | No | Database port (default: 5432) |
-| `database` | string | Yes* | Database name (use `*` for wildcard expansion; used in file names and S3 keys) |
+| `database` | string | Yes* | Database name (use `*` for wildcard expansion; used in the S3 key path) |
 | `exclude_db` | []string | No | Databases to exclude when using wildcard (`database: "*"`) |
 | `user` | string | No | Database user |
 | `password` | string | No | Database password |
@@ -440,7 +468,7 @@ backup:
 | `upload_to_s3` | bool | No | Per-db S3 upload override |
 | `delete_local_after_upload` | bool | No | Delete local file after S3 upload |
 | `schemas` | []string | No | Per-db schema filter override |
-| `exclude_tables` | []string | No | Tables to exclude from dump |
+| `exclude_tables` | []string | No | Tables to exclude from the Go dump (bare name, `schema.table`, or glob) |
 | `no_owner` | bool | No | Per-db no-owner override |
 | `clean` | bool | No | Per-db clean override |
 | `backup_method` | string | No | Per-db backup method override: `go` (.sql) or `pg_dump` (.dump) |
@@ -456,8 +484,8 @@ backup:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enabled` | bool | `false` | Enable S3 upload globally |
-| `bucket` | string | | S3 bucket name (default, can be overridden per database) |
+| `enabled` | bool | `false` | Enable S3 upload globally; required when any `upload_to_s3` is true |
+| `bucket` | string | | S3 bucket name (default, can be overridden per database with `s3_bucket`) |
 | `region` | string | | AWS region (required for AWS S3, can be any value for MinIO/RustFS) |
 | `prefix` | string | | Key prefix for all uploads (default, can be overridden per database) |
 | `access_key_id` | string | | AWS access key (or use `AWS_ACCESS_KEY_ID` env var) |
@@ -475,17 +503,21 @@ backup:
 
 **Go method** (pure Go dump) produces SQL output covering:
 
-- Extensions
+- Extensions (in their original schema, excluding extension-owned objects)
 - Schemas
 - Enum types
-- Sequences
-- Tables (columns, defaults, NOT NULL, primary keys, unique constraints)
-- Views
+- Sequences (including their current position via `setval`)
+- Tables (columns, identity/generated columns, defaults, NOT NULL, primary/unique/check/exclusion constraints)
 - Functions
+- Views and materialized views (dependency-ordered; materialized views are refreshed after data)
 - Table data (as INSERT statements)
-- Indexes (post-data)
+- Indexes, including standalone unique indexes (post-data)
 - Foreign keys (post-data)
 - Triggers (post-data)
+
+Known limitations of the Go method: partitioned/foreign tables, comments, privileges, row-level
+security policies, custom aggregates, and some less common object types are not reproduced. Use
+`backup_method: "pg_dump"` for a complete, production-grade dump.
 
 **pg_dump method** (external binary) produces PostgreSQL custom format archives containing:
 - Complete database structure and data
@@ -521,6 +553,11 @@ backup:
         - "temp_db"
       upload_to_s3: true
       s3_prefix: "production/"
+
+  s3:
+    enabled: true
+    bucket: "my-db-backups"
+    region: "us-east-1"
 ```
 
 **How it works:**
@@ -543,22 +580,23 @@ backup:
 
 ### Backup Output
 
-- **Local files:**
+- **Local files:** `{name}_backup_{yyyyMMdd_HHmmss}.{ext}`, where `{name}` is the configured
+  target `name` (wildcard targets use the expanded `{name}_{database}`).
   - **`go` method (pure Go dump):**
-    - Plain SQL: `{database}_backup_{yyyyMMdd_HHmmss}.sql`
-    - Compressed SQL (gzip): `{database}_backup_{yyyyMMdd_HHmmss}.sql.gz`
+    - Plain SQL: `{name}_backup_{yyyyMMdd_HHmmss}.sql`
+    - Compressed SQL (gzip): `{name}_backup_{yyyyMMdd_HHmmss}.sql.gz`
   - **`pg_dump` method (external binary):**
-    - Custom format: `{database}_backup_{yyyyMMdd_HHmmss}.dump`
-    - Compressed custom format (gzip): `{database}_backup_{yyyyMMdd_HHmmss}.dump.gz`
+    - Custom format: `{name}_backup_{yyyyMMdd_HHmmss}.dump`
+    - Compressed custom format (gzip): `{name}_backup_{yyyyMMdd_HHmmss}.dump.gz`
     - Note: Custom format is already compressed internally, additional gzip compression is optional
 
 - **S3 uploads:**
   - Bucket: Per-database `s3_bucket` or global `bucket` setting
   - Key: `{prefix}{database}/{filename}` where prefix is per-database `s3_prefix` or global `prefix`
-  - Examples:
-    - Go method: `production/myapp_prod/myapp_prod_backup_20240115_120000.sql.gz`
-    - pg_dump method (uncompressed): `production/myapp_prod/myapp_prod_backup_20240115_120000.dump`
-    - pg_dump method (compressed): `production/myapp_prod/myapp_prod_backup_20240115_120000.dump.gz`
+  - Examples (target `name: myapp_prod`, `database: myapp`):
+    - Go method: `production/myapp/myapp_prod_backup_20240115_120000.sql.gz`
+    - pg_dump method (uncompressed): `production/myapp/myapp_prod_backup_20240115_120000.dump`
+    - pg_dump method (compressed): `production/myapp/myapp_prod_backup_20240115_120000.dump.gz`
 
 ### Differences from `--backup-only` Flag
 
@@ -570,8 +608,8 @@ backup:
 | Compression | No | Optional gzip for both methods |
 | S3 upload | No | Yes (AWS S3 / MinIO / RustFS) |
 | S3 customization | N/A | Per-database bucket/prefix overrides |
-| SSH tunnel support | No | Yes (key/password/agent auth) |
-| Connection formats | lib/pq only | lib/pq, .NET, PostgreSQL URL |
+| SSH tunnel support | Yes (via YAML `migration.ssh_tunnel`) | Yes (key/password/agent auth) |
+| Connection formats | lib/pq, .NET, PostgreSQL URL | lib/pq, .NET, PostgreSQL URL |
 | SQLite support | Yes | No (PostgreSQL only) |
 
 ## Examples

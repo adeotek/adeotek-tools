@@ -12,6 +12,7 @@
 #   database: "myapp"
 #   user: "admin"
 #   password: "secret"
+#   ssl_mode: "disable"          # disable/require/verify-ca/verify-full
 #
 #   # Connection string (optional, overrides individual parameters)
 #   # Supports three formats:
@@ -35,6 +36,10 @@
 #     key_file: "~/.ssh/id_rsa"        # Path to private key (for "key" method)
 #     # password: "sshpass"            # SSH password (for "password" method)
 #     local_port: 0                    # Local port (0 = auto-assign, or specify explicit port like 5433)
+#     # Host key verification (default: ~/.ssh/known_hosts)
+#     # known_hosts_file: "~/.ssh/known_hosts"
+#     # host_key_fingerprint: "SHA256:..."
+#     # insecure_ignore_host_key: false # only for throwaway environments
 
 # backup section (required for `sql-toolbox backup --config`)
 backup:
@@ -55,6 +60,9 @@ backup:
     #   user: "sshuser"
     #   auth_method: "agent"              # Use SSH agent (most secure, no credentials in config)
     #   local_port: 0                     # Auto-assign local port
+    #   # known_hosts_file: "~/.ssh/known_hosts"
+    #   # host_key_fingerprint: "SHA256:..."
+    #   # insecure_ignore_host_key: false
 
   databases:
     # Example 1: Backup all databases on a server (wildcard)

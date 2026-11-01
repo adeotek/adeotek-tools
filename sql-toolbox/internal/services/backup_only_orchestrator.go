@@ -17,11 +17,12 @@ import (
 
 // DatabaseBackupResult holds the result of a single database backup
 type DatabaseBackupResult struct {
-	DatabaseName string
-	FilePath     string
-	UploadedToS3 bool
-	S3Key        string
-	Error        error
+	DatabaseName    string
+	FilePath        string
+	UploadedToS3    bool
+	WouldUploadToS3 bool
+	S3Key           string
+	Error           error
 }
 
 // BackupSummary holds the overall results of the backup-only operation
@@ -41,6 +42,7 @@ type BackupOnlyOrchestrator struct {
 	// Overridable for testing
 	s3UploaderFactory func(models.S3Config) (S3Uploader, error)
 	dbConnector       func(connStr string) (*sql.DB, error)
+	s3Uploaders       map[models.S3Config]S3Uploader
 }
 
 // NewBackupOnlyOrchestrator creates a new orchestrator
@@ -55,7 +57,21 @@ func NewBackupOnlyOrchestrator(config *models.BackupConfig, verbose, dryRun bool
 		dbConnector: func(connStr string) (*sql.DB, error) {
 			return sql.Open("postgres", connStr)
 		},
+		s3Uploaders: make(map[models.S3Config]S3Uploader),
 	}
+}
+
+// getS3Uploader returns a cached uploader for the given configuration.
+func (o *BackupOnlyOrchestrator) getS3Uploader(cfg models.S3Config) (S3Uploader, error) {
+	if uploader, ok := o.s3Uploaders[cfg]; ok {
+		return uploader, nil
+	}
+	uploader, err := o.s3UploaderFactory(cfg)
+	if err != nil {
+		return nil, err
+	}
+	o.s3Uploaders[cfg] = uploader
+	return uploader, nil
 }
 
 // Run executes the backup for all configured databases
@@ -105,12 +121,12 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 			DeleteLocalAfterUpload: o.config.S3.DeleteLocalAfterUpload,
 		}
 
-		var err error
-		s3Uploader, err = o.s3UploaderFactory(s3Config)
+		uploader, err := o.getS3Uploader(s3Config)
 		if err != nil {
 			result.Error = fmt.Errorf("failed to create S3 uploader: %w", err)
 			return result
 		}
+		s3Uploader = uploader
 	}
 
 	// Establish SSH tunnel if configured
@@ -141,7 +157,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 	// Create output directory
 	outputDir := dbTarget.GetEffectiveOutputDir()
 	if !o.dryRun {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if err := os.MkdirAll(outputDir, 0700); err != nil {
 			result.Error = fmt.Errorf("failed to create output directory: %w", err)
 			return result
 		}
@@ -153,16 +169,24 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 	var fileName string
 	var compress bool
 
+	// Use the configured target name (which includes the database name for
+	// wildcard expansions) so two targets for the same database cannot collide.
+	baseName := dbTarget.Database
+	if dbTarget.Name != "" {
+		baseName = dbTarget.Name
+	}
+	baseName = sanitizeFileName(baseName)
+
 	if method == BackupMethodPgDump {
 		// pg_dump custom format - optionally compress with gzip
-		fileName = fmt.Sprintf("%s_backup_%s.dump", dbTarget.Database, timestamp)
+		fileName = fmt.Sprintf("%s_backup_%s.dump", baseName, timestamp)
 		compress = dbTarget.GetEffectiveCompress()
 		if compress {
 			fileName += ".gz"
 		}
 	} else {
 		// Go method produces SQL, optionally compressed with gzip
-		fileName = fmt.Sprintf("%s_backup_%s.sql", dbTarget.Database, timestamp)
+		fileName = fmt.Sprintf("%s_backup_%s.sql", baseName, timestamp)
 		compress = dbTarget.GetEffectiveCompress()
 		if compress {
 			fileName += ".gz"
@@ -178,7 +202,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 			s3Prefix := dbTarget.GetEffectiveS3Prefix()
 			s3Key := BuildS3Key(s3Prefix, dbTarget.Database, filePath)
 			log.Printf("[DRY RUN] Would upload to S3: %s", s3Key)
-			result.UploadedToS3 = true
+			result.WouldUploadToS3 = true
 			result.S3Key = s3Key
 		}
 		return result
@@ -219,6 +243,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 			DatabaseName: dbTarget.Database,
 			User:         dbTarget.User,
 			Password:     dbTarget.Password,
+			SSLMode:      dbTarget.SSLMode,
 		}
 		if dbTarget.ConnectionString != "" {
 			connParams.RawConnectionString = dbTarget.ConnectionString
@@ -241,12 +266,25 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 		}
 	} else {
 		// Use pure Go dump - needs DB connection
-		connStr := dbTarget.ToConnectionString()
-
-		// If SSH tunnel is active, modify connection string to use tunnel's local address
+		connParams := &models.ConnectionParameters{
+			Provider:     "postgresql",
+			Host:         dbTarget.Host,
+			Port:         dbTarget.GetEffectivePort(),
+			DatabaseName: dbTarget.Database,
+			User:         dbTarget.User,
+			Password:     dbTarget.Password,
+			SSLMode:      dbTarget.SSLMode,
+		}
+		if dbTarget.ConnectionString != "" {
+			connParams.RawConnectionString = dbTarget.ConnectionString
+		}
 		if sshTunnel != nil {
-			connStr = fmt.Sprintf("host=127.0.0.1 port=%d dbname=%s user=%s password=%s sslmode=disable",
-				sshTunnel.GetLocalPort(), dbTarget.Database, dbTarget.User, dbTarget.Password)
+			connParams.SetActiveTunnel(sshTunnel)
+		}
+		connStr, connErr := connParams.GetConnectionString()
+		if connErr != nil {
+			result.Error = fmt.Errorf("failed to build connection string: %w", connErr)
+			return result
 		}
 
 		db, dErr := o.dbConnector(connStr)
@@ -315,7 +353,7 @@ func (o *BackupOnlyOrchestrator) backupDatabase(dbTarget models.DatabaseTarget) 
 
 // createOutputWriter creates a writer for the dump output, optionally wrapping with gzip
 func createOutputWriter(path string, compress bool) (io.Writer, func() error, error) {
-	file, err := os.Create(path)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -85,13 +85,14 @@ func LoadBackupConfig(path string) (*BackupConfig, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	if err := config.Validate(); err != nil {
-		return nil, err
-	}
-
-	// Link defaults and S3 config to each database target
+	// Link defaults and S3 config to each database target before validation, so
+	// validation can resolve inherited values (e.g. upload_to_s3, s3_bucket)
 	for i := range config.Databases {
 		config.Databases[i].SetDefaults(&config.Defaults, &config.S3)
+	}
+
+	if err := config.Validate(); err != nil {
+		return nil, err
 	}
 
 	return &config, nil
@@ -116,10 +117,71 @@ func (c *BackupConfig) Validate() error {
 		}
 	}
 
-	if c.S3.Enabled && c.S3.Bucket == "" {
-		return fmt.Errorf("s3: bucket is required when S3 is enabled")
+	if err := validateBackupMethod("defaults", c.Defaults.BackupMethod); err != nil {
+		return err
+	}
+	for i := range c.Databases {
+		db := &c.Databases[i]
+		if err := validateBackupMethod(fmt.Sprintf("database '%s'", db.Name), db.BackupMethod); err != nil {
+			return err
+		}
 	}
 
+	if (c.S3.AccessKeyID == "") != (c.S3.SecretAccessKey == "") {
+		return fmt.Errorf("s3: access_key_id and secret_access_key must be provided together")
+	}
+	if c.S3.Enabled {
+		for i := range c.Databases {
+			db := &c.Databases[i]
+			if !db.GetEffectiveUploadToS3() {
+				continue
+			}
+			key := db.GetEffectiveS3AccessKeyID()
+			secret := db.GetEffectiveS3SecretAccessKey()
+			if (key == "") != (secret == "") {
+				return fmt.Errorf("database '%s': s3 access_key_id and secret_access_key must be provided together", db.Name)
+			}
+		}
+	} else {
+		for i := range c.Databases {
+			db := &c.Databases[i]
+			if db.GetEffectiveUploadToS3() {
+				return fmt.Errorf("database '%s': upload_to_s3 is enabled but s3.enabled is false", db.Name)
+			}
+		}
+	}
+
+	if c.S3.Enabled && c.S3.Bucket == "" {
+		// Per-database buckets are allowed, so require a resolvable bucket for
+		// every database that uploads, and at least one bucket in total.
+		hasBucket := false
+		for i := range c.Databases {
+			db := &c.Databases[i]
+			if db.GetEffectiveS3Bucket() != "" {
+				hasBucket = true
+				continue
+			}
+			if db.GetEffectiveUploadToS3() {
+				return fmt.Errorf("database '%s': s3 bucket is required when S3 upload is enabled", db.Name)
+			}
+		}
+		if !hasBucket {
+			return fmt.Errorf("s3: bucket is required when S3 is enabled")
+		}
+	}
+
+	return nil
+}
+
+// validateBackupMethod rejects unknown backup methods instead of silently
+// falling back to the pure-Go dumper.
+func validateBackupMethod(scope string, method *string) error {
+	if method == nil || *method == "" {
+		return nil
+	}
+	if *method != "go" && *method != "pg_dump" {
+		return fmt.Errorf("%s: invalid backup_method '%s' (must be 'go' or 'pg_dump')", scope, *method)
+	}
 	return nil
 }
 
@@ -294,16 +356,16 @@ func (dt *DatabaseTarget) ToConnectionString() string {
 	}
 
 	parts := []string{
-		fmt.Sprintf("host=%s", dt.Host),
+		fmt.Sprintf("host=%s", quoteConnValue(dt.Host)),
 		fmt.Sprintf("port=%d", dt.GetEffectivePort()),
-		fmt.Sprintf("dbname=%s", dt.Database),
+		fmt.Sprintf("dbname=%s", quoteConnValue(dt.Database)),
 	}
 
 	if dt.User != "" {
-		parts = append(parts, fmt.Sprintf("user=%s", dt.User))
+		parts = append(parts, fmt.Sprintf("user=%s", quoteConnValue(dt.User)))
 	}
 	if dt.Password != "" {
-		parts = append(parts, fmt.Sprintf("password=%s", dt.Password))
+		parts = append(parts, fmt.Sprintf("password=%s", quoteConnValue(dt.Password)))
 	}
 
 	sslMode := dt.SSLMode
@@ -409,7 +471,8 @@ func ExpandWildcardDatabasesWithConnStr(template DatabaseTarget, verbose bool, c
 	}
 
 	if len(databases) == 0 {
-		return nil, fmt.Errorf("wildcard expansion found 0 databases after exclusions %v", exclusions)
+		log.Printf("Warning: wildcard expansion for '%s' found 0 databases after exclusions %v", template.Name, exclusions)
+		return []DatabaseTarget{}, nil
 	}
 
 	// Create new DatabaseTarget for each discovered database

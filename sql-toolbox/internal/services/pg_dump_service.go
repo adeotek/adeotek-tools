@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -53,16 +55,20 @@ func (s *PgDumpService) Dump() error {
 	if err := s.dumpTables(); err != nil {
 		return fmt.Errorf("dumping tables: %w", err)
 	}
-	if err := s.dumpViews(); err != nil {
-		return fmt.Errorf("dumping views: %w", err)
-	}
+	// Functions must exist before views that call them.
 	if err := s.dumpFunctions(); err != nil {
 		return fmt.Errorf("dumping functions: %w", err)
+	}
+	if err := s.dumpViews(); err != nil {
+		return fmt.Errorf("dumping views: %w", err)
 	}
 
 	// Data
 	if err := s.dumpAllTableData(); err != nil {
 		return fmt.Errorf("dumping table data: %w", err)
+	}
+	if err := s.dumpMaterializedViewData(); err != nil {
+		return fmt.Errorf("dumping materialized view data: %w", err)
 	}
 
 	// Post-data: indexes, foreign keys, triggers
@@ -132,10 +138,14 @@ func (s *PgDumpService) isSchemaIncluded(schema string) bool {
 	return false
 }
 
-// isTableExcluded checks whether a table should be excluded from the dump
-func (s *PgDumpService) isTableExcluded(table string) bool {
-	for _, t := range s.options.ExcludeTables {
-		if t == table {
+// isTableExcluded checks whether a table should be excluded from the dump.
+// Patterns can be a bare table name, a schema-qualified name, or a glob.
+func (s *PgDumpService) isTableExcluded(schema, table string) bool {
+	for _, pattern := range s.options.ExcludeTables {
+		if ok, _ := path.Match(pattern, table); ok {
+			return true
+		}
+		if ok, _ := path.Match(pattern, schema+"."+table); ok {
 			return true
 		}
 	}
@@ -147,7 +157,12 @@ func qualifiedName(schema, name string) string {
 	return fmt.Sprintf("%s.%s", quoteIdentifier(schema), quoteIdentifier(name))
 }
 
-// quoteIdentifier quotes a PostgreSQL identifier
+// quoteLiteral quotes a string as a PostgreSQL string literal
+func quoteLiteral(value string) string {
+	return "'" + escapeStringLiteral(value) + "'"
+}
+
+// quoteIdentifier quotes a PostgreSQL identifier, escaping embedded quotes
 func quoteIdentifier(name string) string {
-	return `"` + name + `"`
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
 }

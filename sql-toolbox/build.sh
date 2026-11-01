@@ -19,18 +19,19 @@ echo "Go version: $(go version)"
 echo "Downloading dependencies..."
 go mod download
 
-# Tidy up modules
-echo "Tidying up modules..."
-go mod tidy
-
-# Run tests
+# Run tests and static checks
 echo "Running tests..."
-go test -v ./...
+go test ./...
+
+echo "Running go vet..."
+go vet ./...
 
 # Build the application
 echo "Building application..."
+VERSION=$(git describe --tags --always --dirty 2>/dev/null | sed 's|.*/||' || echo dev)
 mkdir -p build
-go build -ldflags "-w -s" -o build/sql-toolbox ./cmd/sql-toolbox
+go build -ldflags "-w -s -X github.com/adeotek/adeotek-tools/sql-toolbox/internal/app.Version=$VERSION" \
+    -o build/sql-toolbox ./cmd/sql-toolbox
 
 # Check if build was successful
 if [ -f "build/sql-toolbox" ]; then
