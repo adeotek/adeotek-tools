@@ -68,13 +68,18 @@ func runBackup(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(config.Databases) == 0 {
-		return fmt.Errorf("no databases to backup after wildcard expansion")
+		log.Printf("Warning: no databases to backup after wildcard expansion; nothing to do")
+		return nil
 	}
 
 	if verbose {
 		log.Printf("Configuration loaded: %d database(s) configured", len(config.Databases))
 		if config.S3.Enabled {
-			log.Printf("S3 upload enabled: bucket=%s, region=%s", config.S3.Bucket, config.S3.Region)
+			bucket := config.S3.Bucket
+			if bucket == "" {
+				bucket = "(per-database)"
+			}
+			log.Printf("S3 upload enabled: bucket=%s, region=%s", bucket, config.S3.Region)
 		}
 	}
 
@@ -96,6 +101,8 @@ func runBackup(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  [OK]   %s -> %s", result.DatabaseName, result.FilePath)
 			if result.UploadedToS3 {
 				fmt.Printf(" (uploaded to S3: %s)", result.S3Key)
+			} else if result.WouldUploadToS3 {
+				fmt.Printf(" (would upload to S3: %s)", result.S3Key)
 			}
 			fmt.Println()
 		}

@@ -122,6 +122,69 @@ s3:
 	}
 }
 
+func TestLoadBackupConfig_S3EnabledPerDatabaseBucket(t *testing.T) {
+	yaml := `
+defaults:
+  upload_to_s3: true
+databases:
+  - name: "myapp"
+    host: "localhost"
+    database: "myapp"
+    s3_bucket: "myapp-backups"
+s3:
+  enabled: true
+`
+	path := writeTempConfig(t, yaml)
+	config, err := LoadBackupConfig(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := config.Databases[0].GetEffectiveS3Bucket(); got != "myapp-backups" {
+		t.Errorf("expected effective bucket 'myapp-backups', got '%s'", got)
+	}
+}
+
+func TestLoadBackupConfig_S3EnabledUploadWithoutBucket(t *testing.T) {
+	yaml := `
+databases:
+  - name: "with-bucket"
+    host: "localhost"
+    database: "myapp"
+    s3_bucket: "myapp-backups"
+  - name: "without-bucket"
+    host: "localhost"
+    database: "other"
+    upload_to_s3: true
+s3:
+  enabled: true
+`
+	path := writeTempConfig(t, yaml)
+	_, err := LoadBackupConfig(path)
+	if err == nil {
+		t.Fatal("expected error for database uploading to S3 without a resolvable bucket")
+	}
+	want := "database 'without-bucket': s3 bucket is required when S3 upload is enabled"
+	if err.Error() != want {
+		t.Errorf("expected error '%s', got '%s'", want, err.Error())
+	}
+}
+
+func TestLoadBackupConfig_S3EnabledPerDatabaseBucketNoUpload(t *testing.T) {
+	yaml := `
+databases:
+  - name: "myapp"
+    host: "localhost"
+    database: "myapp"
+    s3_bucket: "myapp-backups"
+s3:
+  enabled: true
+`
+	path := writeTempConfig(t, yaml)
+	if _, err := LoadBackupConfig(path); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestDatabaseTarget_GetEffectiveOutputDir(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -31,6 +31,7 @@ func newMigrationCmd() *cobra.Command {
 	cmd.Flags().StringP("database", "b", "", "Database name")
 	cmd.Flags().StringP("user", "u", "", "Database user")
 	cmd.Flags().StringP("password", "s", "", "Database password")
+	cmd.Flags().String("ssl-mode", "", "PostgreSQL SSL mode (disable/require/verify-ca/verify-full, default: disable)")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run in dry-run mode, simulating execution without making changes")
 	cmd.Flags().BoolP("verbose", "v", false, "Enable verbose output")
 	cmd.Flags().Bool("backup", false, "Backup the database before applying migrations (only if there are unapplied scripts)")
@@ -53,6 +54,7 @@ func newMigrationCmd() *cobra.Command {
 	v.BindPFlag("database", cmd.Flags().Lookup("database"))
 	v.BindPFlag("user", cmd.Flags().Lookup("user"))
 	v.BindPFlag("password", cmd.Flags().Lookup("password"))
+	v.BindPFlag("ssl-mode", cmd.Flags().Lookup("ssl-mode"))
 	v.BindPFlag("dry-run", cmd.Flags().Lookup("dry-run"))
 	v.BindPFlag("verbose", cmd.Flags().Lookup("verbose"))
 	v.BindPFlag("backup", cmd.Flags().Lookup("backup"))
@@ -95,6 +97,7 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	database := resolveString(v, "database", migConfig, func(c *models.MigrationConfig) string { return c.Database })
 	user := resolveString(v, "user", migConfig, func(c *models.MigrationConfig) string { return c.User })
 	password := resolveString(v, "password", migConfig, func(c *models.MigrationConfig) string { return c.Password })
+	sslMode := resolveString(v, "ssl-mode", migConfig, func(c *models.MigrationConfig) string { return c.SSLMode })
 	isDryRun := v.GetBool("dry-run")
 	verbose := v.GetBool("verbose")
 	isBackup := resolveBool(v, "backup", migConfig, func(c *models.MigrationConfig) bool { return c.Backup })
@@ -102,17 +105,32 @@ func runMigration(cmd *cobra.Command, args []string) error {
 	isRestore := resolveBool(v, "restore", migConfig, func(c *models.MigrationConfig) bool { return c.Restore })
 	backupMethod := resolveString(v, "backup-method", migConfig, func(c *models.MigrationConfig) string { return c.BackupMethod })
 
+	if isRestore && (isBackup || isBackupOnly) {
+		return fmt.Errorf("--restore cannot be combined with --backup or --backup-only")
+	}
+	if isBackup && isBackupOnly {
+		return fmt.Errorf("--backup cannot be combined with --backup-only")
+	}
+	if backupMethod != "" && backupMethod != services.BackupMethodGo && backupMethod != services.BackupMethodPgDump {
+		return fmt.Errorf("invalid --backup-method '%s' (must be 'go' or 'pg_dump')", backupMethod)
+	}
+
 	// Default provider if empty
 	if provider == "" {
 		provider = "postgresql"
 	}
 
 	// Create connection parameters first (needed for both restore and migration)
+	portStr := ""
+	if port > 0 {
+		portStr = strconv.Itoa(port)
+	}
 	connectionParams, err := models.ParseConnectionParameters(
-		provider, connectionString, host, strconv.Itoa(port), database, user, password)
+		provider, connectionString, host, portStr, database, user, password)
 	if err != nil {
 		return fmt.Errorf("failed to parse connection parameters: %v", err)
 	}
+	connectionParams.SSLMode = sslMode
 
 	// Validate connection parameters
 	if valid, errors := connectionParams.IsValid(); !valid {

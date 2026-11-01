@@ -9,11 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version information
-const (
-	Version   = "0.8.4"
-	EnvPrefix = "SQLTB"
-)
+// Version information. Version is injected at build time via -ldflags.
+var Version = "0.8.5"
+
+const EnvPrefix = "SQLTB"
 
 // Run executes the main application logic
 func Run() {

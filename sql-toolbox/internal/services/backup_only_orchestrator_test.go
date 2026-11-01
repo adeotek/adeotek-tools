@@ -85,8 +85,11 @@ func TestBackupOnlyOrchestrator_DryRunWithS3(t *testing.T) {
 	if len(mock.UploadCalls) != 0 {
 		t.Errorf("expected 0 upload calls in dry-run, got %d", len(mock.UploadCalls))
 	}
-	if !summary.Results[0].UploadedToS3 {
-		t.Error("expected UploadedToS3 to be true in dry-run")
+	if summary.Results[0].UploadedToS3 {
+		t.Error("UploadedToS3 must be false in dry-run")
+	}
+	if !summary.Results[0].WouldUploadToS3 {
+		t.Error("expected WouldUploadToS3 to be true in dry-run")
 	}
 }
 

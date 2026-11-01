@@ -456,6 +456,27 @@ GRANT EXECUTE ON FUNCTION test_function() TO public;`
 	}
 }
 
+func TestSqlScriptsHelpers_SplitSqlStatements_TrailingCommentAndQuotedSemicolon(t *testing.T) {
+	helper := NewSqlScriptsHelpers()
+	script := `INSERT INTO t (v) VALUES ('a;b'); -- trailing comment
+SELECT 1;
+SELECT '--not a comment';`
+
+	statements := helper.SplitSqlStatements(script)
+	if len(statements) != 3 {
+		t.Fatalf("expected 3 statements, got %d: %#v", len(statements), statements)
+	}
+	if !strings.Contains(statements[0], "'a;b'") {
+		t.Errorf("semicolon inside a quoted string must not split the statement: %q", statements[0])
+	}
+	if !strings.Contains(statements[1], "SELECT 1") {
+		t.Errorf("expected the second statement to be SELECT 1, got %q", statements[1])
+	}
+	if !strings.Contains(statements[2], "'--not a comment'") {
+		t.Errorf("comment marker inside a string must not be treated as a comment: %q", statements[2])
+	}
+}
+
 func TestSqlScriptsHelpers_DollarQuoteRegexPattern(t *testing.T) {
 	// Test the regex pattern used for dollar-quoted string detection
 	dollarQuotePattern := regexp.MustCompile(`\$([A-Za-z0-9_]*)\$`)

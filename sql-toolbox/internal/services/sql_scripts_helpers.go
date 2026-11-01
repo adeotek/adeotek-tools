@@ -2,11 +2,11 @@ package services
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -118,7 +118,7 @@ func (s *SqlScriptsHelpers) CalculateHash(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-// ExecuteScript executes a SQL script against the database
+// ExecuteScript executes a SQL script against the database in a transaction
 func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams *models.ConnectionParameters) error {
 	dbFactory := database.NewFactory(connectionParams)
 	db, err := dbFactory.CreateConnection()
@@ -127,6 +127,22 @@ func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams
 	}
 	defer db.Close()
 
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	if err := s.ExecuteScriptTx(tx, scriptContent); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit script transaction: %w", err)
+	}
+	return nil
+}
+
+// ExecuteScriptTx executes all statements of a SQL script inside an existing transaction
+func (s *SqlScriptsHelpers) ExecuteScriptTx(tx *sql.Tx, scriptContent string) error {
 	// Split script into individual statements for better error handling
 	statements := s.SplitSqlStatements(scriptContent)
 
@@ -136,8 +152,7 @@ func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams
 			continue
 		}
 
-		_, err := db.Exec(statement)
-		if err != nil {
+		if _, err := tx.Exec(statement); err != nil {
 			return fmt.Errorf("failed to execute SQL statement: %w", err)
 		}
 	}
@@ -145,71 +160,158 @@ func (s *SqlScriptsHelpers) ExecuteScript(scriptContent string, connectionParams
 	return nil
 }
 
-// SplitSqlStatements splits a SQL script into individual statements
-// This handles complex scripts including stored procedures, functions, and other constructs
+// SplitSqlStatements splits a SQL script into individual statements.
+// Semicolons inside single/double quotes, line/block comments and dollar-quoted
+// bodies do not terminate a statement.
 func (s *SqlScriptsHelpers) SplitSqlStatements(script string) []string {
 	var result []string
 	var current strings.Builder
 
-	lines := strings.Split(script, "\n")
-	inBlock := false
-	blockDelimiter := ""
+	var dollarTag string
+	inSingle, inDouble, inLineComment, inBlockComment := false, false, false, false
 
-	// Regex pattern for PostgreSQL dollar-quoted strings: $tag$ where tag can be empty or contain letters, digits, underscores
-	dollarQuotePattern := regexp.MustCompile(`\$([A-Za-z0-9_]*)\$`)
-
-	for _, line := range lines {
-		trimmedLine := strings.TrimSpace(line)
-
-		// Skip empty lines and comments when not in a block
-		if !inBlock && (trimmedLine == "" || strings.HasPrefix(trimmedLine, "--")) {
-			continue
+	for i := 0; i < len(script); {
+		c := script[i]
+		next := byte(0)
+		if i+1 < len(script) {
+			next = script[i+1]
 		}
 
-		// Check for block delimiters ($$, $tag$, etc.)
-		if !inBlock {
-			// Look for PostgreSQL dollar-quoted strings or PL/pgSQL blocks
-			matches := dollarQuotePattern.FindAllString(trimmedLine, -1)
-			if len(matches) > 0 {
-				// Use the first valid delimiter found
-				blockDelimiter = matches[0]
-				inBlock = true
+		switch {
+		case inLineComment:
+			current.WriteByte(c)
+			if c == '\n' {
+				inLineComment = false
 			}
-		}
-
-		// Add the line to current statement
-		if current.Len() > 0 {
-			current.WriteString("\n")
-		}
-		current.WriteString(line)
-
-		// Check if we're ending a block
-		if inBlock && blockDelimiter != "" && strings.Contains(trimmedLine, blockDelimiter) {
-			// Count occurrences to handle multiple delimiters in same line
-			openCount := strings.Count(current.String(), blockDelimiter)
-			if openCount%2 == 0 { // Even number means block is closed
-				inBlock = false
-				blockDelimiter = ""
+			i++
+		case inBlockComment:
+			current.WriteByte(c)
+			if c == '*' && next == '/' {
+				current.WriteByte(next)
+				inBlockComment = false
+				i += 2
+			} else {
+				i++
 			}
-		}
-
-		// If not in a block and line ends with semicolon, it's end of statement
-		if !inBlock && strings.HasSuffix(trimmedLine, ";") {
-			stmt := strings.TrimSpace(current.String())
-			if stmt != "" && stmt != ";" {
-				result = append(result, stmt)
+		case dollarTag != "":
+			if strings.HasPrefix(script[i:], dollarTag) {
+				current.WriteString(dollarTag)
+				i += len(dollarTag)
+				dollarTag = ""
+			} else {
+				current.WriteByte(c)
+				i++
 			}
-			current.Reset()
+		case inSingle:
+			current.WriteByte(c)
+			if c == '\'' {
+				if next == '\'' {
+					current.WriteByte(next)
+					i += 2
+					continue
+				}
+				inSingle = false
+			}
+			i++
+		case inDouble:
+			current.WriteByte(c)
+			if c == '"' {
+				if next == '"' {
+					current.WriteByte(next)
+					i += 2
+					continue
+				}
+				inDouble = false
+			}
+			i++
+		default:
+			switch {
+			case c == '\'':
+				inSingle = true
+				current.WriteByte(c)
+				i++
+			case c == '"':
+				inDouble = true
+				current.WriteByte(c)
+				i++
+			case c == '-' && next == '-':
+				inLineComment = true
+				current.WriteString("--")
+				i += 2
+			case c == '/' && next == '*':
+				inBlockComment = true
+				current.WriteString("/*")
+				i += 2
+			case c == '$':
+				if tagLen := dollarTagLength(script[i:]); tagLen > 0 {
+					dollarTag = script[i : i+tagLen]
+					current.WriteString(dollarTag)
+					i += tagLen
+				} else {
+					current.WriteByte(c)
+					i++
+				}
+			case c == ';':
+				current.WriteByte(c)
+				if stmt := strings.TrimSpace(current.String()); hasExecutableSQL(stmt) {
+					result = append(result, stmt)
+				}
+				current.Reset()
+				i++
+			default:
+				current.WriteByte(c)
+				i++
+			}
 		}
 	}
 
-	// Add any remaining content as final statement
-	if current.Len() > 0 {
-		stmt := strings.TrimSpace(current.String())
-		if stmt != "" && stmt != ";" {
-			result = append(result, stmt)
-		}
+	if stmt := strings.TrimSpace(current.String()); hasExecutableSQL(stmt) {
+		result = append(result, stmt)
 	}
 
 	return result
+}
+
+// dollarTagLength returns the length of a dollar-quote opener at the start of s,
+// or 0 when s does not start with one (e.g. "$1" in an identifier).
+func dollarTagLength(s string) int {
+	if len(s) < 2 || s[0] != '$' {
+		return 0
+	}
+	for i := 1; i < len(s); i++ {
+		c := s[i]
+		if c == '$' {
+			return i + 1
+		}
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return 0
+		}
+	}
+	return 0
+}
+
+// hasExecutableSQL reports whether a statement contains anything besides
+// whitespace, semicolons and leading comments.
+func hasExecutableSQL(statement string) bool {
+	s := strings.TrimSpace(statement)
+	for {
+		s = strings.TrimSpace(s)
+		switch {
+		case strings.HasPrefix(s, "--"):
+			if idx := strings.IndexByte(s, '\n'); idx >= 0 {
+				s = s[idx+1:]
+				continue
+			}
+			return false
+		case strings.HasPrefix(s, "/*"):
+			if idx := strings.Index(s, "*/"); idx >= 0 {
+				s = s[idx+2:]
+				continue
+			}
+			return false
+		}
+		break
+	}
+	s = strings.TrimSpace(s)
+	return s != "" && s != ";"
 }

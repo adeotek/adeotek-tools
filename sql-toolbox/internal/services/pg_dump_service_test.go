@@ -123,7 +123,13 @@ func TestFormatInsertValue(t *testing.T) {
 			name:     "timestamp",
 			value:    time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC),
 			colType:  "timestamp with time zone",
-			expected: "'2024-01-15 10:30:00+00'",
+			expected: "'2024-01-15 10:30:00+00:00'",
+		},
+		{
+			name:     "timestamp with sub-hour offset",
+			value:    time.Date(2024, 1, 15, 10, 30, 0, 0, time.FixedZone("NPT", 5*3600+1800)),
+			colType:  "timestamp with time zone",
+			expected: "'2024-01-15 10:30:00+05:30'",
 		},
 	}
 	for _, tt := range tests {
@@ -197,6 +203,7 @@ func TestQuoteIdentifier(t *testing.T) {
 		{"simple", `"simple"`},
 		{"my_table", `"my_table"`},
 		{"public", `"public"`},
+		{`odd"name`, `"odd""name"`},
 	}
 	for _, tt := range tests {
 		got := quoteIdentifier(tt.input)

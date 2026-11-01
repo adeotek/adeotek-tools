@@ -14,10 +14,13 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
-# Build flags
-LDFLAGS=-ldflags "-w -s"
+# Version injected into the binary (override with make VERSION=x.y.z)
+VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null | sed 's|.*/||' || echo dev)
 
-.PHONY: all build clean test deps tidy run install
+# Build flags
+LDFLAGS=-ldflags "-w -s -X $(MODULE_NAME)/internal/app.Version=$(VERSION)"
+
+.PHONY: all build clean test deps tidy run install fmt lint
 
 # Default target
 all: clean deps build
@@ -60,12 +63,22 @@ test:
 # Download dependencies
 deps:
 	@echo "Downloading dependencies..."
-	$(GOGET) ./...
+	$(GOMOD) download
 
 # Tidy up go.mod and go.sum
 tidy:
 	@echo "Tidying up modules..."
 	$(GOMOD) tidy
+
+# Format Go sources
+fmt:
+	@echo "Formatting Go sources..."
+	gofmt -w $(shell find . -name '*.go' -not -path './vendor/*')
+
+# Run static checks
+lint:
+	@echo "Running go vet..."
+	$(GOCMD) vet ./...
 
 # Run the application
 run:
@@ -90,6 +103,8 @@ help:
 	@echo "  test        - Run tests"
 	@echo "  deps        - Download dependencies"
 	@echo "  tidy        - Tidy up go.mod and go.sum"
+	@echo "  fmt         - Format Go sources"
+	@echo "  lint        - Run go vet"
 	@echo "  run         - Run the application"
 	@echo "  install     - Install the application"
 	@echo "  help        - Show this help message"

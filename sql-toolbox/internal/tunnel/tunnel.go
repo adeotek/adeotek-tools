@@ -5,10 +5,13 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/knownhosts"
 
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
 )
@@ -17,6 +20,7 @@ import (
 type SSHTunnel struct {
 	config       *models.SSHTunnelConfig
 	sshClient    *ssh.Client
+	agentConn    net.Conn
 	listener     net.Listener
 	localAddress string
 	dbHost       string
@@ -57,12 +61,16 @@ func (t *SSHTunnel) establish() error {
 		return fmt.Errorf("failed to get SSH auth method: %w", err)
 	}
 
+	hostKeyCallback, err := t.hostKeyCallback()
+	if err != nil {
+		return fmt.Errorf("failed to configure SSH host key verification: %w", err)
+	}
+
 	// SSH client configuration
 	sshConfig := &ssh.ClientConfig{
-		User: t.config.User,
-		Auth: []ssh.AuthMethod{authMethod},
-		// TODO: Add host key verification for production use
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		User:            t.config.User,
+		Auth:            []ssh.AuthMethod{authMethod},
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	// Connect to SSH server
@@ -87,6 +95,46 @@ func (t *SSHTunnel) establish() error {
 	go t.forward()
 
 	return nil
+}
+
+// hostKeyCallback builds the SSH host key verification callback from the config.
+func (t *SSHTunnel) hostKeyCallback() (ssh.HostKeyCallback, error) {
+	if t.config.InsecureIgnoreHostKey {
+		return ssh.InsecureIgnoreHostKey(), nil
+	}
+
+	if fingerprint := strings.TrimSpace(t.config.HostKeyFingerprint); fingerprint != "" {
+		return func(_ string, _ net.Addr, key ssh.PublicKey) error {
+			if ssh.FingerprintSHA256(key) == fingerprint || ssh.FingerprintLegacyMD5(key) == fingerprint {
+				return nil
+			}
+			return fmt.Errorf("SSH host key fingerprint mismatch: got %s", ssh.FingerprintSHA256(key))
+		}, nil
+	}
+
+	knownHostsFile := t.config.KnownHostsFile
+	if knownHostsFile == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine home directory for known_hosts: %w", err)
+		}
+		knownHostsFile = filepath.Join(home, ".ssh", "known_hosts")
+	} else if strings.HasPrefix(knownHostsFile, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand known_hosts_file: %w", err)
+		}
+		knownHostsFile = filepath.Join(home, knownHostsFile[2:])
+	}
+
+	if _, err := os.Stat(knownHostsFile); err != nil {
+		return nil, fmt.Errorf("known_hosts file %q not found; set known_hosts_file, host_key_fingerprint, or insecure_ignore_host_key", knownHostsFile)
+	}
+	callback, err := knownhosts.New(knownHostsFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load known_hosts file %q: %w", knownHostsFile, err)
+	}
+	return callback, nil
 }
 
 // getAuthMethod returns the appropriate SSH authentication method based on config
@@ -134,6 +182,7 @@ func (t *SSHTunnel) getAgentAuth() (ssh.AuthMethod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to SSH agent: %w", err)
 	}
+	t.agentConn = conn
 
 	agentClient := agent.NewClient(conn)
 	return ssh.PublicKeysCallback(agentClient.Signers), nil
@@ -238,6 +287,12 @@ func (t *SSHTunnel) Close() error {
 				if closeErr == nil {
 					closeErr = fmt.Errorf("failed to close SSH client: %w", err)
 				}
+			}
+		}
+
+		if t.agentConn != nil {
+			if err := t.agentConn.Close(); err != nil && closeErr == nil {
+				closeErr = fmt.Errorf("failed to close SSH agent connection: %w", err)
 			}
 		}
 	})

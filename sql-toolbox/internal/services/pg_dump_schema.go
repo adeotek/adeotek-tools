@@ -8,7 +8,12 @@ import (
 
 // dumpExtensions dumps CREATE EXTENSION statements
 func (s *PgDumpService) dumpExtensions() error {
-	rows, err := s.db.Query(`SELECT extname FROM pg_extension WHERE extname != 'plpgsql' ORDER BY extname`)
+	rows, err := s.db.Query(`
+		SELECT e.extname, n.nspname
+		FROM pg_extension e
+		JOIN pg_namespace n ON n.oid = e.extnamespace
+		WHERE e.extname != 'plpgsql'
+		ORDER BY e.extname`)
 	if err != nil {
 		return fmt.Errorf("querying extensions: %w", err)
 	}
@@ -16,22 +21,23 @@ func (s *PgDumpService) dumpExtensions() error {
 
 	var hasExtensions bool
 	for rows.Next() {
+		var extname, schema string
+		if err := rows.Scan(&extname, &schema); err != nil {
+			return fmt.Errorf("scanning extension: %w", err)
+		}
 		if !hasExtensions {
 			if err := s.writeln("\n--\n-- Extensions\n--\n"); err != nil {
 				return err
 			}
 			hasExtensions = true
 		}
-		var extname string
-		if err := rows.Scan(&extname); err != nil {
-			return fmt.Errorf("scanning extension: %w", err)
-		}
 		if s.options.Clean {
 			if err := s.writef("DROP EXTENSION IF EXISTS %s CASCADE;\n", quoteIdentifier(extname)); err != nil {
 				return err
 			}
 		}
-		if err := s.writef("CREATE EXTENSION IF NOT EXISTS %s WITH SCHEMA public;\n\n", quoteIdentifier(extname)); err != nil {
+		if err := s.writef("CREATE EXTENSION IF NOT EXISTS %s WITH SCHEMA %s;\n\n",
+			quoteIdentifier(extname), quoteIdentifier(schema)); err != nil {
 			return err
 		}
 	}
@@ -91,6 +97,9 @@ func (s *PgDumpService) dumpEnumTypes() error {
 		JOIN pg_namespace n ON t.typnamespace = n.oid
 		JOIN pg_enum e ON t.oid = e.enumtypid
 		WHERE t.typtype = 'e'
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_depend d
+			WHERE d.classid = 'pg_type'::regclass AND d.objid = t.oid AND d.deptype = 'e')
 		GROUP BY n.nspname, t.typname
 		ORDER BY n.nspname, t.typname`)
 	if err != nil {
@@ -142,6 +151,9 @@ func (s *PgDumpService) dumpSequences() error {
 		JOIN pg_namespace n ON c.relnamespace = n.oid
 		WHERE c.relkind = 'S'
 		  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_depend d
+			WHERE d.classid = 'pg_class'::regclass AND d.objid = c.oid AND d.deptype = 'e')
 		ORDER BY n.nspname, c.relname`)
 	if err != nil {
 		return fmt.Errorf("querying sequences: %w", err)
@@ -203,6 +215,19 @@ func (s *PgDumpService) dumpSequences() error {
 			qname, startValue, incrementBy, minValue, maxValue, cacheValue, cycleStr); err != nil {
 			return err
 		}
+
+		// Preserve the current sequence position, otherwise restored sequences
+		// would hand out values that are already in use.
+		var lastValue int64
+		var isCalled bool
+		if err := s.db.QueryRow(fmt.Sprintf("SELECT last_value, is_called FROM %s", qname)).
+			Scan(&lastValue, &isCalled); err != nil {
+			return fmt.Errorf("querying sequence state for %s: %w", qname, err)
+		}
+		if err := s.writef("SELECT pg_catalog.setval(%s, %d, %t);\n\n",
+			quoteLiteral(qname), lastValue, isCalled); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -215,7 +240,9 @@ func (s *PgDumpService) dumpTables() error {
 		JOIN pg_namespace n ON c.relnamespace = n.oid
 		WHERE c.relkind = 'r'
 		  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
-		  AND c.relname NOT LIKE 'pg_%'
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_depend d
+			WHERE d.classid = 'pg_class'::regclass AND d.objid = c.oid AND d.deptype = 'e')
 		ORDER BY n.nspname, c.relname`)
 	if err != nil {
 		return fmt.Errorf("querying tables: %w", err)
@@ -234,7 +261,7 @@ func (s *PgDumpService) dumpTables() error {
 		if !s.isSchemaIncluded(ti.schema) {
 			continue
 		}
-		if s.isTableExcluded(ti.name) {
+		if s.isTableExcluded(ti.schema, ti.name) {
 			continue
 		}
 		tables = append(tables, ti)
@@ -273,7 +300,9 @@ func (s *PgDumpService) dumpSingleTable(schema, table string) error {
 		SELECT a.attname,
 			format_type(a.atttypid, a.atttypmod) AS data_type,
 			a.attnotnull,
-			pg_get_expr(d.adbin, d.adrelid) AS default_value
+			pg_get_expr(d.adbin, d.adrelid) AS default_value,
+			a.attidentity,
+			a.attgenerated
 		FROM pg_attribute a
 		LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
 		WHERE a.attrelid = $1::regclass
@@ -287,14 +316,25 @@ func (s *PgDumpService) dumpSingleTable(schema, table string) error {
 
 	var columns []string
 	for colRows.Next() {
-		var colName, dataType string
+		var colName, dataType, identity, generated string
 		var notNull bool
 		var defaultValue sql.NullString
-		if err := colRows.Scan(&colName, &dataType, &notNull, &defaultValue); err != nil {
+		if err := colRows.Scan(&colName, &dataType, &notNull, &defaultValue, &identity, &generated); err != nil {
 			return fmt.Errorf("scanning column: %w", err)
 		}
 		col := fmt.Sprintf("    %s %s", quoteIdentifier(colName), dataType)
-		if defaultValue.Valid {
+		switch {
+		case generated != "":
+			// Generated columns carry their expression in pg_attrdef; a DEFAULT
+			// clause would make the CREATE TABLE invalid.
+			if defaultValue.Valid {
+				col += fmt.Sprintf(" GENERATED ALWAYS AS (%s) STORED", defaultValue.String)
+			}
+		case identity == "a":
+			col += " GENERATED ALWAYS AS IDENTITY"
+		case identity == "d":
+			col += " GENERATED BY DEFAULT AS IDENTITY"
+		case defaultValue.Valid:
 			col += " DEFAULT " + defaultValue.String
 		}
 		if notNull {
@@ -311,7 +351,7 @@ func (s *PgDumpService) dumpSingleTable(schema, table string) error {
 		SELECT conname, pg_get_constraintdef(oid)
 		FROM pg_constraint
 		WHERE conrelid = $1::regclass
-		  AND contype IN ('p', 'u')
+		  AND contype IN ('p', 'u', 'c', 'x')
 		ORDER BY contype, conname`, qname)
 	if err != nil {
 		return fmt.Errorf("querying constraints: %w", err)
@@ -339,46 +379,167 @@ func (s *PgDumpService) dumpSingleTable(schema, table string) error {
 	return nil
 }
 
-// dumpViews dumps CREATE VIEW statements
-func (s *PgDumpService) dumpViews() error {
+type viewDefinition struct {
+	schema       string
+	name         string
+	relkind      string
+	definition   string
+	dependencies []string
+}
+
+func (v viewDefinition) key() string {
+	return v.schema + "." + v.name
+}
+
+// queryViews returns views and materialized views with their view dependencies.
+func (s *PgDumpService) queryViews() ([]viewDefinition, error) {
 	rows, err := s.db.Query(`
-		SELECT n.nspname, c.relname, pg_get_viewdef(c.oid, true) AS viewdef
+		SELECT n.nspname, c.relname, c.relkind, pg_get_viewdef(c.oid, true) AS viewdef,
+			COALESCE(ARRAY(
+				SELECT DISTINCT dn.nspname || '.' || dc.relname
+				FROM pg_rewrite rw
+				JOIN pg_depend d ON d.objid = rw.oid
+				JOIN pg_class dc ON dc.oid = d.refobjid
+				JOIN pg_namespace dn ON dn.oid = dc.relnamespace
+				WHERE rw.ev_class = c.oid
+				  AND d.refobjid <> c.oid
+				  AND dc.relkind IN ('v', 'm')
+			), '{}') AS deps
 		FROM pg_class c
 		JOIN pg_namespace n ON c.relnamespace = n.oid
-		WHERE c.relkind = 'v'
+		WHERE c.relkind IN ('v', 'm')
 		  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
 		ORDER BY n.nspname, c.relname`)
 	if err != nil {
-		return fmt.Errorf("querying views: %w", err)
+		return nil, fmt.Errorf("querying views: %w", err)
 	}
 	defer rows.Close()
 
-	var hasViews bool
+	var views []viewDefinition
 	for rows.Next() {
-		var schema, name, viewdef string
-		if err := rows.Scan(&schema, &name, &viewdef); err != nil {
-			return fmt.Errorf("scanning view: %w", err)
+		var view viewDefinition
+		var deps []byte
+		if err := rows.Scan(&view.schema, &view.name, &view.relkind, &view.definition, &deps); err != nil {
+			return nil, fmt.Errorf("scanning view: %w", err)
 		}
-		if !s.isSchemaIncluded(schema) {
+		if !s.isSchemaIncluded(view.schema) {
 			continue
 		}
-		if !hasViews {
-			if err := s.writeln("\n--\n-- Views\n--\n"); err != nil {
+		view.dependencies = parsePostgresArray(string(deps))
+		views = append(views, view)
+	}
+	return views, rows.Err()
+}
+
+// orderViews sorts views so that dependencies are created before dependents.
+func orderViews(views []viewDefinition) (ordered, unresolved []viewDefinition) {
+	known := make(map[string]bool, len(views))
+	for _, view := range views {
+		known[view.key()] = true
+	}
+
+	pending := views
+	emitted := make(map[string]bool, len(views))
+	for len(pending) > 0 {
+		progressed := false
+		var remaining []viewDefinition
+		for _, view := range pending {
+			ready := true
+			for _, dep := range view.dependencies {
+				if known[dep] && !emitted[dep] {
+					ready = false
+					break
+				}
+			}
+			if ready {
+				ordered = append(ordered, view)
+				emitted[view.key()] = true
+				progressed = true
+			} else {
+				remaining = append(remaining, view)
+			}
+		}
+		if !progressed {
+			// Circular or unresolvable dependency information: emit the rest in
+			// their original order rather than dropping them.
+			return ordered, remaining
+		}
+		pending = remaining
+	}
+	return ordered, nil
+}
+
+// dumpViews dumps CREATE VIEW / CREATE MATERIALIZED VIEW statements
+func (s *PgDumpService) dumpViews() error {
+	views, err := s.queryViews()
+	if err != nil {
+		return err
+	}
+	if len(views) == 0 {
+		return nil
+	}
+
+	ordered, unresolved := orderViews(views)
+	if len(unresolved) > 0 {
+		if err := s.writeln("-- WARNING: could not resolve view dependency order for:"); err != nil {
+			return err
+		}
+		for _, view := range unresolved {
+			if err := s.writef("--   %s\n", view.key()); err != nil {
 				return err
 			}
-			hasViews = true
 		}
-		qname := qualifiedName(schema, name)
+		ordered = append(ordered, unresolved...)
+	}
+
+	if err := s.writeln("\n--\n-- Views\n--\n"); err != nil {
+		return err
+	}
+	for _, view := range ordered {
+		qname := qualifiedName(view.schema, view.name)
+		kind := "VIEW"
+		if view.relkind == "m" {
+			kind = "MATERIALIZED VIEW"
+		}
 		if s.options.Clean {
-			if err := s.writef("DROP VIEW IF EXISTS %s CASCADE;\n", qname); err != nil {
+			if err := s.writef("DROP %s IF EXISTS %s CASCADE;\n", kind, qname); err != nil {
 				return err
 			}
 		}
-		if err := s.writef("CREATE VIEW %s AS\n%s;\n\n", qname, strings.TrimRight(viewdef, " \t\n;")); err != nil {
+		suffix := ""
+		if view.relkind == "m" {
+			suffix = " WITH NO DATA"
+		}
+		if err := s.writef("CREATE %s %s AS\n%s%s;\n\n",
+			kind, qname, strings.TrimRight(view.definition, " \t\n;"), suffix); err != nil {
 			return err
 		}
 	}
-	return rows.Err()
+	return nil
+}
+
+// dumpMaterializedViewData refreshes materialized views after base data is loaded.
+func (s *PgDumpService) dumpMaterializedViewData() error {
+	views, err := s.queryViews()
+	if err != nil {
+		return err
+	}
+	var wroteHeader bool
+	for _, view := range views {
+		if view.relkind != "m" {
+			continue
+		}
+		if !wroteHeader {
+			if err := s.writeln("\n--\n-- Materialized view data\n--\n"); err != nil {
+				return err
+			}
+			wroteHeader = true
+		}
+		if err := s.writef("REFRESH MATERIALIZED VIEW %s;\n", qualifiedName(view.schema, view.name)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // dumpFunctions dumps CREATE FUNCTION statements
@@ -389,6 +550,9 @@ func (s *PgDumpService) dumpFunctions() error {
 		JOIN pg_namespace n ON p.pronamespace = n.oid
 		WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
 		  AND p.prokind != 'a'
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_depend d
+			WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
 		ORDER BY n.nspname, p.proname`)
 	if err != nil {
 		return fmt.Errorf("querying functions: %w", err)
@@ -433,8 +597,9 @@ func (s *PgDumpService) dumpIndexes() error {
 		JOIN pg_class i ON i.oid = x.indexrelid
 		JOIN pg_namespace n ON c.relnamespace = n.oid
 		WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-		  AND NOT x.indisprimary
-		  AND NOT x.indisunique
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_constraint con
+			WHERE con.conindid = x.indexrelid)
 		ORDER BY n.nspname, c.relname, i.relname`)
 	if err != nil {
 		return fmt.Errorf("querying indexes: %w", err)
@@ -450,7 +615,7 @@ func (s *PgDumpService) dumpIndexes() error {
 		if !s.isSchemaIncluded(schema) {
 			continue
 		}
-		if s.isTableExcluded(tablename) {
+		if s.isTableExcluded(schema, tablename) {
 			continue
 		}
 		if !hasIndexes {
@@ -474,10 +639,13 @@ func (s *PgDumpService) dumpIndexes() error {
 // dumpForeignKeys dumps ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY statements
 func (s *PgDumpService) dumpForeignKeys() error {
 	rows, err := s.db.Query(`
-		SELECT n.nspname, c.relname, con.conname, pg_get_constraintdef(con.oid)
+		SELECT n.nspname, c.relname, con.conname, pg_get_constraintdef(con.oid),
+			rn.nspname, rc.relname
 		FROM pg_constraint con
 		JOIN pg_class c ON con.conrelid = c.oid
 		JOIN pg_namespace n ON c.relnamespace = n.oid
+		JOIN pg_class rc ON con.confrelid = rc.oid
+		JOIN pg_namespace rn ON rc.relnamespace = rn.oid
 		WHERE con.contype = 'f'
 		  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
 		ORDER BY n.nspname, c.relname, con.conname`)
@@ -488,14 +656,14 @@ func (s *PgDumpService) dumpForeignKeys() error {
 
 	var hasFKs bool
 	for rows.Next() {
-		var schema, tablename, conname, condef string
-		if err := rows.Scan(&schema, &tablename, &conname, &condef); err != nil {
+		var schema, tablename, conname, condef, refSchema, refTable string
+		if err := rows.Scan(&schema, &tablename, &conname, &condef, &refSchema, &refTable); err != nil {
 			return fmt.Errorf("scanning foreign key: %w", err)
 		}
 		if !s.isSchemaIncluded(schema) {
 			continue
 		}
-		if s.isTableExcluded(tablename) {
+		if s.isTableExcluded(schema, tablename) || s.isTableExcluded(refSchema, refTable) {
 			continue
 		}
 		if !hasFKs {
@@ -537,7 +705,7 @@ func (s *PgDumpService) dumpTriggers() error {
 		if !s.isSchemaIncluded(schema) {
 			continue
 		}
-		if s.isTableExcluded(tablename) {
+		if s.isTableExcluded(schema, tablename) {
 			continue
 		}
 		if !hasTriggers {

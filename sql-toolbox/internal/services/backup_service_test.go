@@ -374,3 +374,45 @@ func TestRestoreSQLiteBackup_ReplacesAtomically(t *testing.T) {
 		}
 	}
 }
+
+func TestBackupService_RestoreLastBackup_OnlyUsesTargetDatabase(t *testing.T) {
+	dir := t.TempDir()
+	aPath := filepath.Join(dir, "a.db")
+	bPath := filepath.Join(dir, "b.db")
+	if err := os.WriteFile(aPath, []byte("a-original"), 0644); err != nil {
+		t.Fatalf("failed to write a.db: %v", err)
+	}
+	if err := os.WriteFile(bPath, []byte("b-original"), 0644); err != nil {
+		t.Fatalf("failed to write b.db: %v", err)
+	}
+
+	bs := NewBackupService(false, false, "")
+	paramsA := &models.ConnectionParameters{Provider: "sqlite", DatabaseName: aPath}
+	paramsB := &models.ConnectionParameters{Provider: "sqlite", DatabaseName: bPath}
+	backupDir := bs.getBackupDirectory()
+	t.Cleanup(func() { _ = os.RemoveAll(backupDir) })
+
+	if _, err := bs.CreateBackup(paramsA); err != nil {
+		t.Fatalf("backup a failed: %v", err)
+	}
+	if _, err := bs.CreateBackup(paramsB); err != nil {
+		t.Fatalf("backup b failed: %v", err)
+	}
+
+	// Corrupt a.db after its backup; restoring a.db must not pick b's backup,
+	// even though b's backup is the most recent one in the directory.
+	if err := os.WriteFile(aPath, []byte("a-modified"), 0644); err != nil {
+		t.Fatalf("failed to modify a.db: %v", err)
+	}
+	if err := bs.RestoreLastBackup(paramsA); err != nil {
+		t.Fatalf("restore failed: %v", err)
+	}
+
+	got, err := os.ReadFile(aPath)
+	if err != nil {
+		t.Fatalf("failed to read a.db: %v", err)
+	}
+	if string(got) != "a-original" {
+		t.Errorf("expected a.db to be restored from its own backup, got %q", string(got))
+	}
+}

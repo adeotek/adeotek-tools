@@ -17,6 +17,12 @@ type SSHTunnelConfig struct {
 	KeyFile    string `yaml:"key_file"`    // Path to private key (for "key" method)
 	Password   string `yaml:"password"`    // SSH password (for "password" method)
 	LocalPort  int    `yaml:"local_port"`  // Local port (0 = auto-assign)
+
+	// Host key verification. When none of these is set, ~/.ssh/known_hosts is
+	// used. InsecureIgnoreHostKey must be set explicitly to disable verification.
+	KnownHostsFile        string `yaml:"known_hosts_file"`
+	HostKeyFingerprint    string `yaml:"host_key_fingerprint"`
+	InsecureIgnoreHostKey bool   `yaml:"insecure_ignore_host_key"`
 }
 
 // Validate checks if the SSH tunnel configuration is valid

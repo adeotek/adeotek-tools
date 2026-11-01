@@ -1,6 +1,7 @@
 package services
 
 import (
+	"compress/gzip"
 	"database/sql"
 	"fmt"
 	"io"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/adeotek/adeotek-tools/sql-toolbox/internal/models"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const backupDirectoryName = ".db-backups"
@@ -81,12 +83,22 @@ func (bs *BackupService) RestoreLastBackup(connectionParams *models.ConnectionPa
 		return nil
 	}
 
+	restorePath := lastBackupPath
+	if strings.HasSuffix(restorePath, ".gz") {
+		decompressed, cleanup, err := decompressBackup(restorePath)
+		if err != nil {
+			return err
+		}
+		defer cleanup()
+		restorePath = decompressed
+	}
+
 	provider := connectionParams.GetDbProvider()
 	switch provider {
 	case models.PostgreSQL:
-		return bs.restorePostgresBackup(connectionParams, lastBackupPath)
+		return bs.restorePostgresBackup(connectionParams, restorePath)
 	case models.SQLite:
-		return bs.restoreSQLiteBackup(connectionParams, lastBackupPath)
+		return bs.restoreSQLiteBackup(connectionParams, restorePath)
 	default:
 		return fmt.Errorf("restore not supported for provider: %s", provider)
 	}
@@ -102,8 +114,9 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 	provider := connectionParams.GetDbProvider()
 	var extensions []string
 	if provider == models.PostgreSQL {
-		// Support both .sql (pure Go) and .dump (pg_dump custom format)
-		extensions = []string{".sql", ".dump"}
+		// Support both .sql (pure Go) and .dump (pg_dump custom format),
+		// including gzip-compressed backups produced by the backup subcommand.
+		extensions = []string{".sql.gz", ".dump.gz", ".sql", ".dump"}
 	} else {
 		extensions = []string{".db"}
 	}
@@ -113,9 +126,12 @@ func (bs *BackupService) GetLastBackupPath(connectionParams *models.ConnectionPa
 		return "", fmt.Errorf("failed to read backup directory: %w", err)
 	}
 
+	// Only consider backups belonging to this database; otherwise a restore of
+	// database A could silently apply the most recent backup of database B.
+	dbPrefix := bs.getDatabaseName(connectionParams) + "_backup_"
 	var backupFiles []string
 	for _, entry := range entries {
-		if entry.IsDir() {
+		if entry.IsDir() || !strings.HasPrefix(entry.Name(), dbPrefix) {
 			continue
 		}
 		for _, ext := range extensions {
@@ -194,7 +210,7 @@ func (bs *BackupService) createPostgresBackup(connectionParams *models.Connectio
 		return "", fmt.Errorf("failed to create database dumper: %w", err)
 	}
 
-	file, err := os.Create(backupPath)
+	file, err := os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return "", fmt.Errorf("failed to create backup file: %w", err)
 	}
@@ -244,13 +260,26 @@ func (bs *BackupService) createSQLiteBackup(connectionParams *models.ConnectionP
 		return "", fmt.Errorf("SQLite database file not found: %s", sourcePath)
 	}
 
+	if isSQLiteDatabase(sourcePath) {
+		// VACUUM INTO produces a consistent snapshot, including committed data
+		// still living in the WAL file.
+		if err := vacuumSQLiteInto(sourcePath, backupPath); err != nil {
+			return "", fmt.Errorf("failed to back up SQLite database: %w", err)
+		}
+		if err := os.Chmod(backupPath, 0600); err != nil {
+			return "", fmt.Errorf("failed to set backup file permissions: %w", err)
+		}
+		log.Printf("SQLite backup created successfully: %s", backupPath)
+		return backupPath, nil
+	}
+
 	sourceFile, err := os.Open(sourcePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to open source database: %w", err)
 	}
 	defer sourceFile.Close()
 
-	destFile, err := os.Create(backupPath)
+	destFile, err := os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return "", fmt.Errorf("failed to create backup file: %w", err)
 	}
@@ -283,10 +312,16 @@ func (bs *BackupService) restorePostgresBackup(connectionParams *models.Connecti
 	// Build connection arguments; a raw connection string takes precedence and must be
 	// normalized (lib/pq format) because pg_restore/psql accept conninfo strings
 	var connArgs []string
+	password := connectionParams.Password
 	if connectionParams.RawConnectionString != "" {
 		connStr, err := connectionParams.GetConnectionString()
 		if err != nil {
 			return fmt.Errorf("failed to build connection string: %w", err)
+		}
+		// Keep the password out of the process arguments.
+		connStr, extractedPassword := models.RemovePasswordFromConnInfo(connStr)
+		if extractedPassword != "" {
+			password = extractedPassword
 		}
 		connArgs = []string{fmt.Sprintf("--dbname=%s", connStr)}
 	} else {
@@ -312,19 +347,22 @@ func (bs *BackupService) restorePostgresBackup(connectionParams *models.Connecti
 	var cmd *exec.Cmd
 	var cmdName string
 
-	// Use pg_restore for custom format (.dump), psql for plain format (.sql)
+	// Use pg_restore for custom format (.dump), psql for plain format (.sql).
+	// Plain SQL restores must stop on the first error and run atomically; psql
+	// otherwise continues and can exit 0 after failed statements.
 	if strings.HasSuffix(backupPath, ".dump") {
 		cmdName = "pg_restore"
-		args := append(connArgs, "--clean", "--if-exists", backupPath)
+		args := append(connArgs, "--clean", "--if-exists", "--exit-on-error", backupPath)
 		cmd = exec.Command(cmdName, args...)
 	} else {
 		cmdName = "psql"
-		args := append(connArgs, fmt.Sprintf("--file=%s", backupPath))
+		args := append(connArgs, "--single-transaction", "-v", "ON_ERROR_STOP=1",
+			fmt.Sprintf("--file=%s", backupPath))
 		cmd = exec.Command(cmdName, args...)
 	}
 
-	if connectionParams.RawConnectionString == "" && connectionParams.Password != "" {
-		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", connectionParams.Password))
+	if password != "" {
+		cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
 	}
 
 	output, err := cmd.CombinedOutput()
@@ -371,15 +409,103 @@ func (bs *BackupService) restoreSQLiteBackup(connectionParams *models.Connection
 	if err := tmpFile.Close(); err != nil {
 		return fmt.Errorf("failed to close restore file: %w", err)
 	}
-	if err := os.Chmod(tmpPath, 0644); err != nil {
+	// Preserve the target's permissions, or use private permissions for new files.
+	mode := os.FileMode(0600)
+	if info, err := os.Stat(targetPath); err == nil {
+		mode = info.Mode().Perm()
+	}
+	if err := os.Chmod(tmpPath, mode); err != nil {
 		return fmt.Errorf("failed to set restore file permissions: %w", err)
 	}
 	if err := os.Rename(tmpPath, targetPath); err != nil {
 		return fmt.Errorf("failed to replace database file: %w", err)
 	}
+	// Stale WAL/SHM files from the replaced database would corrupt or roll back
+	// the restored snapshot, so remove them.
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if err := os.Remove(targetPath + suffix); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to remove stale SQLite sidecar %s: %w", suffix, err)
+		}
+	}
 
 	log.Printf("SQLite backup restored successfully")
 	return nil
+}
+
+// decompressBackup writes a gunzipped copy of path to a temporary file and
+// returns its name plus a cleanup function.
+func decompressBackup(path string) (string, func(), error) {
+	cleanup := func() {}
+	source, err := os.Open(path)
+	if err != nil {
+		return "", cleanup, fmt.Errorf("failed to open compressed backup: %w", err)
+	}
+	defer source.Close()
+
+	reader, err := gzip.NewReader(source)
+	if err != nil {
+		return "", cleanup, fmt.Errorf("failed to read compressed backup: %w", err)
+	}
+	defer reader.Close()
+
+	// Keep the inner extension so restore can still choose pg_restore vs psql.
+	inner := strings.TrimSuffix(path, ".gz")
+	tmp, err := os.CreateTemp("", "sql-toolbox-restore-*"+filepath.Ext(inner))
+	if err != nil {
+		return "", cleanup, fmt.Errorf("failed to create temporary restore file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	cleanup = func() { _ = os.Remove(tmpPath) }
+
+	if _, err := io.Copy(tmp, reader); err != nil {
+		tmp.Close()
+		cleanup()
+		return "", func() {}, fmt.Errorf("failed to decompress backup: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		cleanup()
+		return "", func() {}, fmt.Errorf("failed to close temporary restore file: %w", err)
+	}
+	if err := os.Chmod(tmpPath, 0600); err != nil {
+		cleanup()
+		return "", func() {}, fmt.Errorf("failed to set temporary restore permissions: %w", err)
+	}
+	return tmpPath, cleanup, nil
+}
+
+// isSQLiteDatabase reports whether path starts with the SQLite file header.
+func isSQLiteDatabase(path string) bool {
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	header := make([]byte, 16)
+	if _, err := io.ReadFull(file, header); err != nil {
+		return false
+	}
+	return string(header) == "SQLite format 3\x00"
+}
+
+// vacuumSQLiteInto writes a consistent snapshot of sourcePath to destPath.
+func vacuumSQLiteInto(sourcePath, destPath string) (err error) {
+	db, err := sql.Open("sqlite3", sourcePath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+
+	defer func() {
+		if err != nil {
+			_ = os.Remove(destPath)
+		}
+	}()
+
+	quotedDest := "'" + strings.ReplaceAll(destPath, "'", "''") + "'"
+	_, err = db.Exec("VACUUM INTO " + quotedDest)
+	return err
 }
 
 func (bs *BackupService) getBackupDirectory() string {
@@ -392,15 +518,14 @@ func (bs *BackupService) getDatabaseName(connectionParams *models.ConnectionPara
 	if dbName == "" {
 		dbName = "unknown"
 	}
-	// Remove invalid file name characters
-	dbName = strings.ReplaceAll(dbName, "/", "_")
-	dbName = strings.ReplaceAll(dbName, "\\", "_")
-	dbName = strings.ReplaceAll(dbName, ":", "_")
-	dbName = strings.ReplaceAll(dbName, "*", "_")
-	dbName = strings.ReplaceAll(dbName, "?", "_")
-	dbName = strings.ReplaceAll(dbName, "\"", "_")
-	dbName = strings.ReplaceAll(dbName, "<", "_")
-	dbName = strings.ReplaceAll(dbName, ">", "_")
-	dbName = strings.ReplaceAll(dbName, "|", "_")
-	return dbName
+	return sanitizeFileName(dbName)
+}
+
+// sanitizeFileName replaces characters that are unsafe in backup file names.
+func sanitizeFileName(name string) string {
+	replacer := strings.NewReplacer(
+		"/", "_", "\\", "_", ":", "_", "*", "_", "?", "_",
+		"\"", "_", "<", "_", ">", "_", "|", "_",
+	)
+	return replacer.Replace(name)
 }

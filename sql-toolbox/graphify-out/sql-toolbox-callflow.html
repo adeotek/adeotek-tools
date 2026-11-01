@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>sql-toolbox — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 408 nodes, 1095 edges, 23 communities. Commit: 3a89ce3</p>
+<p class="subtitle">Generated from graphify knowledge graph: 470 nodes, 1287 edges, 30 communities. Commit: 538d204</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -88,7 +88,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>327 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>378 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
     BUILD_GRAPH_321CBB04("Graph Build<br/><small>7 nodes</small>")
     class BUILD_GRAPH_321CBB04 module;
@@ -96,7 +96,7 @@ flowchart LR
     class CLI_SKILLS_9964CBB8 module;
     SERVE_API_35EC8E86("Serving API<br/><small>7 nodes</small>")
     class SERVE_API_35EC8E86 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>5 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>11 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     READMEMD_USAGE_CONNECTION_6B40804A("Readmemd Usage Connection<br/><small>12 nodes</small>")
     class READMEMD_USAGE_CONNECTION_6B40804A module;
@@ -116,7 +116,7 @@ flowchart LR
     class AGENTSMD_AGENTS_SQL_D36430F1 module;
     BACKUP_WORKERSH_SCRIPT_CABC4A48("Backup Workersh Script<br/><small>2 nodes</small>")
     class BACKUP_WORKERSH_SCRIPT_CABC4A48 module;
-    OTHER_D0941E68("Other<br/><small>1 nodes</small>")
+    OTHER_D0941E68("Other<br/><small>6 nodes</small>")
     class OTHER_D0941E68 module;
     EXTRACT_PIPELINE_5F350230 -->|imports x4| SERVE_API_35EC8E86
     SERVE_API_35EC8E86 -->|references x3| EXTRACT_PIPELINE_5F350230
@@ -143,7 +143,7 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>327</td><td><code>0, 1, 10, 13, 7, 4, 12, 2</code></td></tr><tr><td>Graph Build</td><td>7</td><td><code>15, 21</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>7</td><td><code>9</code></td></tr><tr><td>Serving API</td><td>7</td><td><code>3</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>5</td><td><code>11</code></td></tr><tr><td>Readmemd Usage Connection</td><td>12</td><td><code>5</code></td></tr><tr><td>Readmemd Example Directory</td><td>10</td><td><code>6</code></td></tr><tr><td>Readmemd Backup Subcommand</td><td>8</td><td><code>8</code></td></tr><tr><td>Readmemd Backup Restore</td><td>5</td><td><code>14</code></td></tr><tr><td>Readmemd Example Environment</td><td>5</td><td><code>16</code></td></tr><tr><td>Readmemd New Important</td><td>5</td><td><code>17</code></td></tr><tr><td>Readmemd Backupdatabases Backupdefaults</td><td>4</td><td><code>18</code></td></tr><tr><td>Agentsmd Agents Sql</td><td>3</td><td><code>19</code></td></tr><tr><td>Backup Workersh Script</td><td>2</td><td><code>20</code></td></tr><tr><td>Other</td><td>1</td><td><code>22</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>378</td><td><code>0, 1, 13, 10, 2, 7, 12, 4, 23</code></td></tr><tr><td>Graph Build</td><td>7</td><td><code>15, 21</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>7</td><td><code>9</code></td></tr><tr><td>Serving API</td><td>7</td><td><code>3</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>11</td><td><code>24, 11</code></td></tr><tr><td>Readmemd Usage Connection</td><td>12</td><td><code>5</code></td></tr><tr><td>Readmemd Example Directory</td><td>10</td><td><code>6</code></td></tr><tr><td>Readmemd Backup Subcommand</td><td>8</td><td><code>8</code></td></tr><tr><td>Readmemd Backup Restore</td><td>5</td><td><code>14</code></td></tr><tr><td>Readmemd Example Environment</td><td>5</td><td><code>16</code></td></tr><tr><td>Readmemd New Important</td><td>5</td><td><code>17</code></td></tr><tr><td>Readmemd Backupdatabases Backupdefaults</td><td>4</td><td><code>18</code></td></tr><tr><td>Agentsmd Agents Sql</td><td>3</td><td><code>19</code></td></tr><tr><td>Backup Workersh Script</td><td>2</td><td><code>20</code></td></tr><tr><td>Other</td><td>6</td><td><code>22, 25, 26, 27, 28, 29</code></td></tr>
     </table>
   </div>
   <div class="card">
@@ -155,79 +155,81 @@ flowchart LR
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>408 nodes · 1095 edges · 23 communities (18 shown, 5 thin omitted)</li>
-      <li>Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 151 edges (avg confidence: 0.85)</li>
+      <li>470 nodes · 1287 edges · 30 communities (20 shown, 10 thin omitted)</li>
+      <li>Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 174 edges (avg confidence: 0.85)</li>
       <li>Token cost: 0 input · 0 output</li>
-      <li>1. `DatabaseTarget` - 25 edges</li>
-      <li>2. `PgDumpService` - 25 edges</li>
-      <li>3. `ConnectionParameters` - 23 edges</li>
+      <li>1. `PgDumpService` - 27 edges</li>
+      <li>2. `DatabaseTarget` - 25 edges</li>
+      <li>3. `ConnectionParameters` - 24 edges</li>
     </ul>
   </div>
 </div>
 <hr>
 <!-- ====== 2. Extraction Pipeline ====== -->
 <h2 id="extract-pipeline">2. Extraction Pipeline</h2>
-<p>Extraction Pipeline groups implementation around internal, services, backup, testgo, mostly in internal/models/backup_config_test.go, internal/models/backup_config.go, internal/services/backup_service_test.go. This section covers 327 nodes and 1013 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Extraction Pipeline groups implementation around internal, services, backup, testgo, mostly in internal/models/backup_config_test.go, internal/models/backup_config.go, internal/models/connection.go. This section covers 378 nodes and 1199 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (327 nodes, 1013 edges)
+    %% Section: Extraction Pipeline (378 nodes, 1199 edges)
     subgraph extract_pipeline_internal_models_backup_config_g_beb92305["internal/models/backup_config.go"]
-        internal_models_backup_config_go_models_database_1927a789("DatabaseTarget<br/><small>internal/models/backup_config.go</small>")
         internal_models_backup_config_go_models_backupco_e0e60eae("BackupConfig<br/><small>internal/models/backup_config.go</small>")
         models_backupconfig_validate_36b88109("Validate()<br/><small>internal/models/backup_config.go</small>")
         models_backupconfig_expandwildcards_c7998df6("ExpandWildcards()<br/><small>internal/models/backup_config.go</small>")
+        internal_models_backup_config_go_models_database_1927a789("DatabaseTarget<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_setdefaults_34786a98("SetDefaults()<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_geteffectiveoutputdir_5add7e29("GetEffectiveOutputDir()<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_geteffectivecompress_0e925944("GetEffectiveCompress()<br/><small>internal/models/backup_config.go</small>")
         models_databasetarget_geteffectiveuploadtos3_8ac44656("GetEffectiveUploadToS3()<br/><small>internal/models/backup_config.go</small>")
-        models_databasetarget_geteffectivedeletelocalaft_c3033596("GetEffectiveDeleteLocalAfterUpload()<br/><small>internal/models/backup_config.go</small>")
-        models_databasetarget_geteffectivenoowner_02b495f2("GetEffectiveNoOwner()<br/><small>internal/models/backup_config.go</small>")
-        models_databasetarget_geteffectiveclean_c22c671c("GetEffectiveClean()<br/><small>internal/models/backup_config.go</small>")
-        models_databasetarget_geteffectivebackupmethod_184fbbe0("GetEffectiveBackupMethod()<br/><small>internal/models/backup_config.go</small>")
-        models_databasetarget_geteffectiveschemas_10d6e506("GetEffectiveSchemas()<br/><small>internal/models/backup_config.go</small>")
+    end
+    subgraph extract_pipeline_internal_services_backup_servic_4a4f8da1["internal/services/backup_service_test.go"]
+        services_failingdumper_3e828ec3("failingDumper<br/><small>internal/services/backup_service_test.go</small>")
+        services_failingdumper_dump_f10a88b4("Dump()<br/><small>internal/services/backup_service_test.go</small>")
+        services_staticdumper_866bac23("staticDumper<br/><small>internal/services/backup_service_test.go</small>")
+        services_staticdumper_dump_61c51ab6("Dump()<br/><small>internal/services/backup_service_test.go</small>")
     end
     internal_app_backup_cmd_004e12aa("backup_cmd.go")
     internal_app_migration_cmd_98600ca7("migration_cmd.go")
     internal_services_backup_only_orchestrator_149a681d("backup_only_orchestrator.go")
     internal_services_backup_service_375e4b2f("backup_service.go")
     services_pgdumpservice_27091f26("PgDumpService<br/><small>internal/services/pg_dump_service.go</small>")
+    internal_tunnel_tunnel_77370bb7("tunnel.go")
+    services_failingdumper_3e828ec3 -->|method| services_failingdumper_dump_f10a88b4
+    services_staticdumper_866bac23 -->|method| services_staticdumper_dump_61c51ab6
     internal_models_backup_config_go_models_backupco_e0e60eae -->|method| models_backupconfig_validate_36b88109
     internal_models_backup_config_go_models_backupco_e0e60eae -->|method| models_backupconfig_expandwildcards_c7998df6
     internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_setdefaults_34786a98
     internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveoutputdir_5add7e29
     internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivecompress_0e925944
     internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveuploadtos3_8ac44656
-    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivedeletelocalaft_c3033596
-    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivenoowner_02b495f2
-    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveclean_c22c671c
-    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectivebackupmethod_184fbbe0
-    internal_models_backup_config_go_models_database_1927a789 -->|method| models_databasetarget_geteffectiveschemas_10d6e506
     models_backupconfig_expandwildcards_c7998df6 -->|calls| models_databasetarget_setdefaults_34786a98
+    models_backupconfig_validate_36b88109 -->|calls| models_databasetarget_geteffectiveuploadtos3_8ac44656
     internal_app_backup_cmd_004e12aa -->|imports| internal_services_backup_only_orchestrator_149a681d
     internal_app_backup_cmd_004e12aa -->|imports| internal_services_backup_service_375e4b2f
     internal_app_migration_cmd_98600ca7 -->|imports| internal_services_backup_only_orchestrator_149a681d
     internal_app_migration_cmd_98600ca7 -->|imports| internal_services_backup_service_375e4b2f
-    %% Omitted for readability: 309 nodes, 0 edges
-    class internal_models_backup_config_go_models_database_1927a789 klass;
+    internal_app_migration_cmd_98600ca7 -->|imports| internal_tunnel_tunnel_77370bb7
+    internal_services_backup_only_orchestrator_149a681d -->|imports| internal_tunnel_tunnel_77370bb7
+    %% Omitted for readability: 360 nodes, 0 edges
     class internal_models_backup_config_go_models_backupco_e0e60eae klass;
     class models_backupconfig_validate_36b88109 function;
     class models_backupconfig_expandwildcards_c7998df6 function;
+    class internal_models_backup_config_go_models_database_1927a789 klass;
     class models_databasetarget_setdefaults_34786a98 function;
     class models_databasetarget_geteffectiveoutputdir_5add7e29 function;
     class models_databasetarget_geteffectivecompress_0e925944 function;
     class models_databasetarget_geteffectiveuploadtos3_8ac44656 function;
-    class models_databasetarget_geteffectivedeletelocalaft_c3033596 function;
-    class models_databasetarget_geteffectivenoowner_02b495f2 function;
-    class models_databasetarget_geteffectiveclean_c22c671c function;
-    class models_databasetarget_geteffectivebackupmethod_184fbbe0 function;
-    class models_databasetarget_geteffectiveschemas_10d6e506 function;
+    class services_failingdumper_3e828ec3 test;
+    class services_failingdumper_dump_f10a88b4 test;
+    class services_staticdumper_866bac23 test;
+    class services_staticdumper_dump_61c51ab6 test;
     class internal_app_backup_cmd_004e12aa module;
     class internal_app_migration_cmd_98600ca7 module;
     class internal_services_backup_only_orchestrator_149a681d module;
     class internal_services_backup_service_375e4b2f module;
     class services_pgdumpservice_27091f26 klass;
+    class internal_tunnel_tunnel_77370bb7 module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -251,22 +253,46 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
+  <td><code>failingDumper</code><br><small style="color:var(--muted)">internal/services/backup_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Dump()</code><br><small style="color:var(--muted)">internal/services/backup_service_test.go</small></td>
+  <td>failingDumper node in internal/services/backup_service_test.go.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>staticDumper</code><br><small style="color:var(--muted)">internal/services/backup_service_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Dump()</code><br><small style="color:var(--muted)">internal/services/backup_service_test.go</small></td>
+  <td>staticDumper node in internal/services/backup_service_test.go.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExpandWildcardDatabasesWithTunnel()</code><br><small style="color:var(--muted)">internal/services/wildcard_helper.go</small><br><code>ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>TestExpandWildcardDatabases EmptyExclud...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+1 more</td>
+  <td><code>QueryDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>ExpandWildcardDatabasesWithConnStr() node in internal/models/backup_config.go.</td>
+</tr>
+<tr>
+  <td>4</td>
   <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+4 more</td>
+  <td><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+7 more</td>
   <td><code>SetDefaults()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>Validate()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>2</td>
+  <td>5</td>
   <td><code>boolPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
-  <td><code>TestDatabaseTarget GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestDatabaseTarget GetEffectiveDeleteLo...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestDatabaseTarget GetEffectiveUploadTo...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><code>TestBackupConfig Validate UploadRequire...</code><br><small style="color:var(--muted)">internal/models/backup_config_validation_test.go</small><br><code>TestDatabaseTarget GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestDatabaseTarget GetEffectiveDeleteLo...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+1 more</td>
   <td>No direct outbound edge</td>
   <td>boolPtr() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>3</td>
+  <td>6</td>
   <td><code>containsAny()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td><code>TestExpandWildcardDatabases EmptyExclud...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
@@ -274,7 +300,7 @@ flowchart LR
   <td>containsAny() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>4</td>
+  <td>7</td>
   <td><code>strPtr()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td><code>TestDatabaseTarget GetEffectiveBackupMe...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
@@ -282,7 +308,23 @@ flowchart LR
   <td>strPtr() node in internal/models/backup_config_test.go.</td>
 </tr>
 <tr>
-  <td>5</td>
+  <td>8</td>
+  <td><code>TestBackupConfig_ExpandWildcards_NoWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ExpandWildcards()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>TestBackupConfig_Validate()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Validate()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>10</td>
   <td><code>TestDatabaseTarget_GetEffectiveBackupMethod()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -290,7 +332,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>6</td>
+  <td>11</td>
   <td><code>TestDatabaseTarget_GetEffectiveCompress()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -298,7 +340,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>7</td>
+  <td>12</td>
   <td><code>TestDatabaseTarget_GetEffectiveDeleteLocalAfterUpload()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -306,7 +348,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>8</td>
+  <td>13</td>
   <td><code>TestDatabaseTarget_GetEffectiveOutputDir()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -314,7 +356,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>9</td>
+  <td>14</td>
   <td><code>TestDatabaseTarget_GetEffectivePort()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -322,7 +364,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>10</td>
+  <td>15</td>
   <td><code>TestDatabaseTarget_GetEffectiveS3AccessKeyID()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -330,7 +372,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>11</td>
+  <td>16</td>
   <td><code>TestDatabaseTarget_GetEffectiveS3Bucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -338,7 +380,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>17</td>
   <td><code>TestDatabaseTarget_GetEffectiveS3Prefix()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -346,7 +388,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>13</td>
+  <td>18</td>
   <td><code>TestDatabaseTarget_GetEffectiveS3SecretAccessKey()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -354,7 +396,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>19</td>
   <td><code>TestDatabaseTarget_GetEffectiveSchemas()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -362,7 +404,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>20</td>
   <td><code>TestDatabaseTarget_GetEffectiveUploadToS3()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -370,7 +412,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>21</td>
   <td><code>TestDatabaseTarget_ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -378,7 +420,15 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>22</td>
+  <td><code>TestDatabaseTarget_ToConnectionString_OmittedPort()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ToConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>23</td>
   <td><code>TestExpandWildcardDatabases_EmptyExcludeDb()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -386,7 +436,15 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>24</td>
+  <td><code>TestExpandWildcardDatabases_NonWildcard()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ExpandWildcardDatabasesWithConnStr()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>25</td>
   <td><code>TestLoadBackupConfig_ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -394,7 +452,7 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>26</td>
   <td><code>TestLoadBackupConfig_MissingHostAndConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -402,7 +460,7 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>27</td>
   <td><code>TestLoadBackupConfig_MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -410,7 +468,7 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>28</td>
   <td><code>TestLoadBackupConfig_NoDatabases()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -418,7 +476,7 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>29</td>
   <td><code>TestLoadBackupConfig_S3EnabledNoBucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -426,67 +484,11 @@ flowchart LR
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 <tr>
-  <td>23</td>
-  <td><code>TestLoadBackupConfig_ValidConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>TestLoadBackupConfig_WildcardDatabase()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td><code>TestLoadBackupConfig ConnectionString()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingHostAndConn...</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br><code>TestLoadBackupConfig MissingName()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small><br>+10 more</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>runBackup()</code><br><small style="color:var(--muted)">internal/app/backup_cmd.go</small><br><code>runMigration()</code><br><small style="color:var(--muted)">internal/app/migration_cmd.go</small><br><code>TestLoadConfig FileNotFound()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small><br>+7 more</td>
-  <td>No direct outbound edge</td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>TestLoadConfig_BackupOnly()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>TestLoadConfig_EmptyFile()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
-  <td>29</td>
-  <td><code>TestLoadConfig_FileNotFound()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small></td>
-  <td>Reads, resolves, or persists project configuration.</td>
-</tr>
-<tr>
   <td>30</td>
-  <td><code>TestLoadConfig_InvalidYAML()</code><br><small style="color:var(--muted)">internal/models/config_test.go</small></td>
+  <td><code>TestLoadBackupConfig_S3EnabledPerDatabaseBucket()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>LoadConfig()</code><br><small style="color:var(--muted)">internal/models/config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
+  <td><code>LoadBackupConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config.go</small><br><code>writeTempConfig()</code><br><small style="color:var(--muted)">internal/models/backup_config_test.go</small></td>
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
 </table>
@@ -496,19 +498,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>internal/models/backup_config_test.go</code></td><td>29 nodes</td></tr>
-<tr><td><code>internal/models/backup_config.go</code></td><td>26 nodes</td></tr>
-<tr><td><code>internal/services/backup_service_test.go</code></td><td>15 nodes</td></tr>
-<tr><td><code>internal/models/connection.go</code></td><td>14 nodes</td></tr>
-<tr><td><code>internal/services/backup_service.go</code></td><td>13 nodes</td></tr>
-<tr><td><code>internal/services/pg_dump_schema.go</code></td><td>13 nodes</td></tr>
-<tr><td><code>internal/services/pg_dump_service.go</code></td><td>13 nodes</td></tr>
-<tr><td><code>internal/tunnel/tunnel.go</code></td><td>13 nodes</td></tr>
+      <tr><td><code>internal/models/backup_config_test.go</code></td><td>32 nodes</td></tr>
+<tr><td><code>internal/models/backup_config.go</code></td><td>27 nodes</td></tr>
+<tr><td><code>internal/models/connection.go</code></td><td>22 nodes</td></tr>
+<tr><td><code>internal/services/pg_dump_schema.go</code></td><td>18 nodes</td></tr>
+<tr><td><code>internal/services/backup_service.go</code></td><td>17 nodes</td></tr>
+<tr><td><code>internal/services/backup_service_test.go</code></td><td>16 nodes</td></tr>
+<tr><td><code>internal/services/pg_dump_service.go</code></td><td>14 nodes</td></tr>
+<tr><td><code>internal/tunnel/tunnel.go</code></td><td>14 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x346, calls x229, references x196, contains x154. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x393, calls x297, references x225, contains x187. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -885,26 +887,52 @@ flowchart LR
 
 <!-- ====== 6. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">6. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around integration, testsh, sqltb, script, mostly in integration-test.sh. This section covers 5 nodes and 4 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around integration, testsh, 001, create, mostly in integration-test.sh, test-scripts/01_tables/001_create_users.sql, test-scripts/01_tables/002_create_posts.sql. This section covers 11 nodes and 10 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (5 nodes, 4 edges)
-    integration_test_8b866f38("integration-test.sh")
-    integration_test_sqltb_provider_83ad1f76("SQLTB_PROVIDER<br/><small>integration-test.sh</small>")
-    integration_test_sqltb_database_3222de26("SQLTB_DATABASE<br/><small>integration-test.sh</small>")
-    integration_test_sqltb_verbose_27da6f3d("SQLTB_VERBOSE<br/><small>integration-test.sh</small>")
-    integration_test_sh_entry_2d8a1732("integration-test.sh script<br/><small>integration-test.sh</small>")
+    %% Section: Tests &amp; Fixtures (11 nodes, 10 edges)
+    subgraph tests_fixtures_integration_test_sh_f1d77fe6["integration-test.sh"]
+        integration_test_8b866f38("integration-test.sh")
+        integration_test_sqltb_provider_83ad1f76("SQLTB_PROVIDER<br/><small>integration-test.sh</small>")
+        integration_test_sqltb_database_3222de26("SQLTB_DATABASE<br/><small>integration-test.sh</small>")
+        integration_test_sqltb_verbose_27da6f3d("SQLTB_VERBOSE<br/><small>integration-test.sh</small>")
+        integration_test_sh_entry_2d8a1732("integration-test.sh script<br/><small>integration-test.sh</small>")
+    end
+    subgraph tests_fixtures_test_scripts_01_tables_001_create_ea388227["test-scripts/01_tables/001_create_users.sql"]
+        test_scripts_01_tables_001_create_users_c7c17cc4("001_create_users.sql")
+        test_scripts_01_tables_001_create_users_users_7aeefc33("users<br/><small>test-scripts/01_tables/001_create_users.sql</small>")
+    end
+    subgraph tests_fixtures_test_scripts_01_tables_002_create_7e67c685["test-scripts/01_tables/002_create_posts.sql"]
+        test_scripts_01_tables_002_create_posts_256847d4("002_create_posts.sql")
+        test_scripts_01_tables_002_create_posts_posts_7f3d666a("posts<br/><small>test-scripts/01_tables/002_create_posts.sql</small>")
+    end
+    subgraph tests_fixtures_test_scripts_02_views_001_user_po_278afe2b["test-scripts/02_views/001_user_posts_view.sql"]
+        test_scripts_02_views_001_user_posts_view_user_p_ea254e0f("user_posts<br/><small>test-scripts/02_views/001_user_posts_view.sql</small>")
+        test_scripts_02_views_001_user_posts_view_260c3dca("001_user_posts_view.sql")
+    end
     integration_test_8b866f38 -->|defines| integration_test_sqltb_provider_83ad1f76
     integration_test_8b866f38 -->|defines| integration_test_sqltb_database_3222de26
     integration_test_8b866f38 -->|defines| integration_test_sqltb_verbose_27da6f3d
+    test_scripts_01_tables_002_create_posts_posts_7f3d666a -->|references| test_scripts_01_tables_001_create_users_users_7aeefc33
+    test_scripts_02_views_001_user_posts_view_user_p_ea254e0f -->|reads from| test_scripts_01_tables_001_create_users_users_7aeefc33
+    test_scripts_02_views_001_user_posts_view_user_p_ea254e0f -->|reads from| test_scripts_01_tables_002_create_posts_posts_7f3d666a
     integration_test_8b866f38 -->|contains| integration_test_sh_entry_2d8a1732
+    test_scripts_01_tables_001_create_users_c7c17cc4 -->|contains| test_scripts_01_tables_001_create_users_users_7aeefc33
+    test_scripts_01_tables_002_create_posts_256847d4 -->|contains| test_scripts_01_tables_002_create_posts_posts_7f3d666a
+    test_scripts_02_views_001_user_posts_view_260c3dca -->|contains| test_scripts_02_views_001_user_posts_view_user_p_ea254e0f
     class integration_test_8b866f38 test;
     class integration_test_sqltb_provider_83ad1f76 test;
     class integration_test_sqltb_database_3222de26 test;
     class integration_test_sqltb_verbose_27da6f3d test;
     class integration_test_sh_entry_2d8a1732 test;
+    class test_scripts_01_tables_001_create_users_c7c17cc4 test;
+    class test_scripts_01_tables_001_create_users_users_7aeefc33 test;
+    class test_scripts_01_tables_002_create_posts_256847d4 test;
+    class test_scripts_01_tables_002_create_posts_posts_7f3d666a test;
+    class test_scripts_02_views_001_user_posts_view_user_p_ea254e0f test;
+    class test_scripts_02_views_001_user_posts_view_260c3dca test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -928,6 +956,54 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
+  <td><code>001_create_users.sql</code><br><small style="color:var(--muted)">test-scripts/01_tables/001_create_users.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>001_create_users.sql node in test-scripts/01_tables/001_create_users.sql.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>users</code><br><small style="color:var(--muted)">test-scripts/01_tables/001_create_users.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>users node in test-scripts/01_tables/001_create_users.sql.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>002_create_posts.sql</code><br><small style="color:var(--muted)">test-scripts/01_tables/002_create_posts.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>002_create_posts.sql node in test-scripts/01_tables/002_create_posts.sql.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>posts</code><br><small style="color:var(--muted)">test-scripts/01_tables/002_create_posts.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>posts node in test-scripts/01_tables/002_create_posts.sql.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>001_user_posts_view.sql</code><br><small style="color:var(--muted)">test-scripts/02_views/001_user_posts_view.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>001_user_posts_view.sql node in test-scripts/02_views/001_user_posts_view.sql.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>user_posts</code><br><small style="color:var(--muted)">test-scripts/02_views/001_user_posts_view.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>user_posts node in test-scripts/02_views/001_user_posts_view.sql.</td>
+</tr>
+<tr>
+  <td>7</td>
   <td><code>integration-test.sh</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -935,7 +1011,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>2</td>
+  <td>8</td>
   <td><code>integration-test.sh script</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -943,7 +1019,7 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>3</td>
+  <td>9</td>
   <td><code>SQLTB_DATABASE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -951,7 +1027,7 @@ flowchart LR
   <td>SQLTB_DATABASE node in integration-test.sh.</td>
 </tr>
 <tr>
-  <td>4</td>
+  <td>10</td>
   <td><code>SQLTB_PROVIDER</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -959,7 +1035,7 @@ flowchart LR
   <td>SQLTB_PROVIDER node in integration-test.sh.</td>
 </tr>
 <tr>
-  <td>5</td>
+  <td>11</td>
   <td><code>SQLTB_VERBOSE</code><br><small style="color:var(--muted)">integration-test.sh</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -974,11 +1050,14 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>integration-test.sh</code></td><td>5 nodes</td></tr>
+<tr><td><code>test-scripts/01_tables/001_create_users.sql</code></td><td>2 nodes</td></tr>
+<tr><td><code>test-scripts/01_tables/002_create_posts.sql</code></td><td>2 nodes</td></tr>
+<tr><td><code>test-scripts/02_views/001_user_posts_view.sql</code></td><td>2 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: defines x3, contains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x4, defines x3, reads from x2, references x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1460,16 +1539,16 @@ flowchart LR
     readme_backup_ecc27387("Backup<br/><small>README.md</small>")
     readme_backup_only_fc6467bc("Backup Only<br/><small>README.md</small>")
     readme_restore_fcc0eb1b("Restore<br/><small>README.md</small>")
-    readme_dry_run_mode_312_9c430a30("Dry-run Mode<br/><small>README.md</small>")
+    readme_dry_run_mode_339_6f2e1012("Dry-run Mode<br/><small>README.md</small>")
     readme_backup_and_restore_dda22c05 -->|contains| readme_backup_ecc27387
     readme_backup_and_restore_dda22c05 -->|contains| readme_backup_only_fc6467bc
     readme_backup_and_restore_dda22c05 -->|contains| readme_restore_fcc0eb1b
-    readme_backup_and_restore_dda22c05 -->|contains| readme_dry_run_mode_312_9c430a30
+    readme_backup_and_restore_dda22c05 -->|contains| readme_dry_run_mode_339_6f2e1012
     class readme_backup_and_restore_dda22c05 concept;
     class readme_backup_ecc27387 concept;
     class readme_backup_only_fc6467bc concept;
     class readme_restore_fcc0eb1b concept;
-    class readme_dry_run_mode_312_9c430a30 concept;
+    class readme_dry_run_mode_339_6f2e1012 concept;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -1984,14 +2063,24 @@ flowchart LR
 
 <!-- ====== 16. Other ====== -->
 <h2 id="other">16. Other</h2>
-<p>Other groups implementation around adeotek, githubcom, tools, sql, mostly in go.mod. This section covers 1 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Other groups implementation around 001, test, scripts, seed, mostly in go.mod, level2/level3/001_deeply_nested.sql, test-scripts/03_data/001_seed_users.sql. This section covers 6 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (1 nodes, 0 edges)
+    %% Section: Other (6 nodes, 0 edges)
     pkg_github_com_adeotek_adeotek_tools_sql_toolbox_0af56c20("github.com/adeotek/adeotek-tools/sql-to...<br/><small>go.mod</small>")
+    test_scripts_01_tables_level1_level2_level3_001_07efb9dd("001_deeply_nested.sql")
+    test_scripts_03_data_001_seed_users_b6c721c2("001_seed_users.sql")
+    test_scripts_03_data_002_seed_posts_4d91b463("002_seed_posts.sql")
+    test_scripts_04_misc_001_semicolons_in_strings_b1e05f03("semicolons in strings.sql<br/><small>test-scripts/04_misc/001_semicolons_in_strings.sql</small>")
+    test_scripts_04_misc_002_comments_and_blank_line_46be1881("and blank lines.sql<br/><small>test-scripts/04_misc/002_comments_and_blank_lines.sql</small>")
     class pkg_github_com_adeotek_adeotek_tools_sql_toolbox_0af56c20 module;
+    class test_scripts_01_tables_level1_level2_level3_001_07efb9dd test;
+    class test_scripts_03_data_001_seed_users_b6c721c2 test;
+    class test_scripts_03_data_002_seed_posts_4d91b463 test;
+    class test_scripts_04_misc_001_semicolons_in_strings_b1e05f03 test;
+    class test_scripts_04_misc_002_comments_and_blank_line_46be1881 test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -2021,6 +2110,46 @@ flowchart LR
   <td>No direct outbound edge</td>
   <td>Turns a local path or remote repository into analysis context.</td>
 </tr>
+<tr>
+  <td>2</td>
+  <td><code>001_deeply_nested.sql</code><br><small style="color:var(--muted)">level2/level3/001_deeply_nested.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>001_deeply_nested.sql node in level2/level3/001_deeply_nested.sql.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>001_seed_users.sql</code><br><small style="color:var(--muted)">test-scripts/03_data/001_seed_users.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>001_seed_users.sql node in test-scripts/03_data/001_seed_users.sql.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>002_seed_posts.sql</code><br><small style="color:var(--muted)">test-scripts/03_data/002_seed_posts.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>002_seed_posts.sql node in test-scripts/03_data/002_seed_posts.sql.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>001_semicolons_in_strings.sql</code><br><small style="color:var(--muted)">test-scripts/04_misc/001_semicolons_in_strings.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>001_semicolons_in_strings.sql node in test-scripts/04_misc/001_semicolons_in_strings.sql.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>002_comments_and_blank_lines.sql</code><br><small style="color:var(--muted)">test-scripts/04_misc/002_comments_and_blank_lines.sql</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>002_comments_and_blank_lines.sql node in test-scripts/04_misc/002_comments_and_blank_lines.sql.</td>
+</tr>
 </table>
 
 <div class="grid">
@@ -2029,6 +2158,11 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>go.mod</code></td><td>1 nodes</td></tr>
+<tr><td><code>level2/level3/001_deeply_nested.sql</code></td><td>1 nodes</td></tr>
+<tr><td><code>test-scripts/03_data/001_seed_users.sql</code></td><td>1 nodes</td></tr>
+<tr><td><code>test-scripts/03_data/002_seed_posts.sql</code></td><td>1 nodes</td></tr>
+<tr><td><code>test-scripts/04_misc/001_semicolons_in_strings.sql</code></td><td>1 nodes</td></tr>
+<tr><td><code>test-scripts/04_misc/002_comments_and_blank_lines.sql</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
@@ -2044,18 +2178,18 @@ flowchart LR
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>408</td></tr>
-      <tr><td>Edges</td><td>1095</td></tr>
+      <tr><td>Nodes</td><td>470</td></tr>
+      <tr><td>Edges</td><td>1287</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>23</td></tr>
+      <tr><td>Communities</td><td>30</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>944</td></tr>
-      <tr><td>INFERRED</td><td>151</td></tr>
+      <tr><td>EXTRACTED</td><td>1113</td></tr>
+      <tr><td>INFERRED</td><td>174</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
   </div>
@@ -2063,7 +2197,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>sql-toolbox — Architecture Documentation</p>
-  <p>Generated: 2026-10-22 17:15 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-11-01 22:17 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

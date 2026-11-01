@@ -16,7 +16,9 @@ func (s *PgDumpService) dumpAllTableData() error {
 		JOIN pg_namespace n ON c.relnamespace = n.oid
 		WHERE c.relkind = 'r'
 		  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
-		  AND c.relname NOT LIKE 'pg_%'
+		  AND NOT EXISTS (
+			SELECT 1 FROM pg_depend d
+			WHERE d.classid = 'pg_class'::regclass AND d.objid = c.oid AND d.deptype = 'e')
 		ORDER BY n.nspname, c.relname`)
 	if err != nil {
 		return fmt.Errorf("querying tables for data dump: %w", err)
@@ -35,7 +37,7 @@ func (s *PgDumpService) dumpAllTableData() error {
 		if !s.isSchemaIncluded(ti.schema) {
 			continue
 		}
-		if s.isTableExcluded(ti.name) {
+		if s.isTableExcluded(ti.schema, ti.name) {
 			continue
 		}
 		tables = append(tables, ti)
@@ -182,7 +184,7 @@ func formatInsertValue(value interface{}, colType string) string {
 	case string:
 		return "'" + escapeStringLiteral(v) + "'"
 	case time.Time:
-		return "'" + v.Format("2006-01-02 15:04:05.999999-07") + "'"
+		return "'" + v.Format("2006-01-02 15:04:05.999999-07:00") + "'"
 	default:
 		// Fallback: convert to string
 		return "'" + escapeStringLiteral(fmt.Sprintf("%v", v)) + "'"

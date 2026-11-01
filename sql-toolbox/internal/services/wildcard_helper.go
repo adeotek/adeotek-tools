@@ -27,15 +27,29 @@ func ExpandWildcardDatabasesWithTunnel(template models.DatabaseTarget, verbose b
 		}
 	}
 
-	// Build connection string for querying databases
+	// Build connection string for querying databases. A connection string or
+	// active tunnel must be honored here as well, otherwise wildcard expansion
+	// would connect directly and ignore both.
 	var connStr string
-	if sshTunnel != nil {
-		// Use SSH tunnel's local address
-		connStr = fmt.Sprintf("host=127.0.0.1 port=%d dbname=postgres user=%s password=%s sslmode=disable",
-			sshTunnel.GetLocalPort(), template.User, template.Password)
-	} else {
-		// Use direct connection (connStr will be built in QueryDatabases)
-		connStr = ""
+	if sshTunnel != nil || template.ConnectionString != "" {
+		connParams := &models.ConnectionParameters{
+			Provider:            "postgresql",
+			RawConnectionString: template.ConnectionString,
+			Host:                template.Host,
+			Port:                template.GetEffectivePort(),
+			DatabaseName:        "postgres",
+			User:                template.User,
+			Password:            template.Password,
+			SSLMode:             template.SSLMode,
+		}
+		if sshTunnel != nil {
+			connParams.SetActiveTunnel(sshTunnel)
+		}
+		var err error
+		connStr, err = connParams.GetConnectionString()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build connection string for wildcard expansion: %w", err)
+		}
 	}
 
 	// Delegate to the models function with the connection string
